@@ -2,7 +2,6 @@ pub mod backup;
 pub mod error;
 pub mod file;
 pub mod input_method;
-pub mod intellij;
 pub mod shell;
 pub mod ssh;
 pub mod vscode;

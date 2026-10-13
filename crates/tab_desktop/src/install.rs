@@ -72,24 +72,6 @@ pub async fn run_install(ctx: Arc<Context>) {
         }
     }
 
-    // install intellij integration
-    match tab_integrations::intellij::variants_installed().await {
-        Ok(variants) => {
-            for integration in variants {
-                if integration.is_installed().await.is_err() {
-                    info!(
-                        "Attempting to install intellij integration for variant {}",
-                        integration.variant.application_name()
-                    );
-                    if let Err(err) = integration.install().await {
-                        error!(%err, "Failed installing intellij integration for variant {}", integration.variant.application_name());
-                    }
-                }
-            }
-        },
-        Err(err) => error!(%err, "Failed getting installed intellij variants"),
-    }
-
     // update ssh integration
     if let Ok(ssh_integration) = SshIntegration::new() {
         if let Err(err) = ssh_integration.reinstall().await {

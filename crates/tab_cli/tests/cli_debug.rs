@@ -16,12 +16,3 @@ fn debug_verify_codesign() -> Result<()> {
         .code(predicate::in_iter([0, 1]));
     Ok(())
 }
-
-#[test]
-fn debug_list_intellij_variants() -> Result<()> {
-    cli()
-        .args(["debug", "list-intellij-variants"])
-        .assert()
-        .code(predicate::in_iter([0, 1]));
-    Ok(())
-}

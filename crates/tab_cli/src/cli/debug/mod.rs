@@ -194,9 +194,6 @@ pub enum DebugSubcommand {
     },
     /// Open up the devtools of a specific webview
     Devtools { app: App },
-    /// Lists installed IntelliJ variants
-    #[command(name = "list-intellij-variants")]
-    ListIntelliJVariants,
     /// Disables sourcing of user shell config and instead uses a minimal shell config
     Shell,
     /// Update the shell config permissions to have the correct owner and access rights
@@ -707,12 +704,6 @@ impl DebugSubcommand {
                 })
                 .await
                 .context("Could not open devtools window")?;
-            },
-            DebugSubcommand::ListIntelliJVariants => {
-                for integration in tab_integrations::intellij::variants_installed().await? {
-                    println!("{}", integration.variant.application_name());
-                    println!("  - {:?}", integration.application_folder());
-                }
             },
             DebugSubcommand::Shell => {
                 let mut profile = NamedTempFile::new()?;

@@ -61,10 +61,6 @@ pub enum Integration {
     InputMethod,
     #[command(name = "vscode")]
     VSCode,
-    #[command(alias = "jetbrains-plugin")]
-    IntellijPlugin,
-    AutostartEntry,
-    GnomeShellExtension,
     #[doc(hidden)]
     All,
 }
@@ -185,26 +181,6 @@ async fn install(integration: Integration, silent: bool) -> Result<()> {
             }
             Ok(())
         },
-        Integration::IntellijPlugin => {
-            let variants = tab_integrations::intellij::variants_installed().await?;
-            installed = !variants.is_empty();
-            for variant in variants {
-                variant.install().await?;
-            }
-            Ok(())
-        },
-        Integration::AutostartEntry => {
-            errored = true;
-            Err(eyre::eyre!(
-                "Installing the autostart entry from the CLI is not supported"
-            ))
-        },
-        Integration::GnomeShellExtension => {
-            errored = true;
-            Err(eyre::eyre!(
-                "Installing the GNOME Shell extension from the CLI is not supported"
-            ))
-        },
     };
 
     if installed && result.is_ok() && !silent {
@@ -294,18 +270,6 @@ async fn uninstall(integration: Integration, silent: bool) -> Result<()> {
             println!("Warning: VSCode integrations are automatically reinstalled on launch");
             Ok(())
         },
-        Integration::IntellijPlugin => {
-            for variant in tab_integrations::intellij::variants_installed().await? {
-                if variant.is_installed().await.is_ok() {
-                    variant.uninstall().await?;
-                    uninstalled = true;
-                }
-            }
-            println!("Warning: IntelliJ integrations are automatically reinstalled on launch");
-            Ok(())
-        },
-        Integration::AutostartEntry => Err(eyre::eyre!("The autostart integration is only supported on Linux")),
-        Integration::GnomeShellExtension => Err(eyre::eyre!("The GNOME Shell extension is only supported on Linux")),
     };
 
     if uninstalled && result.is_ok() && !silent {
@@ -438,25 +402,5 @@ async fn status(integration: Integration, format: OutputFormat) -> Result<ExitCo
             }
             Ok(ExitCode::SUCCESS)
         },
-        Integration::IntellijPlugin => {
-            let variants = tab_integrations::intellij::variants_installed().await?;
-            for variant in variants {
-                match variant.is_installed().await {
-                    Ok(_) => {
-                        println!("{}: Installed", variant.variant.application_name());
-                    },
-                    Err(_) => {
-                        println!("{}: Not installed", variant.variant.application_name());
-                    },
-                }
-            }
-            Ok(ExitCode::SUCCESS)
-        },
-        Integration::AutostartEntry => Err(eyre::eyre!(
-            "Checking the status of the autostart entry from the CLI is not supported"
-        )),
-        Integration::GnomeShellExtension => Err(eyre::eyre!(
-            "Checking the status of the GNOME Shell extension from the CLI is not supported"
-        )),
     }
 }
