@@ -14,7 +14,6 @@ use fig_settings::{
 };
 use fig_util::Shell;
 use tao::event_loop::ControlFlow;
-#[cfg(target_os = "macos")]
 use tokio::process::Command;
 #[allow(unused_imports)]
 use tracing::error;
@@ -78,36 +77,18 @@ where
         OnboardingAction::LaunchShellOnboarding => {
             fig_settings::state::set_value("user.onboarding", false).ok();
 
-            cfg_if::cfg_if! {
-                if #[cfg(target_os = "linux")] {
-                    use fig_util::terminal::LINUX_TERMINALS;
+            let home = fig_util::directories::home_dir().unwrap_or_else(|_| std::path::PathBuf::from("/"));
 
-                    for terminal_executable in LINUX_TERMINALS.iter().flat_map(|term| term.executable_names()) {
-                        if let Ok(terminal_executable_path) = which::which(terminal_executable) {
-                            tokio::spawn(tokio::process::Command::new(terminal_executable_path).output());
-                            return RequestResult::success();
-                        }
-                    }
-                    RequestResult::error("Failed to open any terminal")
-                } else if #[cfg(target_os = "macos")] {
-                    let home = fig_util::directories::home_dir().unwrap_or_else(|_| std::path::PathBuf::from("/"));
-
-                    if let Err(err) = Command::new("open").args(["-b", "com.apple.Terminal"]).arg(home).spawn() {
-                        error!(%err, "Failed to open onboarding");
-                        return RequestResult::error("Failed to open onboarding");
-                    }
-
-                    RequestResult::success()
-                } else if #[cfg(target_os = "windows")] {
-                    use std::os::windows::process::CommandExt;
-
-                    let create_new_console = 0x10;
-                    match std::process::Command::new("cmd").creation_flags(create_new_console).arg("/c").raw_arg(r#"""%PROGRAMFILES%/Git/bin/bash.exe"""#).spawn() {
-                        Ok(_) => RequestResult::success(),
-                        Err(e) => RequestResult::error(format!("Failed to start Git Bash: {e}")),
-                    }
-                }
+            if let Err(err) = Command::new("open")
+                .args(["-b", "com.apple.Terminal"])
+                .arg(home)
+                .spawn()
+            {
+                error!(%err, "Failed to open onboarding");
+                return RequestResult::error("Failed to open onboarding");
             }
+
+            RequestResult::success()
         },
         OnboardingAction::PromptForAccessibilityPermission => {
             use crate::local_ipc::{

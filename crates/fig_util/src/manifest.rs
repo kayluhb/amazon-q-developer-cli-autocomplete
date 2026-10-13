@@ -2,7 +2,6 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::OnceLock;
 
-use cfg_if::cfg_if;
 use fig_os_shim::{
     EnvProvider,
     FsProvider,
@@ -81,27 +80,7 @@ pub enum TargetTriple {
 
 impl TargetTriple {
     const fn from_system() -> Self {
-        cfg_if! {
-            if #[cfg(target_os = "macos")] {
-                TargetTriple::UniversalAppleDarwin
-            } else if #[cfg(all(target_os = "linux", target_env = "gnu", target_arch = "x86_64"))] {
-                TargetTriple::X86_64UnknownLinuxGnu
-            } else if #[cfg(all(target_os = "linux", target_env = "gnu", target_arch = "aarch64"))] {
-                TargetTriple::AArch64UnknownLinuxGnu
-            } else if #[cfg(all(target_os = "linux", target_env = "musl", target_arch = "x86_64"))] {
-                TargetTriple::X86_64UnknownLinuxMusl
-            } else if #[cfg(all(target_os = "linux", target_env = "musl", target_arch = "aarch64"))] {
-                TargetTriple::AArch64UnknownLinuxMusl
-            } else if #[cfg(all(target_os = "windows", target_arch = "x86_64"))] {
-                TargetTriple::X86_64PcWindowsMsvc
-            } else if #[cfg(all(target_os = "windows", target_arch = "x86"))] {
-                TargetTriple::I686PcWindowsMsvc
-            } else if #[cfg(all(target_os = "windows", target_arch = "aarch64"))] {
-                TargetTriple::AArch64PcWindowsMsvc
-            } else {
-                compile_error!("unknown target")
-            }
-        }
+        TargetTriple::UniversalAppleDarwin
     }
 }
 
@@ -268,41 +247,13 @@ pub async fn bundle_metadata_json<Ctx: FsProvider + EnvProvider + PlatformProvid
 /// Checks if this is a full build according to the manifest.
 /// Note that this does not guarantee the value of is_minimal
 pub fn is_full() -> bool {
-    cfg_if! {
-        if #[cfg(target_os = "macos")] {
-            true
-        } else if #[cfg(unix)] {
-            matches!(
-                manifest(),
-                Manifest {
-                    variant: Variant::Full,
-                    ..
-                }
-            )
-        } else if #[cfg(windows)] {
-            true
-        }
-    }
+    true
 }
 
 /// Checks if this is a minimal build according to the manifest.
 /// Note that this does not guarantee the value of is_full
 pub fn is_minimal() -> bool {
-    cfg_if! {
-        if #[cfg(target_os = "macos")] {
-            false
-        } else if #[cfg(unix)] {
-            matches!(
-                manifest(),
-                Manifest {
-                    variant: Variant::Minimal,
-                    ..
-                }
-            )
-        } else if #[cfg(windows)] {
-            false
-        }
-    }
+    false
 }
 
 /// Gets the version from the manifest

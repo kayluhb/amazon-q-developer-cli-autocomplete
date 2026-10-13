@@ -175,12 +175,9 @@ impl AppSubcommand {
                     }
                 }
             },
-            #[cfg(target_os = "macos")]
             AppSubcommand::Uninstall(args) => {
                 fig_install::uninstall(args.into(), fig_os_shim::Context::new()).await?;
             },
-            #[cfg(not(target_os = "macos"))]
-            AppSubcommand::Uninstall(_) => {},
             AppSubcommand::Restart => restart_fig().await?,
             AppSubcommand::Quit => {
                 crate::util::quit_fig(true).await?;

@@ -91,7 +91,6 @@ impl Db {
         let pool = Pool::builder().build(conn)?;
 
         // Check the unix permissions of the database file, set them to 0600 if they are not
-        #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             let metadata = std::fs::metadata(path)?;

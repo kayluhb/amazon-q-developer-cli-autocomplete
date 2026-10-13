@@ -38,7 +38,6 @@ async-trait.workspace = true
 base64.workspace = true
 bytes.workspace = true
 camino.workspace = true
-cfg-if.workspace = true
 clap.workspace = true
 dashmap.workspace = true
 fig_desktop_api.workspace = true
@@ -79,7 +78,6 @@ tracing.workspace = true
 tray-icon = { version = "0.19.2", default-features = false }
 url.workspace = true
 uuid.workspace = true
-which.workspace = true
 whoami.workspace = true
 wry = { version = "0.48.1", default-features = false, features = [
     # "tao",
@@ -92,33 +90,8 @@ wry = { version = "0.48.1", default-features = false, features = [
 [dev-dependencies]
 tracing-subscriber.workspace = true
 
-[target.'cfg(target_os = "windows")'.dependencies.windows]
-version = "0.58.0"
-features = [
-    "implement",
-    "Win32_Foundation",
-    "Win32_Graphics_Gdi",
-    "Win32_Networking_WinSock",
-    "Win32_Security",
-    "Win32_Storage_FileSystem",
-    "Win32_System_Com",
-    "Win32_System_Console",
-    "Win32_System_Ole",
-    "Win32_System_Threading",
-    "Win32_System_ProcessStatus",
-    "Win32_UI_WindowsAndMessaging",
-    "Win32_UI_Accessibility",
-]
-
 [target.'cfg(unix)'.dependencies]
 nix.workspace = true
-
-[target.'cfg(target_os = "linux")'.dependencies]
-dbus = { path = "../dbus" }
-freedesktop-icons = "0.2.2"
-gtk = "0.18"
-x11rb = "0.13.0"
-zbus = { path = "../zbus" }
 
 [target.'cfg(target_os="macos")'.dependencies]
 accessibility-sys = { path = "../macos-utils/accessibility-master/accessibility-sys", version = "0.1.3" }

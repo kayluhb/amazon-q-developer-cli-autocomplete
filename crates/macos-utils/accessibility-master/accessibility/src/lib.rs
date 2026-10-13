@@ -1,4 +1,3 @@
-#![cfg(target_os = "macos")]
 // This is needed for objc
 #![allow(unexpected_cfgs)]
 #![allow(deprecated)]

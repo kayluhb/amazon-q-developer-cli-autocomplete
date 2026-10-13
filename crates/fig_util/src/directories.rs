@@ -14,8 +14,6 @@ use fig_os_shim::{
 use thiserror::Error;
 use time::OffsetDateTime;
 
-#[cfg(unix)]
-use crate::RUNTIME_DIR_NAME;
 use crate::env_var::{
     Q_BUNDLE_METADATA_PATH,
     Q_PARENT,
@@ -28,6 +26,7 @@ use crate::system_info::{
 use crate::{
     BACKUP_DIR_NAME,
     DATA_DIR_NAME,
+    RUNTIME_DIR_NAME,
     TAURI_PRODUCT_NAME,
 };
 
@@ -105,14 +104,12 @@ pub fn home_dir_ctx<Ctx: FsProvider + EnvProvider>(ctx: &Ctx) -> Result<PathBuf>
 /// The directory of the users `$HOME/.local/bin` directory
 ///
 /// MacOS and Linux path: `$HOME/.local/bin``
-#[cfg(unix)]
 pub fn home_local_bin() -> Result<PathBuf> {
     let mut path = home_dir()?;
     path.push(".local/bin");
     Ok(path)
 }
 
-#[cfg(unix)]
 pub fn home_local_bin_ctx(ctx: &Context) -> Result<PathBuf> {
     let mut path = home_dir_ctx(ctx)?;
     path.push(".local/bin");
@@ -192,7 +189,6 @@ pub fn cache_dir() -> Result<PathBuf> {
 /// Get the macos tempdir from the `confstr` function
 ///
 /// See: <https://man7.org/linux/man-pages/man3/confstr.3.html>
-#[cfg(target_os = "macos")]
 fn macos_tempdir() -> Result<PathBuf> {
     let len = unsafe { libc::confstr(libc::_CS_DARWIN_USER_TEMP_DIR, std::ptr::null::<i8>().cast_mut(), 0) };
     let mut buf: Vec<u8> = vec![0; len];
@@ -209,25 +205,13 @@ fn macos_tempdir() -> Result<PathBuf> {
 /// if this is not set such as on macOS it will fallback to TMPDIR which is secure on macOS
 /// On Windows, it uses the TEMP directory
 pub fn runtime_dir() -> Result<PathBuf> {
-    cfg_if::cfg_if! {
-        if #[cfg(unix)] {
-            let mut dir = dirs::runtime_dir();
-            dir = dir.or_else(|| std::env::var_os("TMPDIR").map(PathBuf::from));
+    let mut dir = dirs::runtime_dir();
+    dir = dir.or_else(|| std::env::var_os("TMPDIR").map(PathBuf::from));
 
-            cfg_if::cfg_if! {
-                if #[cfg(target_os = "macos")] {
-                    let macos_tempdir = macos_tempdir()?;
-                    dir = dir.or(Some(macos_tempdir));
-                } else {
-                    dir = dir.or_else(|| Some(std::env::temp_dir()));
-                }
-            }
+    let macos_tempdir = macos_tempdir()?;
+    dir = dir.or(Some(macos_tempdir));
 
-            dir.ok_or(DirectoryError::NoRuntimeDirectory)
-        } else if #[cfg(windows)] {
-            Ok(std::env::temp_dir())
-        }
-    }
+    dir.ok_or(DirectoryError::NoRuntimeDirectory)
 }
 
 /// The q sockets directory of the local q installation
@@ -236,13 +220,7 @@ pub fn runtime_dir() -> Result<PathBuf> {
 /// - MacOS: $TMPDIR/cwrun
 /// - Windows: %TEMP%\{data_dir}\sockets
 pub fn sockets_dir() -> Result<PathBuf> {
-    cfg_if::cfg_if! {
-        if #[cfg(unix)] {
-            Ok(runtime_dir()?.join(RUNTIME_DIR_NAME))
-        } else if #[cfg(windows)] {
-            Ok(runtime_dir()?.join(DATA_DIR_NAME).join("sockets"))
-        }
-    }
+    Ok(runtime_dir()?.join(RUNTIME_DIR_NAME))
 }
 
 /// The directory on the host machine where socket files are stored
@@ -293,14 +271,8 @@ pub fn autocomplete_specs_dir() -> Result<PathBuf> {
 /// - MacOS: `$TMPDIR/logs`
 /// - Windows: `%TEMP%\{data_dir}\logs`
 pub fn logs_dir() -> Result<PathBuf> {
-    cfg_if::cfg_if! {
-        if #[cfg(unix)] {
-            use crate::CLI_BINARY_NAME;
-            Ok(runtime_dir()?.join(format!("{CLI_BINARY_NAME}log")))
-        } else if #[cfg(windows)] {
-            Ok(std::env::temp_dir().join(DATA_DIR_NAME).join("logs"))
-        }
-    }
+    use crate::CLI_BINARY_NAME;
+    Ok(runtime_dir()?.join(format!("{CLI_BINARY_NAME}log")))
 }
 
 /// The directory where fig places all data-sensitive backups
@@ -389,15 +361,7 @@ pub fn figterm_socket_path(session_id: impl Display) -> Result<PathBuf> {
 /// - Linux: "/usr/share/fig"
 /// - Windows: "%LOCALAPPDATA%\{data_dir}\resources"
 pub fn resources_path() -> Result<PathBuf> {
-    cfg_if::cfg_if! {
-        if #[cfg(all(unix, not(target_os = "macos")))] {
-            Ok(std::path::Path::new("/usr/share").join(PACKAGE_NAME))
-        } else if #[cfg(target_os = "macos")] {
-            Ok(crate::app_bundle_path().join(crate::macos::BUNDLE_CONTENTS_RESOURCE_PATH))
-        } else if #[cfg(windows)] {
-            Ok(fig_data_dir()?.join("resources"))
-        }
-    }
+    Ok(crate::app_bundle_path().join(crate::macos::BUNDLE_CONTENTS_RESOURCE_PATH))
 }
 
 pub fn resources_path_ctx<Ctx: EnvProvider + PlatformProvider>(ctx: &Ctx) -> Result<PathBuf> {
@@ -425,13 +389,7 @@ pub fn resources_path_ctx<Ctx: EnvProvider + PlatformProvider>(ctx: &Ctx) -> Res
 /// - Linux: "/usr/share/fig/manifest.json"
 /// - Windows: "%LOCALAPPDATA%\{data_dir}\resources\bin\manifest.json"
 pub fn manifest_path() -> Result<PathBuf> {
-    cfg_if::cfg_if! {
-        if #[cfg(unix)] {
-            Ok(resources_path()?.join("manifest.json"))
-        } else if #[cfg(target_os = "windows")] {
-            Ok(resources_path()?.join("bin").join("manifest.json"))
-        }
-    }
+    Ok(resources_path()?.join("manifest.json"))
 }
 
 /// The path to the metadata.json file included with a Linux desktop bundle.
@@ -534,7 +492,6 @@ pub fn local_webview_data_dir<Ctx: FsProvider + EnvProvider + PlatformProvider>(
 }
 
 utf8_dir!(home_dir);
-#[cfg(unix)]
 utf8_dir!(home_local_bin);
 utf8_dir!(fig_data_dir);
 utf8_dir!(sockets_dir);
@@ -553,7 +510,6 @@ mod linux_tests {
     fn all_paths() {
         let ctx = Context::new();
         assert!(home_dir().is_ok());
-        #[cfg(unix)]
         assert!(home_local_bin().is_ok());
         assert!(fig_data_dir().is_ok());
         assert!(sockets_dir().is_ok());
@@ -583,25 +539,11 @@ mod tests {
     /// own otherwise we will set permissions of directories we shouldn't
     #[test]
     fn test_socket_paths() {
-        #[cfg(unix)]
         assert_eq!(
             host_sockets_dir().unwrap().file_name().unwrap().to_str().unwrap(),
             format!("cwrun")
         );
 
-        #[cfg(windows)]
-        assert_eq!(
-            host_sockets_dir().unwrap().file_name().unwrap().to_str().unwrap(),
-            format!("sockets")
-        );
-
-        #[cfg(unix)]
-        assert_eq!(
-            figterm_socket_path("").unwrap().parent().unwrap().file_name().unwrap(),
-            "t"
-        );
-
-        #[cfg(windows)]
         assert_eq!(
             figterm_socket_path("").unwrap().parent().unwrap().file_name().unwrap(),
             "t"
@@ -619,23 +561,16 @@ mod tests {
 
     macro_rules! macos {
         ($value:expr, @$snapshot:literal) => {
-            #[cfg(target_os = "macos")]
             assert_directory!($value, @$snapshot)
         };
     }
 
     macro_rules! linux {
-        ($value:expr, @$snapshot:literal) => {
-            #[cfg(target_os = "linux")]
-            assert_directory!($value, @$snapshot)
-        };
+        ($value:expr, @ $snapshot:literal) => {};
     }
 
     macro_rules! windows {
-        ($value:expr, @$snapshot:literal) => {
-            #[cfg(target_os = "windows")]
-            assert_directory!($value, @$snapshot)
-        };
+        ($value:expr, @ $snapshot:literal) => {};
     }
 
     fn sanitized_directory_path(path: Result<PathBuf>) -> String {
@@ -654,7 +589,6 @@ mod tests {
             path = path.replace(tmpdir, "$TMPDIR");
         }
 
-        #[cfg(target_os = "macos")]
         {
             if let Ok(tmpdir) = macos_tempdir() {
                 let tmpdir = tmpdir.to_str().unwrap();
@@ -668,20 +602,11 @@ mod tests {
             path = path.replace(xdg_runtime_dir, "$XDG_RUNTIME_DIR");
         }
 
-        #[cfg(target_os = "linux")]
-        {
-            path = path.replace("/tmp", "$TMPDIR");
-        }
-
         path
     }
 
-    #[cfg(unix)]
     #[test]
     fn snapshot_home_local_bin() {
-        #[cfg(target_os = "linux")]
-        linux!(home_local_bin(), @"$HOME/.local/bin");
-        #[cfg(target_os = "macos")]
         macos!(home_local_bin(), @"$HOME/.local/bin");
     }
 
@@ -764,7 +689,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
     fn socket_path_length() {
         use std::os::unix::ffi::OsStrExt;
         /// Sockets are bounded at 100 bytes, why, because legacy compat
@@ -785,7 +709,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(target_os = "macos")]
     fn macos_tempdir_test() {
         let tmpdir = macos_tempdir().unwrap();
         println!("{:?}", tmpdir);

@@ -1,5 +1,3 @@
-#[cfg(target_os = "linux")]
-mod cleanup;
 pub mod cli;
 mod event_handler;
 pub mod history;
@@ -12,7 +10,6 @@ pub mod pty;
 pub mod term;
 
 use std::env;
-#[cfg(unix)]
 use std::ffi::{
     CString,
     OsStr,
@@ -42,7 +39,6 @@ use anyhow::{
     anyhow,
 };
 use bytes::BytesMut;
-use cfg_if::cfg_if;
 use clap::Parser;
 use cli::Cli;
 use fig_log::{
@@ -85,7 +81,6 @@ use flume::{
     Receiver,
     Sender,
 };
-#[cfg(unix)]
 use nix::unistd::execvp;
 use portable_pty::PtySize;
 use tokio::io::{
@@ -122,10 +117,7 @@ use crate::message::{
     process_figterm_message,
     process_remote_message,
 };
-#[cfg(unix)]
 use crate::pty::unix::open_pty;
-#[cfg(windows)]
-use crate::pty::win::open_pty;
 use crate::pty::{
     AsyncMasterPtyExt,
     CommandBuilder,
@@ -208,23 +200,8 @@ fn shell_state_to_context(shell_state: &ShellState) -> local::ShellContext {
 
 #[allow(clippy::needless_return)]
 fn get_cursor_coordinates(terminal: &dyn Terminal) -> Option<TerminalCursorCoordinates> {
-    cfg_if! {
-        if #[cfg(target_os = "windows")] {
-            use term::cast;
-
-            let coordinate = terminal.get_cursor_coordinate().ok()?;
-            let screen_size = terminal.get_screen_size().ok()?;
-            return Some(TerminalCursorCoordinates {
-                x: cast(coordinate.cols).ok()?,
-                y: cast(coordinate.rows).ok()?,
-                xpixel: cast(screen_size.xpixel).ok()?,
-                ypixel: cast(screen_size.ypixel).ok()?,
-            });
-        } else {
-            let _terminal = terminal;
-            return None;
-        }
-    }
+    let _terminal = terminal;
+    return None;
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -448,7 +425,6 @@ fn build_shell_command(command: Option<&[String]>) -> Result<CommandBuilder> {
     Ok(builder)
 }
 
-#[cfg(unix)]
 fn launch_shell(command: Option<&[String]>) -> Result<()> {
     let cmd = build_shell_command(command)?.as_command()?;
     let mut args: Vec<&OsStr> = std::vec![cmd.get_program()];
@@ -521,7 +497,6 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
     logger::stdio_debug_log(format!("pty name: {pty_name}"));
     logger::stdio_debug_log("Forking child shell process");
 
-    #[cfg(unix)]
     {
         let pid = nix::unistd::getpid();
         logger::stdio_debug_log(format!("Parent pid: {pid}"));
@@ -573,9 +548,6 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
         let event_sender = EventHandler::new(remote_sender.clone(), history_sender.clone(), main_loop_tx.clone());
         let mut term = alacritty_terminal::Term::new(size, event_sender, 1, session_id.clone());
 
-        #[cfg(target_os = "windows")]
-        term.set_windows_delay_end_prompt(true);
-
         let mut write_buffer: Vec<u8> = vec![0; BUFFER_SIZE];
 
         let mut key_interceptor = KeyInterceptor::new();
@@ -588,10 +560,7 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
         let input_rx = terminal.read_input()?;
 
         let key_code_encode_mode = KeyCodeEncodeModes {
-            #[cfg(unix)]
             encoding: KeyboardEncoding::Xterm,
-            #[cfg(windows)]
-            encoding: KeyboardEncoding::Win32,
             application_cursor_keys: false,
             newline_mode: false,
         };
@@ -957,8 +926,6 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
     runtime.shutdown_background();
 
     // attempt cleanup
-    #[cfg(target_os = "linux")]
-    cleanup::cleanup()?;
 
     runtime_result
 }
@@ -985,7 +952,6 @@ fn main() {
             // capture_anyhow(&err);
 
             // Fallback to normal shell
-            #[cfg(unix)]
             if let Err(err) = launch_shell(command) {
                 // capture_anyhow(&err);
                 logger::stdio_debug_log(err.to_string());

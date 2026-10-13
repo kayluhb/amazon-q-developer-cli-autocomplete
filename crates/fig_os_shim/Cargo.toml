@@ -8,7 +8,6 @@ version.workspace = true
 license.workspace = true
 
 [dependencies]
-cfg-if.workspace = true
 dirs.workspace = true
 serde.workspace = true
 tempfile.workspace = true
@@ -17,9 +16,6 @@ tokio = { workspace = true, features = ["fs"] }
 [target.'cfg(unix)'.dependencies]
 sysinfo.workspace = true
 nix.workspace = true
-
-[target.'cfg(windows)'.dependencies]
-sysinfo.workspace = true
 
 [lints]
 workspace = true

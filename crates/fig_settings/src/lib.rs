@@ -286,7 +286,6 @@ pub trait JsonStore: Sized {
         let mut file_opts = File::options();
         file_opts.create(true).write(true).truncate(true);
 
-        #[cfg(unix)]
         {
             use std::os::unix::fs::OpenOptionsExt;
             file_opts.mode(0o600);

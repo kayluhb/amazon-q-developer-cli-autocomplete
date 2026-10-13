@@ -97,7 +97,6 @@ async fn main() -> ExitCode {
     })
     .expect("Failed to init logging");
 
-    #[cfg(target_os = "macos")]
     install::migrate_data_dir().await;
 
     if let Err(err) = fig_settings::settings::init_global() {
@@ -124,7 +123,6 @@ async fn main() -> ExitCode {
         }
     }
 
-    #[cfg(target_os = "macos")]
     if let Ok(current_exe) = fig_util::current_exe_origin() {
         if let Ok(statvfs) = nix::sys::statvfs::statvfs(&current_exe) {
             if statvfs.flags().contains(nix::sys::statvfs::FsFlags::ST_RDONLY) {
@@ -142,18 +140,6 @@ async fn main() -> ExitCode {
 
     let ctx = Context::new();
     install::run_install(Arc::clone(&ctx)).await;
-
-    #[cfg(target_os = "linux")]
-    {
-        match fig_os_shim::Env::new().q_backend().ok().as_deref() {
-            Some("default") => {},
-            // SAFETY: we are calling set_var in a single-threaded context.
-            Some(backend) => unsafe { std::env::set_var("GDK_BACKEND", backend) },
-            None => unsafe { std::env::set_var("GDK_BACKEND", "x11") },
-        }
-
-        platform::gtk::init().expect("Failed initializing GTK");
-    }
 
     let show_onboarding = !fig_settings::state::get_bool_or("desktop.completedOnboarding", false);
 
@@ -222,69 +208,6 @@ fn parse_url_page(url: Option<&str>) -> Result<Option<String>, ExitCode> {
     }))
 }
 
-#[cfg(target_os = "linux")]
-#[must_use]
-async fn allow_multiple_running_check(
-    current_pid: sysinfo::Pid,
-    kill_old: bool,
-    page: Option<String>,
-) -> Option<ExitCode> {
-    use std::ffi::OsString;
-
-    use tracing::debug;
-
-    if kill_old {
-        eprintln!("Option kill-old is not supported on Linux.");
-        return Some(ExitCode::SUCCESS);
-    }
-
-    let system = System::new_with_specifics(
-        RefreshKind::nothing().with_processes(ProcessRefreshKind::nothing().with_user(sysinfo::UpdateKind::Always)),
-    );
-    let app_process_name = OsString::from(APP_PROCESS_NAME);
-    let processes = system.processes_by_exact_name(&app_process_name);
-
-    let processes = processes.collect::<Vec<_>>();
-    debug!("Checking for already running desktop instance: {:?}", processes);
-
-    let current_user_id = nix::unistd::getuid().as_raw();
-    for process in processes {
-        let pid = process.pid();
-        let uid = process.user_id().map(|uid| uid as &u32);
-        match (process.parent(), uid) {
-            // The Linux desktop app returns multiple processes with the same name for some reason.
-            (Some(parent_pid), Some(uid))
-                if pid != current_pid && parent_pid != current_pid && *uid == current_user_id =>
-            {
-                let exe = process.exe().unwrap_or(Path::new("")).display();
-                eprintln!("{PRODUCT_NAME} is already running: {exe} (pid={pid}, uid={uid})");
-
-                match &page {
-                    Some(page) => {
-                        eprintln!("Opening /{page}...");
-                        Some(page)
-                    },
-                    None => {
-                        eprintln!("Opening {PRODUCT_NAME} Window...");
-                        None
-                    },
-                };
-
-                if let Err(err) =
-                    fig_ipc::local::open_ui_element(fig_proto::local::UiElement::MissionControl, page).await
-                {
-                    eprintln!("Failed to open Fig: {err}");
-                }
-
-                return Some(ExitCode::SUCCESS);
-            },
-            _ => (),
-        }
-    }
-    None
-}
-
-#[cfg(target_os = "macos")]
 #[must_use]
 async fn allow_multiple_running_check(
     current_pid: sysinfo::Pid,

@@ -97,7 +97,6 @@ pub fn initialize_logging<T: AsRef<Path>>(args: LogArgs<T>) -> Result<LogGuard, 
             };
 
             // On posix-like systems, we modify permissions so that only the owner has access.
-            #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
                 if let Ok(metadata) = file.metadata() {
@@ -137,7 +136,6 @@ pub fn initialize_logging<T: AsRef<Path>>(args: LogArgs<T>) -> Result<LogGuard, 
         } else {
             File::options().append(true).create(true).open(&mcp_path)?
         };
-        #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             if let Ok(metadata) = file.metadata() {

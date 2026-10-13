@@ -226,7 +226,6 @@ impl Terminal {
     pub fn parent_terminal(ctx: &Context) -> Option<Self> {
         let env = ctx.env();
 
-        #[cfg(target_os = "macos")]
         {
             if let Ok(bundle_id) = env.get("__CFBundleIdentifier") {
                 if let Some(term) = Self::from_bundle_id(bundle_id) {

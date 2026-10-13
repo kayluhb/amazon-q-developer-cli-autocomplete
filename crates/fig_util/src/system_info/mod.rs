@@ -3,7 +3,6 @@ pub mod linux;
 use std::borrow::Cow;
 use std::sync::OnceLock;
 
-use cfg_if::cfg_if;
 use fig_os_shim::Env;
 use serde::{
     Deserialize,
@@ -158,83 +157,44 @@ impl std::fmt::Display for OSVersion {
 
 pub fn os_version() -> Option<&'static OSVersion> {
     static OS_VERSION: OnceLock<Option<OSVersion>> = OnceLock::new();
-    OS_VERSION.get_or_init(|| {
-        cfg_if! {
-            if #[cfg(target_os = "macos")] {
-                use std::process::Command;
-                use regex::Regex;
+    OS_VERSION
+        .get_or_init(|| {
+            use std::process::Command;
 
-                let version_info = Command::new("sw_vers")
-                    .output()
-                    .ok()?;
+            use regex::Regex;
 
-                let version_info: String = String::from_utf8_lossy(&version_info.stdout).trim().into();
+            let version_info = Command::new("sw_vers").output().ok()?;
 
-                let version_regex = Regex::new(r"ProductVersion:\s*(\S+)").unwrap();
-                let build_regex = Regex::new(r"BuildVersion:\s*(\S+)").unwrap();
+            let version_info: String = String::from_utf8_lossy(&version_info.stdout).trim().into();
 
-                let version: String = version_regex
-                    .captures(&version_info)
-                    .and_then(|c| c.get(1))
-                    .map(|v| v.as_str().into())?;
+            let version_regex = Regex::new(r"ProductVersion:\s*(\S+)").unwrap();
+            let build_regex = Regex::new(r"BuildVersion:\s*(\S+)").unwrap();
 
-                let major = version
-                    .split('.')
-                    .next()?
-                    .parse().ok()?;
+            let version: String = version_regex
+                .captures(&version_info)
+                .and_then(|c| c.get(1))
+                .map(|v| v.as_str().into())?;
 
-                let minor = version
-                    .split('.')
-                    .nth(1)?
-                    .parse().ok()?;
+            let major = version.split('.').next()?.parse().ok()?;
 
-                let patch = version.split('.').nth(2).and_then(|p| p.parse().ok());
+            let minor = version.split('.').nth(1)?.parse().ok()?;
 
-                let build = build_regex
-                    .captures(&version_info)
-                    .and_then(|c| c.get(1))?
-                    .as_str()
-                    .into();
+            let patch = version.split('.').nth(2).and_then(|p| p.parse().ok());
 
-                Some(OSVersion::MacOS {
-                    major,
-                    minor,
-                    patch,
-                    build,
-                })
-            } else if #[cfg(target_os = "linux")] {
-                use nix::sys::utsname::uname;
+            let build = build_regex
+                .captures(&version_info)
+                .and_then(|c| c.get(1))?
+                .as_str()
+                .into();
 
-                let kernel_version = uname().ok()?.release().to_string_lossy().into();
-                let os_release = linux::get_os_release().cloned();
-
-                Some(OSVersion::Linux {
-                    kernel_version,
-                    os_release,
-                })
-            } else if #[cfg(target_os = "windows")] {
-                use winreg::enums::HKEY_LOCAL_MACHINE;
-                use winreg::RegKey;
-
-                let rkey = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion").ok()?;
-                let build: String = rkey.get_value("CurrentBuild").ok()?;
-
-                Some(OSVersion::Windows {
-                    name: rkey.get_value("ProductName").ok()?,
-                    build: build.parse::<u32>().ok()?,
-                })
-            } else if #[cfg(target_os = "freebsd")] {
-                use nix::sys::utsname::uname;
-
-                let version = uname().ok()?.release().to_string_lossy().into();
-
-                Some(OSVersion::FreeBsd {
-                    version,
-                })
-
-            }
-        }
-    }).as_ref()
+            Some(OSVersion::MacOS {
+                major,
+                minor,
+                patch,
+                build,
+            })
+        })
+        .as_ref()
 }
 
 pub fn in_ssh() -> bool {
@@ -244,22 +204,7 @@ pub fn in_ssh() -> bool {
 
 /// Test if the program is running under WSL
 pub fn in_wsl() -> bool {
-    cfg_if! {
-        if #[cfg(target_os = "linux")] {
-            static IN_WSL: OnceLock<bool> = OnceLock::new();
-            *IN_WSL.get_or_init(|| {
-                if let Ok(b) = std::fs::read("/proc/sys/kernel/osrelease") {
-                    if let Ok(s) = std::str::from_utf8(&b) {
-                        let a = s.to_ascii_lowercase();
-                        return a.contains("microsoft") || a.contains("wsl");
-                    }
-                }
-                false
-            })
-        } else {
-            false
-        }
-    }
+    false
 }
 
 /// Is the calling binary running on a remote instance
@@ -290,7 +235,6 @@ pub fn in_ci() -> bool {
     *IN_CI.get_or_init(|| fig_os_shim::Env::new().in_ci())
 }
 
-#[cfg(target_os = "macos")]
 fn raw_system_id() -> Result<String, Error> {
     let output = std::process::Command::new("ioreg")
         .args(["-rd1", "-c", "IOPlatformExpertDevice"])
@@ -311,32 +255,6 @@ fn raw_system_id() -> Result<String, Error> {
         .into();
 
     Ok(machine_id)
-}
-
-#[cfg(target_os = "linux")]
-fn raw_system_id() -> Result<String, Error> {
-    for path in ["/var/lib/dbus/machine-id", "/etc/machine-id"] {
-        if std::path::Path::new(path).exists() {
-            return Ok(std::fs::read_to_string(path)?);
-        }
-    }
-    Err(Error::HwidNotFound)
-}
-
-#[cfg(target_os = "windows")]
-fn raw_system_id() -> Result<String, Error> {
-    use winreg::RegKey;
-    use winreg::enums::HKEY_LOCAL_MACHINE;
-
-    let rkey = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey(r"SOFTWARE\Microsoft\Cryptography")?;
-    let id: String = rkey.get_value("MachineGuid")?;
-
-    Ok(id)
-}
-
-#[cfg(target_os = "freebsd")]
-fn raw_system_id() -> Result<String, Error> {
-    Err(Error::HwidNotFound)
 }
 
 pub fn get_system_id() -> Option<&'static str> {

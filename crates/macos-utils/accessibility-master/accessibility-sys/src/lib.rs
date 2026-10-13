@@ -1,5 +1,3 @@
-#![cfg(target_os = "macos")]
-
 mod action_constants;
 mod attribute_constants;
 mod error;

@@ -67,24 +67,8 @@ export default function InstallModal({
           // so we should return early here.
           return;
         }
-        if (key === "desktopEntry") {
-          // The app should autostart by default, thus immediately install the autostart entry.
-          Install.install("autostartEntry")
-            .then(() => {
-              setChecking(false);
-              next();
-            })
-            .catch((e) => {
-              setError(
-                `Failed to install the local autostart entry: ${e.message}`,
-              );
-              setTimeElapsed(true);
-              console.error(e);
-            });
-        } else {
-          setChecking(false);
-          next();
-        }
+        setChecking(false);
+        next();
       })
       .catch((e) => {
         setError(e.message);

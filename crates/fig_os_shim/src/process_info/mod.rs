@@ -17,20 +17,8 @@ use crate::{
     Shim,
 };
 
-#[cfg(target_os = "linux")]
-mod linux;
-#[cfg(target_os = "linux")]
-pub use linux::*;
-
-#[cfg(target_os = "macos")]
 mod macos;
-#[cfg(target_os = "macos")]
 pub use macos::*;
-
-#[cfg(windows)]
-mod windows;
-#[cfg(windows)]
-pub use windows::*;
 
 /// Represents the interface to accessing info about the currently running process tree.
 #[derive(Debug, Clone)]

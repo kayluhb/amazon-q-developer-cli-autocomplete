@@ -15,7 +15,6 @@ use std::sync::{
 };
 use std::time::Duration;
 
-use cfg_if::cfg_if;
 use fig_desktop_api::init_script::javascript_init;
 use fig_desktop_api::kv::DashKVStore;
 use fig_os_shim::Context;
@@ -166,7 +165,6 @@ impl WebviewManager {
     pub fn new(context: Arc<Context>, visible: bool) -> Self {
         let mut event_loop = EventLoopBuilder::with_user_event().build();
 
-        #[cfg(target_os = "macos")]
         if !visible {
             use tao::platform::macos::{
                 ActivationPolicy,
@@ -375,7 +373,6 @@ impl WebviewManager {
         // menu_bar.init_for_hwnd(window_hwnd);
         // #[cfg(target_os = "linux")]
         // menu_bar.init_for_gtk_window(&gtk_window, Some(&vertical_gtk_box));
-        #[cfg(target_os = "macos")]
         menu_bar.init_for_nsapp();
 
         let proxy = self.event_loop.create_proxy();
@@ -669,14 +666,6 @@ pub fn build_dashboard(
     //     window = window.with_menu(menu::menu_bar());
     // }
 
-    #[cfg(target_os = "linux")]
-    {
-        use gtk::traits::GtkWindowExt;
-        use tao::platform::unix::WindowExtUnix;
-
-        window.gtk_window().set_role("dashboard");
-    }
-
     let proxy = event_loop.create_proxy();
 
     let mut url = dashboard::url();
@@ -718,16 +707,7 @@ pub fn build_dashboard(
         .with_clipboard(true)
         .with_hotkeys_zoom(true);
 
-    cfg_if! {
-        if #[cfg(target_os = "linux")] {
-            use tao::platform::unix::WindowExtUnix;
-            use wry::WebViewBuilderExtUnix;
-            let vbox = window.default_vbox().unwrap();
-            let webview = webview_builder.build_gtk(vbox)?;
-        } else {
-            let webview = webview_builder.build(&window)?;
-        }
-    };
+    let webview = webview_builder.build(&window)?;
 
     Ok((window, webview))
 }
@@ -750,39 +730,13 @@ pub fn build_autocomplete(
         .with_inner_size(LogicalSize::new(1.0, 1.0))
         .with_theme(THEME.and_then(to_tao_theme));
 
-    cfg_if!(
-        if #[cfg(target_os = "linux")] {
-            use tao::platform::unix::WindowBuilderExtUnix;
-            window_builder = window_builder.with_resizable(true).with_skip_taskbar(true);
-        } else if #[cfg(target_os = "macos")] {
-            use tao::platform::macos::WindowBuilderExtMacOS;
-            window_builder = window_builder.with_resizable(false).with_has_shadow(false).with_visible(false);
-        } else if #[cfg(target_os = "windows")] {
-            use tao::platform::windows::WindowBuilderExtWindows;
-            window_builder = window_builder.with_resizable(false).with_skip_taskbar(true).with_visible(false);
-        }
-    );
+    use tao::platform::macos::WindowBuilderExtMacOS;
+    window_builder = window_builder
+        .with_resizable(false)
+        .with_has_shadow(false)
+        .with_visible(false);
 
     let window = window_builder.build(event_loop)?;
-
-    #[cfg(target_os = "linux")]
-    {
-        use gtk::gdk::WindowTypeHint;
-        use gtk::traits::{
-            GtkWindowExt,
-            WidgetExt,
-        };
-        use tao::platform::unix::WindowExtUnix;
-
-        let gtk_window = window.gtk_window();
-        gtk_window.set_role("autocomplete");
-        gtk_window.set_type_hint(WindowTypeHint::Utility);
-        gtk_window.set_accept_focus(false);
-        gtk_window.set_decorated(false);
-        if let Some(window) = gtk_window.window() {
-            window.set_override_redirect(true);
-        }
-    }
 
     let proxy = event_loop.create_proxy();
 
@@ -831,16 +785,7 @@ pub fn build_autocomplete(
         .with_hotkeys_zoom(true)
         .with_accept_first_mouse(true);
 
-    cfg_if! {
-        if #[cfg(target_os = "linux")] {
-            use tao::platform::unix::WindowExtUnix;
-            use wry::WebViewBuilderExtUnix;
-            let vbox = window.default_vbox().unwrap();
-            let webview = webview_builder.build_gtk(vbox)?;
-        } else {
-            let webview = webview_builder.build(&window)?;
-        }
-    };
+    let webview = webview_builder.build(&window)?;
 
     Ok((window, webview))
 }
@@ -869,71 +814,6 @@ async fn init_webview_notification_listeners(proxy: EventLoopProxy) {
                 });
             }
         };};
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        use fig_integrations::Integration;
-        use fig_integrations::desktop_entry::{
-            AutostartIntegration,
-            should_install_autostart_entry,
-        };
-        use fig_settings::{
-            Settings,
-            State,
-        };
-
-        use crate::notification_bus::JsonNotification;
-        watcher!(
-            settings,
-            "autocomplete.disable",
-            |notification: JsonNotification, proxy: &EventLoopProxy| {
-                let enabled = !notification.as_bool().unwrap_or(false);
-                debug!(%enabled, "Autocomplete");
-                proxy
-                    .send_event(Event::WindowEvent {
-                        window_id: AUTOCOMPLETE_ID,
-                        window_event: WindowEvent::SetEnabled(enabled),
-                    })
-                    .unwrap();
-            }
-        );
-        watcher!(
-            settings,
-            "app.launchOnStartup",
-            |notification: JsonNotification, _proxy: &EventLoopProxy| {
-                let enabled = !notification.as_bool().unwrap_or(true);
-                debug!(%enabled, "app.launchOnStartup");
-                tokio::spawn(async move {
-                    let ctx = Context::new();
-                    let settings = Settings::new();
-                    let state = State::new();
-                    let autostart = match AutostartIntegration::new(&ctx) {
-                        Ok(autostart) => autostart,
-                        Err(err) => {
-                            error!(
-                                ?err,
-                                "failed to update the autostart integration installed status to {}", enabled
-                            );
-                            return;
-                        },
-                    };
-                    if should_install_autostart_entry(&ctx, &settings, &state) {
-                        autostart
-                            .install()
-                            .await
-                            .map_err(|err| warn!(?err, "unable to install autostart integration"))
-                            .ok();
-                    } else {
-                        autostart
-                            .uninstall()
-                            .await
-                            .map_err(|err| warn!(?err, "unable to uninstall autostart integration"))
-                            .ok();
-                    }
-                });
-            }
-        );
     }
 
     watcher!(

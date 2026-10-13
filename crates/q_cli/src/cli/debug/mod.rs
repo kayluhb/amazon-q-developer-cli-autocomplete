@@ -111,13 +111,9 @@ pub enum AccessibilityAction {
     Status,
 }
 
-#[cfg(target_os = "macos")]
-use fig_integrations::{
-    Integration,
-    input_method::InputMethod,
-};
+use fig_integrations::Integration;
+use fig_integrations::input_method::InputMethod;
 
-#[cfg(target_os = "macos")]
 #[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
 pub enum TISAction {
     Enable,
@@ -126,12 +122,10 @@ pub enum TISAction {
     Deselect,
 }
 
-#[cfg(target_os = "macos")]
 use std::path::PathBuf;
 
 use super::diagnostics::get_diagnostics;
 
-#[cfg(target_os = "macos")]
 #[derive(Debug, Subcommand, Clone, PartialEq, Eq)]
 pub enum InputMethodDebugAction {
     Install {
@@ -174,7 +168,6 @@ pub enum DebugSubcommand {
         files: Vec<String>,
     },
     /// Input method debugger
-    #[cfg(target_os = "macos")]
     InputMethod {
         #[command(subcommand)]
         action: Option<InputMethodDebugAction>,
@@ -184,7 +177,6 @@ pub enum DebugSubcommand {
     /// Sample desktop process
     Sample,
     /// Debug application codesigning
-    #[cfg(target_os = "macos")]
     VerifyCodesign,
     /// Accessibility
     Accessibility {
@@ -203,7 +195,6 @@ pub enum DebugSubcommand {
     /// Open up the devtools of a specific webview
     Devtools { app: App },
     /// Lists installed IntelliJ variants
-    #[cfg(any(target_os = "macos", target_os = "linux"))]
     #[command(name = "list-intellij-variants")]
     ListIntelliJVariants,
     /// Disables sourcing of user shell config and instead uses a minimal shell config
@@ -350,7 +341,6 @@ impl DebugSubcommand {
                     .spawn()?
                     .wait()?;
             },
-            #[cfg(target_os = "macos")]
             DebugSubcommand::InputMethod { action } => {
                 let action = match action {
                     Some(action) => action,
@@ -493,7 +483,6 @@ impl DebugSubcommand {
                 println!("Please send this file to the development team");
                 println!("Or attach it to a Github issue (run '{}')", "fig issue".magenta());
             },
-            #[cfg(target_os = "macos")]
             DebugSubcommand::VerifyCodesign => {
                 Command::new("codesign")
                     .arg("-vvvv")
@@ -549,14 +538,8 @@ impl DebugSubcommand {
                             .wait()?;
                     },
                     Some(AccessibilityAction::Status) | None => {
-                        cfg_if::cfg_if! {
-                            if #[cfg(target_os = "macos")] {
-                                let diagnostic = get_diagnostics().await?;
-                                println!("Accessibility Enabled: {}", diagnostic.accessibility);
-                            } else {
-                                println!("Unable to get accessibility status on this platform");
-                            }
-                        }
+                        let diagnostic = get_diagnostics().await?;
+                        println!("Accessibility Enabled: {}", diagnostic.accessibility);
                     },
                 }
             },
@@ -725,11 +708,9 @@ impl DebugSubcommand {
                 .await
                 .context("Could not open devtools window")?;
             },
-            #[cfg(any(target_os = "macos", target_os = "linux"))]
             DebugSubcommand::ListIntelliJVariants => {
                 for integration in fig_integrations::intellij::variants_installed().await? {
                     println!("{}", integration.variant.application_name());
-                    #[cfg(target_os = "macos")]
                     println!("  - {:?}", integration.application_folder());
                 }
             },

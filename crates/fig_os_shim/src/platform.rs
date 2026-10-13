@@ -14,24 +14,8 @@ pub enum Os {
 
 impl Os {
     pub fn current() -> Self {
-        #[cfg(target_os = "macos")]
         {
             return Self::Mac;
-        }
-
-        #[cfg(target_os = "linux")]
-        {
-            return Self::Linux;
-        }
-
-        #[cfg(target_os = "windows")]
-        {
-            return Self::Windows;
-        }
-
-        #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
-        {
-            compile_error!("unsupported platform");
         }
 
         // This line should never be reached due to the compile_error above,

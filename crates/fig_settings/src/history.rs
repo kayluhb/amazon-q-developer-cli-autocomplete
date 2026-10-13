@@ -133,7 +133,6 @@ impl History {
             let mut legacy_history_file_opts = File::options();
             legacy_history_file_opts.create(true).append(true);
 
-            #[cfg(unix)]
             {
                 use std::os::unix::fs::OpenOptionsExt;
                 legacy_history_file_opts.mode(0o600);

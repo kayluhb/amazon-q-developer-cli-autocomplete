@@ -74,7 +74,6 @@ pub async fn start_remote_ipc(
             std::fs::create_dir_all(parent).context("Failed creating socket path")?;
         }
 
-        #[cfg(unix)]
         {
             use std::fs::Permissions;
             use std::os::unix::fs::PermissionsExt;

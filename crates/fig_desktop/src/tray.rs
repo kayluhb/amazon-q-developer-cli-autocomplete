@@ -130,15 +130,6 @@ pub fn handle_event(menu_event: &MenuEvent, proxy: &EventLoopProxy) {
     }
 }
 
-#[allow(dead_code)]
-#[cfg(target_os = "linux")]
-fn load_icon(path: impl AsRef<std::path::Path>) -> Option<Icon> {
-    let image = image::open(path).ok()?.into_rgba8();
-    let (width, height) = image.dimensions();
-    let rgba = image.into_raw();
-    Icon::from_rgba(rgba, width, height).ok()
-}
-
 pub async fn build_tray(
     _event_loop_window_target: &EventLoopWindowTarget,
     _figterm_state: &FigtermState,

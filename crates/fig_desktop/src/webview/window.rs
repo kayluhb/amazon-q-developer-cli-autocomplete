@@ -350,14 +350,11 @@ impl WindowState {
                     }
 
                     // TODO: why are we setting then unsetting resizable?
-                    #[cfg(not(target_os = "linux"))]
                     self.window.set_resizable(true);
 
-                    #[cfg(not(target_os = "linux"))]
                     self.window.set_resizable(false);
                 }
 
-                #[cfg(target_os = "macos")]
                 if self.window_id == DASHBOARD_ID {
                     use tao::platform::macos::{
                         ActivationPolicy,
@@ -381,19 +378,10 @@ impl WindowState {
                         }
 
                         self.window.set_visible(true);
-                        cfg_if::cfg_if!(
-                            if #[cfg(target_os = "macos")] {
-                                // We handle setting window level on focus changed on MacOS
-                                // TODO: pull this out into platform code.
-                            } else if #[cfg(target_os = "windows")] {
-                                self.window.set_always_on_top(false);
-                            } else {
-                                self.window.set_always_on_top(true);
-                            }
-                        );
+                        // We handle setting window level on focus changed on MacOS
+                        // TODO: pull this out into platform code.
                     }
                 } else {
-                    #[cfg(target_os = "macos")]
                     if self.window_id == DASHBOARD_ID {
                         use tao::platform::macos::{
                             ActivationPolicy,
@@ -475,25 +463,13 @@ impl WindowState {
             WindowEvent::DebugMode(debug_mode) => {
                 // Macos does not support setting the webview background color so we have
                 // to set the css background root color to see the window
-                cfg_if::cfg_if! {
-                    if #[cfg(target_os = "macos")] {
-                        self.webview
-                            .evaluate_script(if debug_mode {
-                                "document.querySelector(':root').style.setProperty('background-color', 'red');"
-                            } else {
-                                "document.querySelector(':root').style.removeProperty('background-color');"
-                            })
-                            .unwrap();
+                self.webview
+                    .evaluate_script(if debug_mode {
+                        "document.querySelector(':root').style.setProperty('background-color', 'red');"
                     } else {
-                        self.webview
-                            .set_background_color(if debug_mode {
-                                (0xff, 0, 0, 0xff)
-                            } else {
-                                (0, 0, 0, 0) }
-                            ).unwrap();
-                    }
-
-                }
+                        "document.querySelector(':root').style.removeProperty('background-color');"
+                    })
+                    .unwrap();
             },
             WindowEvent::SetEnabled(enabled) => self.set_enabled(enabled),
             WindowEvent::SetTheme(theme) => self.set_theme(theme),

@@ -1,4 +1,3 @@
-#![cfg(target_os = "macos")]
 // Mega yikes on this.
 #![allow(deprecated)]
 #![allow(unsafe_op_in_unsafe_fn)]

@@ -20,7 +20,6 @@ use crate::error::{
 pub struct FileIntegration {
     pub path: PathBuf,
     pub contents: String,
-    #[cfg(unix)]
     pub mode: Option<u32>,
 }
 
@@ -32,7 +31,6 @@ impl Integration for FileIntegration {
 
     async fn is_installed(&self) -> Result<()> {
         // Check for parent folder permissions issues
-        #[cfg(unix)]
         {
             use nix::unistd::{
                 AccessFlags,
@@ -91,7 +89,6 @@ impl Integration for FileIntegration {
         let mut options = File::options();
         options.write(true).create(true).truncate(true);
 
-        #[cfg(unix)]
         if let Some(mode) = self.mode {
             options.mode(mode);
         }
@@ -125,7 +122,6 @@ mod tests {
             path: tempdir.path().join("integration.txt"),
             contents: "test".into(),
             // weird mode for testing
-            #[cfg(unix)]
             mode: None,
         };
 

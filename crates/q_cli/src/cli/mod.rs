@@ -444,7 +444,6 @@ mod test {
     ///
     /// If this changes, you must also change how it is called from within
     /// fig_integrations::input_method
-    #[cfg(target_os = "macos")]
     #[test]
     fn test_input_method_installation() {
         use internal::InternalSubcommand;

@@ -144,7 +144,8 @@
   }
 
   .gradient-q-secondary-dark {
-    background: radial-gradient(
+    background:
+      radial-gradient(
         122.5% 122.5% at 0% 0%,
         #000000 0%,
         rgba(0, 0, 0, 0) 100%
@@ -166,7 +167,6 @@
       ),
       #301673;
   }
-
 }
 
 /* Currently an issue with Linux webkit CSS variables */

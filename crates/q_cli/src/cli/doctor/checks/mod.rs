@@ -1,7 +1,5 @@
 mod bash_version;
 mod fish_version;
-#[cfg(target_os = "linux")]
-pub mod linux;
 mod sshd_config;
 
 pub use bash_version::BashVersionCheck;

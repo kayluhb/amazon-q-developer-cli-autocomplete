@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::io::{
     Write,
     stdout,
@@ -15,7 +14,6 @@ const INSIDE_EMACS: &str = "INSIDE_EMACS";
 const TERM_PROGRAM: &str = "TERM_PROGRAM";
 const WARP_TERMINAL: &str = "WarpTerminal";
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 #[allow(dead_code)]
 struct ProcessInfo {
     pid: Box<fig_os_shim::process_info::Pid>,
@@ -25,14 +23,12 @@ struct ProcessInfo {
     is_special: bool,
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 enum Status {
     Launch(Cow<'static, str>),
     DontLaunch(Cow<'static, str>),
     Process(ProcessInfo),
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 impl Status {
     fn exit_status(self, quiet: bool) -> Result<ProcessInfo, u8> {
         match self {
@@ -161,7 +157,6 @@ fn grandparent_status(ctx: &Context, parent_pid: fig_os_shim::process_info::Pid)
     })
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 fn should_launch(ctx: &Context, quiet: bool) -> u8 {
     use fig_os_shim::Os;
 
@@ -202,7 +197,6 @@ fn should_launch(ctx: &Context, quiet: bool) -> u8 {
     u8::from(!(grandparent_info.is_valid && parent_info.is_valid))
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 pub fn should_figterm_launch_exit_status(ctx: &Context, quiet: bool) -> u8 {
     use fig_util::env_var::{
         PROCESS_LAUNCHED_BY_Q,
@@ -294,25 +288,8 @@ pub fn should_figterm_launch_exit_status(ctx: &Context, quiet: bool) -> u8 {
     }
 }
 
-#[cfg(any(target_os = "macos", target_os = "linux"))]
 pub fn should_figterm_launch(ctx: &Context) -> ExitCode {
     ExitCode::from(should_figterm_launch_exit_status(ctx, false))
-}
-
-#[cfg(target_os = "windows")]
-pub fn should_qterm_launch() -> ExitCode {
-    use std::os::windows::io::AsRawHandle;
-
-    use winapi::um::consoleapi::GetConsoleMode;
-
-    let mut mode = 0;
-    let stdin_ok = unsafe { GetConsoleMode(std::io::stdin().as_raw_handle() as *mut _, &mut mode) };
-    ExitCode::from(if stdin_ok == 1 { 2 } else { 1 });
-}
-
-#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
-pub fn should_qterm_launch() -> ExitCode {
-    ExitCode::from(2);
 }
 
 #[cfg(test)]

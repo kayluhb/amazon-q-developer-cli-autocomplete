@@ -30,24 +30,6 @@ export function useInputMethodCheck() {
   ] as const;
 }
 
-export function useGnomeExtensionCheck() {
-  const store = useContext(StoreContext);
-  if (!store) throw new Error("Missing StoreContext.Provider in the tree");
-  return [
-    useStore(store, (state) => state.gnomeExtensionIsInstalled),
-    useStore(store, (state) => state.refreshGnomeExtensionIsInstalled),
-  ] as const;
-}
-
-export function useDesktopEntryCheck() {
-  const store = useContext(StoreContext);
-  if (!store) throw new Error("Missing StoreContext.Provider in the tree");
-  return [
-    useStore(store, (state) => state.desktopEntryIsInstalled),
-    useStore(store, (state) => state.refreshDesktopEntryIsInstalled),
-  ] as const;
-}
-
 /**
  * @param check The install method to check
  * @returns The status of the check is installed, if undefined it is is either loading
@@ -59,10 +41,6 @@ export function useStatusCheck(check: InstallKey) {
   const [dotfilesIsInstalled, refreshDotfilesIsInstalled] = useDotfilesCheck();
   const [inputMethodIsInstalled, refreshInputMethodIsInstalled] =
     useInputMethodCheck();
-  const [desktopEntryIsInstalled, refreshDesktopEntryIsInstalled] =
-    useDesktopEntryCheck();
-  const [gnomeExtensionIsInstalled, refreshGnomeExtensionIsInstalled] =
-    useGnomeExtensionCheck();
 
   if (check === "accessibility") {
     return [accessibilityIsInstalled, refreshAccessibilityIsInstalled] as const;
@@ -70,13 +48,6 @@ export function useStatusCheck(check: InstallKey) {
     return [dotfilesIsInstalled, refreshDotfilesIsInstalled] as const;
   } else if (check === "inputMethod") {
     return [inputMethodIsInstalled, refreshInputMethodIsInstalled] as const;
-  } else if (check === "desktopEntry") {
-    return [desktopEntryIsInstalled, refreshDesktopEntryIsInstalled] as const;
-  } else if (check === "gnomeExtension") {
-    return [
-      gnomeExtensionIsInstalled,
-      refreshGnomeExtensionIsInstalled,
-    ] as const;
   } else {
     throw new Error(`Invalid check for install key: ${check}`);
   }

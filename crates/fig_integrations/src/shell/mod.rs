@@ -6,7 +6,6 @@ use std::io::{
 use std::path::PathBuf;
 
 use async_trait::async_trait;
-use cfg_if::cfg_if;
 use clap::ValueEnum;
 use fig_os_shim::Env;
 use fig_util::{
@@ -248,7 +247,6 @@ impl ShellScriptShellIntegration {
         FileIntegration {
             path: self.path.clone(),
             contents: self.get_contents(),
-            #[cfg(unix)]
             mode: None,
         }
     }
@@ -264,38 +262,16 @@ impl ShellScriptShellIntegration {
             Some(name) => format!(" --rcfile {}", get_prefix(name)),
             None => "".into(),
         };
-        cfg_if!(
-            if #[cfg(target_os = "macos")] {
-                return match self.shell {
-                    // Check if ~/.local/bin/{CLI_BINARY_NAME} is executable before eval
-                    Shell::Bash | Shell::Zsh => format!("[ -x ~/.local/bin/{CLI_BINARY_NAME} ] && eval \"$(~/.local/bin/{CLI_BINARY_NAME} init {shell} {when}{rcfile})\""),
-                    Shell::Fish => format!("test -x ~/.local/bin/{CLI_BINARY_NAME}; and eval (~/.local/bin/{CLI_BINARY_NAME} init {shell} {when}{rcfile} | string split0)"),
-                    Shell::Nu => "".into(),
-                }
-            } else {
-                let add_to_path_line = match self.shell {
-                    Shell::Bash | Shell::Zsh => indoc::indoc! {r#"
-                        _Q_LOCAL_BIN="$HOME/.local/bin"
-                        [[ ":$PATH:" != *":$_Q_LOCAL_BIN:"* ]] && PATH="${PATH:+"$PATH:"}$_Q_LOCAL_BIN"
-                        unset _Q_LOCAL_BIN
-                    "#},
-                    Shell::Fish => "contains $HOME/.local/bin $PATH; or set -a PATH $HOME/.local/bin",
-                    Shell::Nu => "",
-                };
-
-                let source_line = match self.shell {
-                    Shell::Fish => format!("command -qv {CLI_BINARY_NAME}; and eval ({CLI_BINARY_NAME} init {shell} {when}{rcfile} | string split0)"),
-                    Shell::Bash | Shell::Zsh => {
-                        // Check that the current shell is bash
-                        let bash_pre = if self.shell.is_bash() { "[ -n \"$BASH_VERSION\" ] && " } else { "" };
-                        format!("{bash_pre}command -v {CLI_BINARY_NAME} >/dev/null 2>&1 && eval \"$({CLI_BINARY_NAME} init {shell} {when}{rcfile})\"")
-                    }
-                    Shell::Nu => "".into(),
-                };
-
-                return format!("{add_to_path_line}\n{source_line}\n");
-            }
-        );
+        return match self.shell {
+            // Check if ~/.local/bin/{CLI_BINARY_NAME} is executable before eval
+            Shell::Bash | Shell::Zsh => format!(
+                "[ -x ~/.local/bin/{CLI_BINARY_NAME} ] && eval \"$(~/.local/bin/{CLI_BINARY_NAME} init {shell} {when}{rcfile})\""
+            ),
+            Shell::Fish => format!(
+                "test -x ~/.local/bin/{CLI_BINARY_NAME}; and eval (~/.local/bin/{CLI_BINARY_NAME} init {shell} {when}{rcfile} | string split0)"
+            ),
+            Shell::Nu => "".into(),
+        };
     }
 }
 
@@ -886,35 +862,5 @@ mod test {
             "split with shebang and no linefeed"
         );
         assert_eq!(("", contents), split_shebang(without_shebang), "split with no shebang");
-    }
-
-    #[cfg(target_os = "linux")]
-    fn all_dotfile_shell_integrations() -> Vec<ShellScriptShellIntegration> {
-        Shell::all()
-            .iter()
-            .flat_map(|shell| shell.get_script_integrations().unwrap())
-            .collect()
-    }
-
-    #[test]
-    #[cfg(target_os = "linux")]
-    fn dotfile_shell_integrations_snapshot() {
-        for integration in all_dotfile_shell_integrations() {
-            let integration_name = format!(
-                "{} {}",
-                integration.describe(),
-                integration.path.file_name().unwrap().to_str().unwrap()
-            )
-            .replace(' ', "_");
-            insta::assert_snapshot!(integration_name, integration.get_contents());
-        }
-    }
-
-    #[test]
-    #[cfg(target_os = "linux")]
-    fn dotfile_shell_integrations_shellcheck() {
-        for integration in all_dotfile_shell_integrations() {
-            run_shellcheck(integration.get_contents());
-        }
     }
 }

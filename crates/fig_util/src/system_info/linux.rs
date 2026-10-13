@@ -202,16 +202,6 @@ mod test {
 
     use super::*;
 
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn os_release() {
-        if OsRelease::path().exists() {
-            OsRelease::load().unwrap();
-        } else {
-            println!("Skipping os-release test as /etc/os-release does not exist");
-        }
-    }
-
     #[test]
     fn os_release_parse() {
         let os_release_str = indoc::indoc! {r#"

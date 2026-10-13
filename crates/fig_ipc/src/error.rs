@@ -14,7 +14,6 @@ pub enum Error {
     Dir(#[from] fig_util::directories::DirectoryError),
     #[error(transparent)]
     Io(#[from] std::io::Error),
-    #[cfg(unix)]
     #[error(transparent)]
     Nix(#[from] nix::Error),
 }
@@ -52,16 +51,6 @@ pub enum RecvError {
 impl RecvError {
     pub fn is_disconnect(&self) -> bool {
         if let RecvError::Io(io) = self {
-            #[cfg(windows)]
-            {
-                // Windows error code
-                let wsaeconnreset = 10054;
-                if let Some(err) = io.raw_os_error() {
-                    if err == wsaeconnreset {
-                        return true;
-                    }
-                }
-            }
             matches!(io.kind(), std::io::ErrorKind::ConnectionAborted)
         } else {
             false

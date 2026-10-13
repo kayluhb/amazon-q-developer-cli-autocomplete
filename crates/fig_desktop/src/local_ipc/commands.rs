@@ -98,11 +98,9 @@ pub async fn diagnostic(_: DiagnosticsCommand, figterm_state: &FigtermState) -> 
 
     let response = DiagnosticsResponse {
         autocomplete_active: Some(platform::autocomplete_active()),
-        #[cfg(target_os = "macos")]
         path_to_bundle: macos_utils::bundle::get_bundle_path()
             .and_then(|path| path.to_str().map(|s| s.to_owned()))
             .unwrap_or_default(),
-        #[cfg(target_os = "macos")]
         accessibility: if macos_utils::accessibility::accessibility_is_enabled() {
             "true".into()
         } else {
@@ -171,26 +169,23 @@ pub async fn prompt_for_accessibility_permission<Ctx>(ctx: &Ctx) -> LocalResult
 where
     Ctx: SettingsProvider + StateProvider + ContextProvider + ContextArcProvider + Send + Sync,
 {
-    cfg_if::cfg_if! {
-        if #[cfg(target_os = "macos")] {
-            use fig_desktop_api::requests::install::install;
-            use fig_proto::fig::{InstallRequest, InstallComponent, InstallAction};
+    use fig_desktop_api::requests::install::install;
+    use fig_proto::fig::{
+        InstallAction,
+        InstallComponent,
+        InstallRequest,
+    };
 
-            install(
-                InstallRequest {
-                    component: InstallComponent::Accessibility.into(),
-                    action: InstallAction::Install.into()
-                },
-                ctx
-            ).await.ok();
-            Ok(LocalResponse::Success(None))
-        } else {
-            Err(LocalResponse::Error {
-                code: None,
-                message: Some("Accessibility API not supported on this platform".to_owned()),
-            })
-        }
-    }
+    install(
+        InstallRequest {
+            component: InstallComponent::Accessibility.into(),
+            action: InstallAction::Install.into(),
+        },
+        ctx,
+    )
+    .await
+    .ok();
+    Ok(LocalResponse::Success(None))
 }
 
 pub fn log_level(LogLevelCommand { level }: LogLevelCommand) -> LocalResult {
@@ -230,25 +225,10 @@ pub fn dump_state(
 
 #[allow(unused_variables)]
 pub async fn connect_to_ibus(proxy: EventLoopProxy, platform_state: &PlatformState) -> LocalResult {
-    cfg_if::cfg_if! {
-        if #[cfg(target_os = "linux")] {
-            use crate::platform::ibus::launch_ibus_connection;
-            match launch_ibus_connection(proxy, platform_state.inner()).await {
-                Ok(_) => Ok(LocalResponse::Success(None)),
-                Err(err) => {
-                    Err(LocalResponse::Error {
-                        code: None,
-                        message: Some(format!("Failed connecting to ibus: {:?}", err)),
-                    })
-                },
-            }
-        } else {
-            Err(LocalResponse::Error {
-                code: None,
-                message: Some("Connecting to IBus is only supported on Linux".to_owned()),
-            })
-        }
-    }
+    Err(LocalResponse::Error {
+        code: None,
+        message: Some("Connecting to IBus is only supported on Linux".to_owned()),
+    })
 }
 
 pub async fn bundle_metadata(ctx: &Context) -> LocalResult {

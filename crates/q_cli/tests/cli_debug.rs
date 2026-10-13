@@ -9,7 +9,6 @@ fn debug_root() -> Result<()> {
 }
 
 #[test]
-#[cfg(target_os = "macos")]
 fn debug_verify_codesign() -> Result<()> {
     cli()
         .args(["debug", "verify-codesign"])

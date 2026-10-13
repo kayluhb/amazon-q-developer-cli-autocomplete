@@ -7,7 +7,6 @@ pub mod system_info;
 pub mod terminal;
 
 pub mod consts;
-#[cfg(target_os = "macos")]
 pub mod launchd_plist;
 
 use std::cmp::Ordering;

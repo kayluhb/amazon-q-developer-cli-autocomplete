@@ -88,13 +88,7 @@ pub fn open_pty(pty_size: &PtySize) -> Result<PtyPair> {
     // The pseudoterminal must be initialized with O_NONBLOCK since on macOS, the
     // it can not be safely set with fcntl() later on.
     // https://github.com/pkgw/stund/blob/master/tokio-pty-process/src/lib.rs#L127-L133
-    cfg_if::cfg_if! {
-        if #[cfg(any(target_os = "macos", target_os = "linux"))] {
-            let oflag = OFlag::O_RDWR | OFlag::O_NONBLOCK;
-        } else if #[cfg(target_os = "freebsd")] {
-            let oflag = OFlag::O_RDWR;
-        }
-    }
+    let oflag = OFlag::O_RDWR | OFlag::O_NONBLOCK;
     let master_pty = posix_openpt(oflag).context("Failed to openpt")?;
 
     // Allow pseudoterminal pair to be generated
@@ -117,9 +111,6 @@ pub fn open_pty(pty_size: &PtySize) -> Result<PtyPair> {
         ws_ypixel: pty_size.pixel_height,
     };
     unsafe { ioctl_tiocswinsz(slave_pty, &winsize) }?;
-
-    #[cfg(target_os = "freebsd")]
-    set_nonblocking(master_pty.as_raw_fd()).context("Failed to set nonblocking")?;
 
     let master = UnixMasterPty { fd: master_pty };
     let slave = UnixSlavePty {
@@ -266,22 +257,6 @@ impl AsRawFd for UnixMasterPty {
     fn as_raw_fd(&self) -> RawFd {
         self.fd.as_raw_fd()
     }
-}
-
-/// Set `fd` into non-blocking mode using `O_NONBLOCKING`
-#[cfg(target_os = "freebsd")]
-fn set_nonblocking(fd: RawFd) -> Result<()> {
-    use nix::fcntl;
-
-    let old_oflag_c_int =
-        fcntl::fcntl(fd, FcntlArg::F_GETFL).with_context(|| format!("Failed to get flags for fd {fd:?}"))?;
-
-    let old_oflag = OFlag::from_bits_truncate(old_oflag_c_int);
-
-    fcntl::fcntl(fd, FcntlArg::F_SETFL(old_oflag | OFlag::O_NONBLOCK))
-        .with_context(|| format!("Failed to set O_NONBLOCK for fd {fd:?}"))?;
-
-    Ok(())
 }
 
 #[cfg(test)]

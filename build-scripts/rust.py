@@ -3,7 +3,7 @@ from os import environ
 import platform
 import shutil
 from typing import Dict, List, Optional
-from util import info, isDarwin, isLinux, isMusl, run_cmd_output, warn, Variant
+from util import info, isDarwin, run_cmd_output, warn, Variant
 from datetime import datetime, timezone
 
 
@@ -36,14 +36,6 @@ def skip_fish_tests() -> bool:
     return skip_fish_tests
 
 
-@cache
-def cargo_cmd_name() -> str:
-    if isMusl():
-        return "cross"
-    else:
-        return "cargo"
-
-
 def rust_env(release: bool, variant: Optional[Variant] = None, linker=None) -> Dict[str, str]:
     env = {
         "CARGO_NET_GIT_FETCH_WITH_CLI": "true",
@@ -56,9 +48,6 @@ def rust_env(release: bool, variant: Optional[Variant] = None, linker=None) -> D
 
         if linker:
             rustflags.append(f"-C link-arg=-fuse-ld={linker}")
-
-        if isLinux():
-            rustflags.append("-C link-arg=-Wl,--compress-debug-sections=zlib")
 
         env["CARGO_INCREMENTAL"] = "0"
         env["CARGO_PROFILE_RELEASE_LTO"] = "thin"
@@ -88,10 +77,8 @@ def rust_targets() -> List[str]:
     match platform.system():
         case "Darwin":
             return ["x86_64-apple-darwin", "aarch64-apple-darwin"]
-        case "Linux":
-            return [get_target_triple()]
         case other:
-            raise ValueError(f"Unsupported platform {other}")
+            raise ValueError(f"Unsupported platform {other}, only macOS is supported")
 
 
 @cache
@@ -102,20 +89,7 @@ def get_target_triple() -> str:
     env = environ.get("AMAZON_Q_BUILD_TARGET_TRIPLE")
     if env:
         return env
-    elif isDarwin():
-        return "universal-apple-darwin"
-    else:
-        match (platform.machine(), isMusl()):
-            case ("x86_64", True):
-                return "x86_64-unknown-linux-musl"
-            case ("x86_64", False):
-                return "x86_64-unknown-linux-gnu"
-            case ("aarch64", True):
-                return "aarch64-unknown-linux-musl"
-            case ("aarch64", False):
-                return "aarch64-unknown-linux-gnu"
-            case (other, _):
-                raise ValueError(f"Unsupported machine {other}")
+    return "universal-apple-darwin"
 
 
 if __name__ == "__main__":

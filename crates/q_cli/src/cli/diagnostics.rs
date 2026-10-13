@@ -45,7 +45,6 @@ pub struct DiagnosticArgs {
 
 impl DiagnosticArgs {
     pub async fn execute(&self) -> Result<ExitCode> {
-        #[cfg(target_os = "macos")]
         if !self.force && !crate::util::desktop::desktop_app_running() {
             use fig_util::{
                 CLI_BINARY_NAME,

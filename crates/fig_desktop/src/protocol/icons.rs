@@ -81,7 +81,7 @@ static ASSETS: LazyLock<HashMap<AssetSpecifier<'static>, Arc<Cow<'static, [u8]>>
 
 pub type ProcessedAsset = (Arc<Cow<'static, [u8]>>, AssetKind);
 
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+#[allow(dead_code)]
 static ASSET_CACHE: LazyLock<Cache<PathBuf, ProcessedAsset>> = LazyLock::new(|| {
     Cache::builder()
         .weigher(|k: &PathBuf, v: &(Arc<Cow<'_, [u8]>>, AssetKind)| {
@@ -91,7 +91,7 @@ static ASSET_CACHE: LazyLock<Cache<PathBuf, ProcessedAsset>> = LazyLock::new(|| 
         .build()
 });
 
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum AssetKind {
     Png,
@@ -107,7 +107,7 @@ impl AssetKind {
     }
 }
 
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+#[allow(dead_code)]
 pub async fn process_asset(path: PathBuf) -> Result<ProcessedAsset> {
     if let Some(asset) = ASSET_CACHE.get(&path).await {
         trace!("icon cache hit");
@@ -225,17 +225,8 @@ pub async fn handle(
                 warn!(%err, "Failed to decode fig url");
             })?;
 
-            cfg_if::cfg_if! {
-                if #[cfg(windows)] {
-                    let path = transform_unix_to_windows_path(path);
-                    // TODO: we might want to shellexpand like we do below, but we need
-                    // context on what the home dir is
-                    let path_str = path.to_str().unwrap_or("");
-                } else {
-                    let path_str = shellexpand::tilde(&decoded_str);
-                    let path = Path::new(path_str.as_ref());
-                }
-            }
+            let path_str = shellexpand::tilde(&decoded_str);
+            let path = Path::new(path_str.as_ref());
 
             let fallback = match tokio::fs::metadata(path).await {
                 Ok(meta) => {
@@ -268,7 +259,7 @@ pub async fn handle(
 }
 
 /// Translate a unix style path into a windows style path assuming root dir is the drive
-#[cfg_attr(not(windows), allow(dead_code))]
+#[allow(dead_code)]
 fn transform_unix_to_windows_path(path: Cow<'_, str>) -> Cow<'_, Path> {
     use std::path::Component;
 

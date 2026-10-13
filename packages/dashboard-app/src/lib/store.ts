@@ -17,8 +17,6 @@ export interface Data {
   accessibilityIsInstalled: boolean | undefined;
   dotfilesIsInstalled: boolean | undefined;
   inputMethodIsInstalled: boolean | undefined;
-  desktopEntryIsInstalled: boolean | undefined;
-  gnomeExtensionIsInstalled: boolean | undefined;
 }
 
 export interface Actions {
@@ -28,8 +26,6 @@ export interface Actions {
   refreshAccessibilityIsInstalled: () => Promise<void>;
   refreshDotfilesIsInstalled: () => Promise<void>;
   refreshInputMethodIsInstalled: () => Promise<void>;
-  refreshDesktopEntryIsInstalled: () => Promise<void>;
-  refreshGnomeExtensionIsInstalled: () => Promise<void>;
 
   isLoading: () => boolean;
 }
@@ -45,8 +41,6 @@ export const createStore = () => {
     accessibilityIsInstalled: undefined,
     dotfilesIsInstalled: undefined,
     inputMethodIsInstalled: undefined,
-    desktopEntryIsInstalled: undefined,
-    gnomeExtensionIsInstalled: undefined,
     platformInfo: undefined,
     setSetting: async (key, value) => {
       set((s) => ({ settings: { ...s.settings, [key]: value } }));
@@ -68,15 +62,6 @@ export const createStore = () => {
     refreshInputMethodIsInstalled: async () => {
       const inputMethodIsInstalled = await Install.isInstalled("inputMethod");
       set(() => ({ inputMethodIsInstalled }));
-    },
-    refreshDesktopEntryIsInstalled: async () => {
-      const desktopEntryIsInstalled = await Install.isInstalled("desktopEntry");
-      set(() => ({ desktopEntryIsInstalled }));
-    },
-    refreshGnomeExtensionIsInstalled: async () => {
-      const gnomeExtensionIsInstalled =
-        await Install.isInstalled("gnomeExtension");
-      set(() => ({ gnomeExtensionIsInstalled }));
     },
     refreshLocalState: async () => {
       const state = await ApiState.current();
@@ -146,14 +131,6 @@ export const createStore = () => {
 
   Install.isInstalled("inputMethod").then((isInstalled) => {
     store.setState({ inputMethodIsInstalled: isInstalled });
-  });
-
-  Install.isInstalled("desktopEntry").then((isInstalled) => {
-    store.setState({ desktopEntryIsInstalled: isInstalled });
-  });
-
-  Install.isInstalled("gnomeExtension").then((isInstalled) => {
-    store.setState({ gnomeExtensionIsInstalled: isInstalled });
   });
 
   Install.installStatus.subscribe("accessibility", (isInstalled) => {

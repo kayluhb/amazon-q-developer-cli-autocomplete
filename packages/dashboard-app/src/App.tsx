@@ -16,11 +16,7 @@ import { StoreContext } from "./context/zustand";
 import { createStore } from "./lib/store";
 import ListenerContext from "./context/input";
 import { useLocation } from "react-router-dom";
-import {
-  useAccessibilityCheck,
-  useDotfilesCheck,
-  useGnomeExtensionCheck,
-} from "./hooks/store";
+import { useAccessibilityCheck, useDotfilesCheck } from "./hooks/store";
 import { useLocalStateZodDefault } from "./hooks/store/useState";
 import { z } from "zod";
 import { NOTIFICATIONS_SEEN_STATE_KEY } from "./lib/constants";
@@ -30,7 +26,6 @@ import { useState } from "react";
 import { usePlatformInfo } from "./hooks/store/usePlatformInfo";
 import { Platform } from "@aws/amazon-q-developer-cli-api-bindings";
 import { matchesPlatformRestrictions } from "./lib/platform";
-import { gnomeExtensionInstallCheck } from "./data/install";
 
 function App() {
   const store = useRef(createStore()).current;
@@ -197,21 +192,12 @@ function Layout() {
     z.boolean(),
     false,
   );
-  const platformInfo = usePlatformInfo();
   const [accessibilityCheck] = useAccessibilityCheck();
   const [dotfilesCheck] = useDotfilesCheck();
-  const [gnomeExtensionCheck] = useGnomeExtensionCheck();
   const navData = useNavData();
   const error =
     onboardingComplete &&
-    (accessibilityCheck === false ||
-      dotfilesCheck === false ||
-      (platformInfo &&
-        matchesPlatformRestrictions(
-          platformInfo,
-          gnomeExtensionInstallCheck.platformRestrictions,
-        ) &&
-        gnomeExtensionCheck === false));
+    (accessibilityCheck === false || dotfilesCheck === false);
 
   const [notifCount, _] = useLocalStateZodDefault(
     NOTIFICATIONS_SEEN_STATE_KEY,

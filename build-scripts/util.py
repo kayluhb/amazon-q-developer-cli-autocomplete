@@ -28,16 +28,6 @@ def isDarwin() -> bool:
 
 
 @cache
-def isLinux() -> bool:
-    return platform.system() == "Linux"
-
-
-@cache
-def isMusl() -> bool:
-    return os.environ.get("AMAZON_Q_BUILD_MUSL") is not None
-
-
-@cache
 def version() -> str:
     output = run_cmd_output(
         [
@@ -134,19 +124,8 @@ def get_variants() -> List[Variant]:
     match platform.system():
         case "Darwin":
             return [Variant.FULL]
-        case "Linux":
-            is_ubuntu = "ubuntu" in platform.version().lower()
-            if is_ubuntu:
-                return [Variant.FULL]
-            else:
-                return [Variant.MINIMAL]
         case other:
             raise ValueError(f"Unsupported platform {other}")
-
-
-class Package(Enum):
-    DEB = "deb"
-    APPIMAGE = "appImage"
 
 
 def enum_encoder(obj):

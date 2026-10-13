@@ -5,25 +5,8 @@ use std::{
     str,
 };
 
-use cfg_if::cfg_if;
-
 // Platform-specific implementations
-#[cfg(target_os = "linux")]
-use super::linux::{
-    cmdline,
-    current,
-    exe,
-    parent,
-};
-#[cfg(target_os = "macos")]
 use super::macos::{
-    cmdline,
-    current,
-    exe,
-    parent,
-};
-#[cfg(windows)]
-use super::windows::{
     cmdline,
     current,
     exe,
@@ -94,36 +77,24 @@ macro_rules! pid_decl {
     };
 }
 
-cfg_if! {
-    if #[cfg(unix)] {
-        use nix::libc::pid_t;
+use nix::libc::pid_t;
 
-        pid_decl!(pid_t);
+pid_decl!(pid_t);
 
-        impl RawPid {
-            pub fn as_u32(&self) -> u32 {
-                self.0 as _
-            }
-        }
-        impl From<nix::unistd::Pid> for RawPid {
-            fn from(pid: nix::unistd::Pid) -> Self {
-                RawPid(pid.as_raw())
-            }
-        }
+impl RawPid {
+    pub fn as_u32(&self) -> u32 {
+        self.0 as _
+    }
+}
+impl From<nix::unistd::Pid> for RawPid {
+    fn from(pid: nix::unistd::Pid) -> Self {
+        RawPid(pid.as_raw())
+    }
+}
 
-        impl From<RawPid> for nix::unistd::Pid {
-            fn from(pid: RawPid) -> Self {
-                nix::unistd::Pid::from_raw(pid.0)
-            }
-        }
-    } else if #[cfg(windows)] {
-        pid_decl!(u32);
-
-        impl RawPid {
-            pub fn as_u32(&self) -> u32 {
-                self.0
-            }
-        }
+impl From<RawPid> for nix::unistd::Pid {
+    fn from(pid: RawPid) -> Self {
+        nix::unistd::Pid::from_raw(pid.0)
     }
 }
 
@@ -186,21 +157,7 @@ mod tests {
 
         // On Windows, the parent process might be cargo.exe, or it could be another process
         // like runner.exe or pwsh.exe depending on how the test is run
-        #[cfg(windows)]
-        {
-            // Check for common parent processes when running tests on Windows
-            assert!(
-                parent_name.contains("cargo")
-                    || parent_name.contains("runner")
-                    || parent_name.contains("pwsh")
-                    || parent_name.contains("cmd")
-                    || parent_name.contains("powershell"),
-                "Unexpected parent process name: {}",
-                parent_name
-            );
-        }
 
-        #[cfg(not(windows))]
         {
             assert!(
                 parent_name.contains("cargo"),

@@ -37,13 +37,6 @@ bitflags::bitflags! {
     }
 }
 
-#[cfg(target_os = "linux")]
-impl InstallComponents {
-    pub fn all_linux_minimal() -> Self {
-        Self::SHELL_INTEGRATIONS | Self::BINARY | Self::SSH
-    }
-}
-
 pub async fn uninstall(components: InstallComponents, ctx: Arc<Context>) -> Result<(), Error> {
     let ssh_result = if components.contains(InstallComponents::SSH) {
         SshIntegration::new()?.uninstall().await
@@ -94,20 +87,8 @@ pub async fn uninstall(components: InstallComponents, ctx: Arc<Context>) -> Resu
         }
     }
 
-    #[cfg(target_os = "linux")]
-    if components.contains(InstallComponents::GNOME_SHELL_EXTENSION) {
-        let shell_extensions = dbus::gnome_shell::ShellExtensions::new(Arc::downgrade(&ctx));
-        super::os::uninstall_gnome_extension(&ctx, &shell_extensions).await?;
-    }
-
-    #[cfg(target_os = "linux")]
-    if components.contains(InstallComponents::DESKTOP_ENTRY) {
-        super::os::uninstall_desktop_entries(&ctx).await?;
-    }
-
     let daemon_result = Ok(());
 
-    #[cfg(target_os = "macos")]
     if components.contains(InstallComponents::INPUT_METHOD) {
         use fig_integrations::Error;
         use fig_integrations::input_method::{
@@ -166,7 +147,6 @@ pub async fn install(components: InstallComponents, env: &Env) -> Result<(), Err
         SshIntegration::new()?.install().await?;
     }
 
-    #[cfg(target_os = "macos")]
     if components.contains(InstallComponents::INPUT_METHOD) {
         use fig_integrations::input_method::InputMethod;
         InputMethod::default().install().await?;

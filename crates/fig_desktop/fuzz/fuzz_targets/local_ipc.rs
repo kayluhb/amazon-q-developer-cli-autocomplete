@@ -21,7 +21,6 @@ static RUNTIME: LazyLock<tokio::runtime::Runtime> = LazyLock::new(|| tokio::runt
 static DIRSOCK: LazyLock<(tempfile::TempDir, PathBuf)> = LazyLock::new(|| {
     let temp_dir = tempfile::tempdir().unwrap();
     let socket_path = temp_dir.path().join("test.sock");
-    #[cfg(unix)]
     {
         use std::fs::Permissions;
         use std::os::unix::fs::PermissionsExt;

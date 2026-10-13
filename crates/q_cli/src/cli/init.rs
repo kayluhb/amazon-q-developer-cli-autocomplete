@@ -211,7 +211,6 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
         }
     }
 
-    #[cfg(target_os = "macos")]
     if when == &When::Post
         && !fig_integrations::input_method::InputMethod::default()
             .is_enabled()

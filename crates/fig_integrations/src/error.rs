@@ -35,24 +35,18 @@ pub enum Error {
     StripPrefix(#[from] std::path::StripPrefixError),
     #[error("{0}")]
     Custom(Cow<'static, str>),
-    #[cfg(target_os = "macos")]
     #[error(transparent)]
     InputMethod(#[from] crate::input_method::InputMethodError),
-    #[cfg(target_os = "macos")]
     #[error("Application not installed: {0}")]
     ApplicationNotInstalled(Cow<'static, str>),
     #[error(transparent)]
     SerdeJSON(#[from] serde_json::Error),
-    #[cfg(target_os = "macos")]
     #[error(transparent)]
     PList(#[from] plist::Error),
     #[error("Permission denied: {}", .path.display())]
     PermissionDenied { path: PathBuf, inner: io::Error },
     #[error("nix: {}", .0)]
     Nix(#[from] nix::Error),
-    #[cfg(target_os = "linux")]
-    #[error(transparent)]
-    ExtensionsError(#[from] dbus::gnome_shell::ExtensionsError),
 
     #[error("{context}: {error}")]
     Context {

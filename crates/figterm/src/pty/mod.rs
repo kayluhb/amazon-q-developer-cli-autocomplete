@@ -12,11 +12,7 @@ use portable_pty::{
 pub mod cmdbuilder;
 pub use cmdbuilder::CommandBuilder;
 
-#[cfg(unix)]
 pub mod unix;
-
-#[cfg(windows)]
-pub mod win;
 
 #[async_trait]
 pub trait AsyncMasterPty {

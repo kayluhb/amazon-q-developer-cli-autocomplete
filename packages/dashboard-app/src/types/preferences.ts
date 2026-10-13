@@ -39,12 +39,7 @@ export type RichText = {
   tag: string;
 };
 
-export type InstallKey =
-  | "dotfiles"
-  | "accessibility"
-  | "inputMethod"
-  | "desktopEntry"
-  | "gnomeExtension";
+export type InstallKey = "dotfiles" | "accessibility" | "inputMethod";
 
 export type InstallCheck = {
   id: string;

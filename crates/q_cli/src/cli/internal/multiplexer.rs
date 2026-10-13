@@ -179,7 +179,6 @@ async fn handle_stdio_stream<S: AsyncWrite + AsyncRead + Unpin>(mut stream: S, e
 }
 
 pub async fn execute(args: MultiplexerArgs) -> Result<()> {
-    #[cfg(unix)]
     let pid_lock = match fig_util::directories::runtime_dir() {
         Ok(dir) => Some(PidLock::new(dir.join("mux.lock")).await.ok()).flatten(),
         Err(err) => {
@@ -256,7 +255,6 @@ pub async fn execute(args: MultiplexerArgs) -> Result<()> {
             std::fs::create_dir_all(parent).context("Failed creating socket path")?;
         }
 
-        #[cfg(unix)]
         {
             use std::fs::Permissions;
             use std::os::unix::fs::PermissionsExt;
@@ -337,7 +335,6 @@ pub async fn execute(args: MultiplexerArgs) -> Result<()> {
         }
     }
 
-    #[cfg(unix)]
     let _ = pid_lock.map(|l| l.release());
 
     info!("quitting multiplexer");

@@ -58,7 +58,6 @@ impl SshIntegration {
                 Match exec \"command -v {bin_name} && {bin_name} internal generate-ssh --remote-host %h --remote-port %p --remote-username %r\"
                     Include \"{include_path}\"
             "},
-            #[cfg(unix)]
             mode: Some(0o600),
         })
     }
@@ -150,7 +149,6 @@ impl Integration for SshIntegration {
             if !path.exists() {
                 let mut builder = DirBuilder::new();
                 builder.recursive(true);
-                #[cfg(unix)]
                 builder.mode(0o700);
                 builder.create(path)?;
             }

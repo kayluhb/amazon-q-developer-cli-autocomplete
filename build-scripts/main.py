@@ -6,7 +6,7 @@ import subprocess
 from build import build
 from const import CLI_BINARY_NAME, CLI_PACKAGE_NAME, PTY_BINARY_NAME
 from doc import run_doc
-from rust import cargo_cmd_name, rust_env
+from rust import rust_env
 from test import all_tests
 from util import Variant, get_variants
 
@@ -38,16 +38,6 @@ build_subparser.add_argument(
     "--aws-account-id",
     action=StoreIfNotEmptyAction,
     help="The AWS account ID",
-)
-build_subparser.add_argument(
-    "--chat-build-bucket-name",
-    action=StoreIfNotEmptyAction,
-    help="The name of the bucket containing the chat binary",
-)
-build_subparser.add_argument(
-    "--chat-download-role-arn",
-    action=StoreIfNotEmptyAction,
-    help="The IAM Role to assume when downloading from the chat build bucket",
 )
 build_subparser.add_argument(
     "--apple-id-secret",
@@ -126,8 +116,6 @@ match args.subparser:
             output_bucket=args.output_bucket,
             signing_bucket=args.signing_bucket,
             aws_account_id=args.aws_account_id,
-            chat_build_bucket_name=args.chat_build_bucket_name,
-            chat_download_role_arn=args.chat_download_role_arn,
             apple_id_secret=args.apple_id_secret,
             signing_role_name=args.signing_role_name,
             stage_name=args.stage_name,
@@ -143,7 +131,7 @@ match args.subparser:
     case "cli":
         subprocess.run(
             [
-                cargo_cmd_name(),
+                "cargo",
                 "run",
                 f"--bin={CLI_PACKAGE_NAME}",
                 *args.args,

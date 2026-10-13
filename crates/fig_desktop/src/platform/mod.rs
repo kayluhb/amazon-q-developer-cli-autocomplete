@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-#[cfg(target_os = "macos")]
 use macos_utils::window_server::ApplicationSpecifier;
 use serde::Serialize;
 use tao::dpi::Position;
@@ -20,20 +19,8 @@ use crate::{
     EventLoopWindowTarget,
 };
 
-cfg_if::cfg_if! {
-    if #[cfg(target_os = "linux")] {
-        mod linux;
-        pub use self::linux::*;
-    } else if #[cfg(target_os = "macos")] {
-        mod macos;
-        pub use self::macos::*;
-    } else if #[cfg(target_os = "windows")] {
-        mod windows;
-        pub use self::windows::*;
-    } else {
-        compile_error!("Unsupported platform");
-    }
-}
+mod macos;
+pub use self::macos::*;
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -128,7 +115,6 @@ pub enum PlatformBoundEvent {
     CaretPositionUpdateRequested,
     WindowDestroyed {
         // TODO: dont use on other platforms than macos
-        #[cfg(target_os = "macos")]
         app: ApplicationSpecifier,
     },
     ExternalWindowFocusChanged {

@@ -45,7 +45,6 @@ use eyre::{
     Result,
     WrapErr,
 };
-#[cfg(target_os = "macos")]
 use fig_integrations::input_method::InputMethodError;
 use fig_integrations::shell::{
     ShellExt,
@@ -400,7 +399,6 @@ impl DoctorCheck for FigBinCheck {
     }
 }
 
-#[cfg(unix)]
 macro_rules! path_check {
     ($name:ident, $path:expr) => {
         struct $name;
@@ -421,7 +419,6 @@ macro_rules! path_check {
     };
 }
 
-#[cfg(unix)]
 path_check!(LocalBinPathCheck, ".local/bin");
 
 struct AppRunningCheck;
@@ -595,27 +592,6 @@ impl DoctorCheck for FigIntegrationsCheck {
                 fix: None,
                 error: None,
             });
-        }
-
-        #[cfg(target_os = "windows")]
-        if let Some(exe) = fig_util::get_parent_process_exe() {
-            if exe.ends_with("cmd.exe") {
-                return Err(DoctorError::Error {
-                    reason: "CMD isn't supported yet, please use Git Bash or WSL instead".into(),
-                    info: vec![],
-                    fix: None,
-                    error: None,
-                });
-            }
-
-            if exe.ends_with("powershell.exe") {
-                return Err(DoctorError::Error {
-                    reason: "Powershell isn't supported yet, please use Git Bash or WSL instead".into(),
-                    info: vec![],
-                    fix: None,
-                    error: None,
-                });
-            }
         }
 
         if std::env::var_os("__PWSH_LOGIN_CHECKED").is_some() {
@@ -1030,7 +1006,6 @@ impl DoctorCheck<Option<Shell>> for DotfileCheck {
     }
 }
 
-#[cfg(target_os = "macos")]
 pub fn dscl_read(value: impl AsRef<OsStr>) -> Result<String> {
     let username_command = Command::new("id").arg("-un").output().context("Could not get id")?;
 
@@ -1047,10 +1022,8 @@ pub fn dscl_read(value: impl AsRef<OsStr>) -> Result<String> {
     Ok(String::from_utf8_lossy(&result.stdout).trim().into())
 }
 
-#[cfg(target_os = "macos")]
 struct ShellCompatibilityCheck;
 
-#[cfg(target_os = "macos")]
 #[async_trait]
 impl DoctorCheck<DiagnosticsResponse> for ShellCompatibilityCheck {
     fn name(&self) -> Cow<'static, str> {
@@ -1398,7 +1371,6 @@ impl DoctorCheck<SupportedTerminalCheckContext> for SupportedTerminalCheck {
                         format!("{CLI_BINARY_NAME} issue").magenta()
                     ).into(),
                     info: vec![
-                        #[cfg(target_os = "macos")]
                         format!(
                             "__CFBundleIdentifier: {}",
                             std::env::var("__CFBundleIdentifier").unwrap_or_else(|_| "<not-set>".into())
@@ -1642,10 +1614,8 @@ impl DoctorCheck<Option<Terminal>> for VSCodeIntegrationCheck {
     }
 }
 
-#[cfg(target_os = "macos")]
 struct ImeStatusCheck;
 
-#[cfg(target_os = "macos")]
 #[async_trait]
 impl DoctorCheck<SupportedTerminalCheckContext> for ImeStatusCheck {
     fn name(&self) -> Cow<'static, str> {
@@ -1751,33 +1721,6 @@ impl DoctorCheck for DesktopCompatibilityCheck {
         DoctorCheckType::NormalCheck
     }
 
-    #[cfg(target_os = "linux")]
-    async fn check(&self, _: &()) -> Result<(), DoctorError> {
-        use fig_os_shim::Context;
-        use fig_util::system_info::linux::{
-            DesktopEnvironment,
-            DisplayServer,
-            get_desktop_environment,
-            get_display_server,
-        };
-
-        let ctx = Context::new();
-        let (display_server, desktop_environment) = (get_display_server(&ctx)?, get_desktop_environment(&ctx)?);
-
-        match (display_server, desktop_environment) {
-            (DisplayServer::X11, DesktopEnvironment::Gnome | DesktopEnvironment::Plasma | DesktopEnvironment::I3) => {
-                Ok(())
-            },
-            (DisplayServer::Wayland, DesktopEnvironment::Gnome) => Err(doctor_warning!(
-                "Support for GNOME on Wayland is in development. It may not work properly on your system."
-            )),
-            (display_server, desktop_environment) => Err(doctor_warning!(
-                "Unknown desktop configuration {desktop_environment:?} on {display_server:?}"
-            )),
-        }
-    }
-
-    #[cfg(not(target_os = "linux"))]
     async fn check(&self, _: &()) -> Result<(), DoctorError> {
         Ok(())
     }
@@ -1796,36 +1739,6 @@ impl DoctorCheck for WindowsConsoleCheck {
     }
 
     async fn check(&self, _: &()) -> Result<(), DoctorError> {
-        #[cfg(target_os = "windows")]
-        {
-            use std::os::windows::io::AsRawHandle;
-
-            use winapi::um::consoleapi::GetConsoleMode;
-
-            let mut mode = 0;
-            let stdin_ok = unsafe { GetConsoleMode(std::io::stdin().as_raw_handle() as *mut _, &mut mode) };
-            let stdout_ok = unsafe { GetConsoleMode(std::io::stdout().as_raw_handle() as *mut _, &mut mode) };
-
-            if stdin_ok != 1 || stdout_ok != 1 {
-                return Err(
-                    DoctorError::Error {
-                        reason: "Windows Console APIs are not supported in this terminal".into(),
-                        info: vec![
-                            "The pseudoterminal layer only supports the new Windows Console API.".into(),
-                            "MinTTY and other TTY implementations may not work properly.".into(),
-                            "".into(),
-                            "You can try the following fixes to get completions working:".into(),
-                            "- If using Git for Windows, reinstall and choose \"Use default console window\" instead of MinTTY".into(),
-                            "- If using Git for Windows and you really want to use MinTTY, reinstall and check \"Enable experimental support for pseudo consoles\"".into(),
-                            "- Use your shell with a supported terminal emulator like Windows Terminal.".into(),
-                            "- Launch your terminal emulator with winpty (e.g. winpty mintty). NOTE: this can lead to some UI bugs.".into()
-                        ],
-                        fix: None,
-                        error: None,
-                    }
-                );
-            }
-        }
         Ok(())
     }
 }
@@ -1888,10 +1801,8 @@ impl DoctorCheck for AutocompleteHostCheck {
     }
 }
 
-#[cfg(target_os = "macos")]
 struct ToolboxInstalledCheck;
 
-#[cfg(target_os = "macos")]
 #[async_trait]
 impl DoctorCheck for ToolboxInstalledCheck {
     fn name(&self) -> Cow<'static, str> {
@@ -2040,7 +1951,6 @@ struct CheckConfiguration {
 
 // Doctor
 pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
-    #[cfg(unix)]
     {
         use nix::unistd::geteuid;
         if geteuid().is_root() {
@@ -2111,10 +2021,7 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
             format!("Let's make sure {PRODUCT_NAME} is set up correctly..."),
             vec![
                 &FigBinCheck,
-                #[cfg(unix)]
                 &LocalBinPathCheck,
-                #[cfg(target_os = "windows")]
-                &WindowsConsoleCheck,
                 &SettingsCorruptionCheck,
                 &SshdConfigCheck,
                 &FigIntegrationsCheck,
@@ -2138,7 +2045,6 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
         run_checks(
             "Let's see if the app is in a working state...".into(),
             vec![
-                #[cfg(unix)]
                 &PtySocketCheck,
                 &AutocompleteDevModeCheck,
                 &PluginDevModeCheck,
@@ -2157,7 +2063,6 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
                 &SystemVersionCheck,
                 &BashVersionCheck,
                 &FishVersionCheck,
-                #[cfg(target_os = "macos")]
                 &ToolboxInstalledCheck,
             ],
             config,
@@ -2170,7 +2075,6 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
             return Ok(());
         }
 
-        #[cfg(target_os = "macos")]
         {
             run_checks_with_context(
                 format!("Let's check {}...", format!("{CLI_BINARY_NAME} diagnostic").bold()),
@@ -2189,52 +2093,6 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
             .await?;
         }
 
-        #[cfg(target_os = "linux")]
-        {
-            use checks::linux::{
-                DisplayServerCheck,
-                GnomeExtensionCheck,
-                IBusConnectionCheck,
-                IBusEnvCheck,
-                IBusRunningCheck,
-                SandboxCheck,
-                get_linux_context,
-            };
-            // Linux desktop checks
-            if fig_util::manifest::is_full() && !fig_util::system_info::is_remote() {
-                run_checks_with_context(
-                    "Let's check Linux integrations",
-                    vec![
-                        &DisplayServerCheck,
-                        &IBusEnvCheck,
-                        &GnomeExtensionCheck,
-                        &IBusRunningCheck,
-                        &IBusConnectionCheck,
-                        // &DesktopCompatibilityCheck, // we need a better way of getting the data
-                        &SandboxCheck,
-                    ],
-                    get_linux_context,
-                    config,
-                    &mut spinner,
-                )
-                .await?;
-            }
-        }
-
-        #[cfg(target_os = "linux")]
-        {
-            if fig_util::manifest::is_full() && !fig_util::system_info::is_remote() {
-                run_checks_with_context(
-                    format!("Let's check {}...", format!("{CLI_BINARY_NAME} diagnostic").bold()),
-                    vec![&AutocompleteActiveCheck],
-                    super::diagnostics::get_diagnostics,
-                    config,
-                    &mut spinner,
-                )
-                .await?;
-            }
-        }
-
         run_checks_with_context(
             "Let's check your terminal integrations...",
             vec![
@@ -2246,7 +2104,6 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
                 // &HyperIntegrationCheck,
                 // #[cfg(not(target_os = "macos"))]
                 // &VSCodeIntegrationCheck,
-                #[cfg(target_os = "macos")]
                 &ImeStatusCheck,
             ],
             get_terminal_context,

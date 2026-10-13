@@ -1,26 +1,11 @@
-#[cfg(target_os = "freebsd")]
-mod freebsd;
-#[cfg(target_os = "linux")]
-mod linux;
-#[cfg(target_os = "macos")]
 pub mod macos;
-#[cfg(windows)]
-mod windows;
 
 use std::time::SystemTimeError;
 
-#[cfg(target_os = "freebsd")]
-use freebsd as os;
-#[cfg(target_os = "linux")]
-use linux as os;
-#[cfg(target_os = "macos")]
 use macos as os;
-#[cfg(target_os = "macos")]
 pub use os::uninstall_terminal_integrations;
 use thiserror::Error;
 use tracing::error;
-#[cfg(windows)]
-use windows as os;
 
 mod common;
 pub use common::{
@@ -57,7 +42,6 @@ pub enum Error {
     UpdateFailed(String),
     #[error("failed to update: `{0}`")]
     UpdateFailedPermissions(String),
-    #[cfg(target_os = "macos")]
     #[error("failed to update due to auth error: `{0}`")]
     SecurityFramework(#[from] security_framework::base::Error),
     #[error("your system is not supported on this channel")]

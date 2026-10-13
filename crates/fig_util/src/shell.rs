@@ -189,7 +189,6 @@ mod tests {
     use super::*;
     use crate::build::SKIP_FISH_TESTS;
 
-    #[cfg(not(windows))]
     #[tokio::test]
     async fn test_shell_version() {
         let tests = [

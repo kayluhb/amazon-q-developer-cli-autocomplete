@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from const import APPLE_TEAM_ID, APP_NAME, CLI_BINARY_NAME, PTY_BINARY_NAME, CHAT_BINARY_NAME
+from const import APPLE_TEAM_ID, APP_NAME, CLI_BINARY_NAME, PTY_BINARY_NAME
 
 
 class CdSigningType(Enum):
@@ -63,10 +63,6 @@ def app_manifest():
             EmbeddedRequirement(
                 path=f"Contents/MacOS/{PTY_BINARY_NAME}",
                 identifier=f"com.amazon.{PTY_BINARY_NAME}",
-            ),
-            EmbeddedRequirement(
-                path=f"Contents/MacOS/{CHAT_BINARY_NAME}",
-                identifier=f"com.amazon.{CHAT_BINARY_NAME}",
             ),
         ],
     )
