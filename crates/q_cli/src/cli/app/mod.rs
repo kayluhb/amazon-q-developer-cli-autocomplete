@@ -161,7 +161,7 @@ impl AppSubcommand {
                         if !already_seen_hint {
                             println!(
                                 "(To turn off autolaunch, run {})",
-                                "fig settings app.disableAutolaunch true".magenta()
+                                format!("{CLI_BINARY_NAME} settings app.disableAutolaunch true").magenta()
                             );
                             fig_settings::state::set_value("DISPLAYED_AUTOLAUNCH_SETTINGS_HINT", true)?;
                         }

@@ -85,7 +85,6 @@ use fig_util::{
     CLI_BINARY_NAME,
     CLI_CRATE_NAME,
     GITHUB_REPO_NAME,
-    OLD_CLI_BINARY_NAMES,
     PRODUCT_NAME,
     PTY_BINARY_NAME,
     Shell,
@@ -1195,16 +1194,6 @@ impl DoctorCheck<DiagnosticsResponse> for CliPathCheck {
 
     async fn check(&self, _: &DiagnosticsResponse) -> Result<(), DoctorError> {
         let path = std::env::current_exe().context("Could not get executable path.")?;
-
-        for old_bin in OLD_CLI_BINARY_NAMES {
-            if path.ends_with(old_bin) {
-                return Err(doctor_warning!(
-                    "The {} CLI has been replaced with {}",
-                    old_bin.magenta(),
-                    CLI_BINARY_NAME.magenta()
-                ));
-            }
-        }
 
         let local_bin_path = directories::home_dir()
             .unwrap()

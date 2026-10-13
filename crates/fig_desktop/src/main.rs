@@ -97,8 +97,6 @@ async fn main() -> ExitCode {
     })
     .expect("Failed to init logging");
 
-    install::migrate_data_dir().await;
-
     if let Err(err) = fig_settings::settings::init_global() {
         error!(%err, "failed to init global settings");
     }

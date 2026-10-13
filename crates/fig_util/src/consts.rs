@@ -8,7 +8,6 @@ pub const TAURI_PRODUCT_NAME: &str = "tab_desktop";
 
 pub const CLI_BINARY_NAME: &str = "tab";
 pub const CLI_BINARY_NAME_MINIMAL: &str = "tab-minimal";
-pub const CHAT_BINARY_NAME: &str = "qchat";
 pub const PTY_BINARY_NAME: &str = "tabterm";
 
 pub const CLI_CRATE_NAME: &str = "q_cli";
@@ -24,11 +23,6 @@ pub const DATA_DIR_NAME: &str = "tab";
 
 /// Backup directory name
 pub const BACKUP_DIR_NAME: &str = ".tab.dotfiles.bak";
-
-// These are the old "CodeWhisperer" branding, used anywhere we will not update to Tab
-pub const OLD_PRODUCT_NAME: &str = "CodeWhisperer";
-pub const OLD_CLI_BINARY_NAMES: &[&str] = &["cw"];
-pub const OLD_PTY_BINARY_NAMES: &[&str] = &["cwterm"];
 
 pub const GITHUB_REPO_NAME: &str = "kayluhb/amazon-q-developer-cli-autocomplete";
 
