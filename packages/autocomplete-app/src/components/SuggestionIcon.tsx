@@ -4,7 +4,6 @@ import {
   SuggestionType,
 } from "@aws/amazon-q-developer-cli-shared/internal";
 import { localProtocol } from "@aws/amazon-q-developer-cli-shared/utils";
-import { icons } from "../fig/icons";
 
 type SuggestionIconProps = {
   suggestion: Suggestion;
@@ -21,17 +20,6 @@ const transformIconUri = (icon: URL): URL => {
 
   if (host === "" && fig.constants?.newUriFormat) {
     host = "path";
-  }
-
-  if (icon.hostname === "icon") {
-    const type = icon.searchParams.get("type");
-    if (type) {
-      if (icons.includes(type)) {
-        return new URL(
-          `https://specs.q.us-east-1.amazonaws.com/icons/${type}.png`,
-        );
-      }
-    }
   }
 
   if (window.fig.constants?.os === "windows") {

@@ -69,7 +69,11 @@ static ASSETS: LazyLock<HashMap<AssetSpecifier<'static>, Arc<Cow<'static, [u8]>>
 
     load_assets! {
         "alert", "asterisk", "box", "carrot", "characters", "command", "commandkey", "cpu", "database",
-        "file", "folder", "flag", "gear", "invite", "option", "package", "string", "symlink", "template"
+        "file", "folder", "flag", "gear", "invite", "option", "package", "string", "symlink", "template",
+        // Brand icons, previously served from the Amazon Q spec CDN
+        "android", "apple", "aws", "azure", "commit", "discord", "docker", "firebase", "gcloud", "git",
+        "github", "gitlab", "gradle", "heroku", "kubernetes", "netlify", "node", "npm", "okteto", "slack",
+        "twitter", "vercel", "yarn"
     }
 
     map
