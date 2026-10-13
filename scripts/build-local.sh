@@ -26,11 +26,19 @@ fi
 app_name="$(cd build-scripts && ../.venv/bin/python -c 'import const; print(const.APP_NAME)')"
 app="build/${app_name}.app"
 
-# Accessibility permission is tied to the code signature, so after each
-# rebuild macOS may ask for it again.
-codesign --force --deep --sign - "$app"
+# Accessibility permission is tied to the code signature. Ad-hoc signatures
+# change on every build, so prefer the stable local certificate from
+# scripts/create-signing-cert.sh when it exists.
+identity="Tab Local Code Signing"
+if security find-certificate -c "$identity" >/dev/null 2>&1; then
+  signed_with="\"$identity\""
+else
+  identity="-"
+  signed_with="ad-hoc (run scripts/create-signing-cert.sh to keep Accessibility across rebuilds)"
+fi
+codesign --force --deep --sign "$identity" "$app"
 codesign --verify --deep --strict "$app"
 
 echo
-echo "Built and ad-hoc signed: $app"
+echo "Built and signed with $signed_with: $app"
 echo "Install: rm -rf \"/Applications/${app_name}.app\" && cp -R \"$app\" /Applications/"

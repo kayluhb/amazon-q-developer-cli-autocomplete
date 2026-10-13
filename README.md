@@ -12,21 +12,24 @@ needs an AWS backend:
   All AWS service clients have been removed.
 - Completion specs are built from [withfig/autocomplete](https://github.com/withfig/autocomplete)
   (MIT) at a pinned commit and bundled into the app, together with their icons.
-- macOS only. The app is ad-hoc signed, so you build it yourself.
+- macOS only. You build it yourself and sign it with a local certificate, so no Apple Developer
+  account is needed.
 
 Tab is not affiliated with or endorsed by Amazon Web Services.
 
 ## Build and install
 
 ```sh
-scripts/setup.sh              # once: installs toolchains
-scripts/build-local.sh        # builds build/Tab.app and ad-hoc signs it
+scripts/setup.sh                # once: installs toolchains
+scripts/create-signing-cert.sh  # once: local signing certificate
+scripts/build-local.sh          # builds and signs build/Tab.app
 cp -R build/Tab.app /Applications/
-open /Applications/Tab.app    # onboarding installs the shell integrations
+open /Applications/Tab.app      # onboarding installs the shell integrations
 ```
 
-Accessibility permission is tied to the app's signature, so you may need to
-re-grant it in System Settings after each rebuild.
+Accessibility permission is tied to the app's signature. With the local certificate it
+carries over between rebuilds; without it, the app is ad-hoc signed and you have to re-grant
+Accessibility in System Settings after each rebuild.
 
 ## Usage
 
