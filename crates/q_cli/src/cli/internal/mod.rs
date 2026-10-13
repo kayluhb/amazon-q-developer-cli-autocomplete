@@ -1,5 +1,4 @@
 mod generate_ssh;
-mod inline_shell_completion;
 pub mod local_state;
 mod multiplexer;
 pub mod should_figterm_launch;
@@ -86,13 +85,8 @@ use tracing::{
     error,
     info,
     trace,
-    warn,
 };
 
-use self::inline_shell_completion::{
-    inline_shell_completion,
-    inline_shell_completion_accept,
-};
 use crate::cli::installation::install_cli;
 use crate::util::desktop::{
     LaunchArgs,
@@ -237,7 +231,6 @@ pub enum InternalSubcommand {
     #[cfg(target_os = "linux")]
     /// Checks for sandboxing
     DetectSandbox,
-    OpenUninstallPage,
     /// Displays prompt to install remote shell integrations
     SshLocalCommand {
         remote_dest: String,
@@ -279,16 +272,6 @@ pub enum InternalSubcommand {
     /// This lets us bypass a bug in Include and vdollar_expand that causes environment variables to
     /// be expanded, even in files that are only referenced in match blocks that resolve to false
     GenerateSsh(generate_ssh::GenerateSshArgs),
-    InlineShellCompletion {
-        #[arg(long, allow_hyphen_values = true)]
-        buffer: String,
-    },
-    InlineShellCompletionAccept {
-        #[arg(long, allow_hyphen_values = true)]
-        buffer: String,
-        #[arg(long, allow_hyphen_values = true)]
-        suggestion: String,
-    },
     #[command(alias = "mux")]
     Multiplexer(MultiplexerArgs),
 }
@@ -681,27 +664,6 @@ impl InternalSubcommand {
                 };
                 Ok(ExitCode::from(exit_code))
             },
-            InternalSubcommand::OpenUninstallPage => {
-                let url = fig_install::UNINSTALL_URL;
-                match fig_util::open_url(url) {
-                    Ok(()) => Ok(ExitCode::SUCCESS),
-                    Err(err) => {
-                        warn!(%err, "Failed to open uninstall directly, trying to open via desktop app");
-
-                        match fig_ipc::local::send_command_to_socket(fig_proto::local::command::Command::OpenBrowser(
-                            fig_proto::local::OpenBrowserCommand { url: url.into() },
-                        ))
-                        .await
-                        {
-                            Ok(_) => Ok(ExitCode::SUCCESS),
-                            Err(err) => {
-                                error!(%err, "Failed to open uninstall via desktop, no more options");
-                                Ok(ExitCode::FAILURE)
-                            },
-                        }
-                    },
-                }
-            },
             InternalSubcommand::PromptSsh { .. } => Ok(ExitCode::SUCCESS),
             InternalSubcommand::SshLocalCommand { remote_dest, uuid } => {
                 // Ensure desktop app is running to avoid SSH errors on stdout when local side of
@@ -830,15 +792,9 @@ impl InternalSubcommand {
             },
             #[cfg(target_os = "macos")]
             InternalSubcommand::BrewUninstall { zap } => {
-                use fig_install::UNINSTALL_URL;
-
-                let brew_is_reinstalling = crate::util::is_brew_reinstall().await;
-
-                if brew_is_reinstalling {
+                if crate::util::is_brew_reinstall().await {
                     // If we're reinstalling, we don't want to uninstall
                     return Ok(ExitCode::SUCCESS);
-                } else if let Err(err) = fig_util::open_url_async(UNINSTALL_URL).await {
-                    error!(%err, %UNINSTALL_URL, "Failed to open uninstall url");
                 }
 
                 let components = if zap {
@@ -853,10 +809,6 @@ impl InternalSubcommand {
                 Ok(ExitCode::SUCCESS)
             },
             InternalSubcommand::GenerateSsh(args) => args.execute().await,
-            InternalSubcommand::InlineShellCompletion { buffer } => Ok(inline_shell_completion(buffer).await),
-            InternalSubcommand::InlineShellCompletionAccept { buffer, suggestion } => {
-                Ok(inline_shell_completion_accept(buffer, suggestion).await)
-            },
             InternalSubcommand::Multiplexer(args) => match multiplexer::execute(args).await {
                 Ok(()) => Ok(ExitCode::SUCCESS),
                 Err(err) => {

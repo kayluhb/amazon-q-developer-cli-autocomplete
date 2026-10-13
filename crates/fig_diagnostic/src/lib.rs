@@ -1,4 +1,6 @@
 #![allow(clippy::ref_option_ref)]
+mod install_method;
+
 use std::collections::BTreeMap;
 
 use fig_os_shim::{
@@ -6,7 +8,6 @@ use fig_os_shim::{
     Os,
     PlatformProvider,
 };
-use fig_telemetry::InstallMethod;
 use fig_util::consts::build::HASH;
 use fig_util::manifest::manifest;
 use fig_util::system_info::{
@@ -16,6 +17,10 @@ use fig_util::system_info::{
 use fig_util::{
     Shell,
     Terminal,
+};
+pub use install_method::{
+    InstallMethod,
+    get_install_method,
 };
 use serde::Serialize;
 use sysinfo::{
@@ -221,7 +226,7 @@ impl CurrentEnvironment {
 
         let os = ctx.platform().os();
         let terminal = Terminal::parent_terminal(&ctx);
-        let install_method = fig_telemetry::get_install_method();
+        let install_method = get_install_method();
 
         let in_cloudshell = fig_util::system_info::in_cloudshell();
         let in_ssh = fig_util::system_info::in_ssh();

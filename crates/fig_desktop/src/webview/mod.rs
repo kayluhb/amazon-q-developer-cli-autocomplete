@@ -91,8 +91,6 @@ use crate::request::api_request;
 use crate::tray::{
     self,
     build_tray,
-    get_context_menu,
-    get_icon,
 };
 use crate::webview::window_id::AutocompleteId;
 pub use crate::webview::window_id::{
@@ -498,13 +496,6 @@ impl WebviewManager {
                         },
                         Event::ControlFlow(new_control_flow) => {
                             *control_flow = new_control_flow;
-                        },
-                        Event::ReloadTray { is_logged_in } => {
-                            tray.set_icon(Some(get_icon(is_logged_in)))
-                                .map_err(|err| error!(?err))
-                                .ok();
-                            tray.set_icon_as_template(true);
-                            tray.set_menu(Some(Box::new(get_context_menu(is_logged_in))));
                         },
                         Event::ReloadCredentials => {
                             // tray.set_menu(Some(Box::new(get_context_menu())));

@@ -10,7 +10,6 @@ pub mod protocol;
 mod remote_ipc;
 mod request;
 mod tray;
-mod update;
 mod utils;
 mod webview;
 
@@ -98,8 +97,6 @@ async fn main() -> ExitCode {
     })
     .expect("Failed to init logging");
 
-    fig_telemetry::init_global_telemetry_emitter();
-
     #[cfg(target_os = "macos")]
     install::migrate_data_dir().await;
 
@@ -144,7 +141,7 @@ async fn main() -> ExitCode {
     }
 
     let ctx = Context::new();
-    install::run_install(Arc::clone(&ctx), cli.ignore_immediate_update).await;
+    install::run_install(Arc::clone(&ctx)).await;
 
     #[cfg(target_os = "linux")]
     {
@@ -195,7 +192,6 @@ async fn main() -> ExitCode {
         .unwrap();
 
     webview_manager.run().await.unwrap();
-    fig_telemetry::finish_telemetry().await;
     ExitCode::SUCCESS
 }
 

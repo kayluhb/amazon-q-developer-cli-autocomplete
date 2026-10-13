@@ -23,8 +23,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn main() -> Result<ExitCode> {
     color_eyre::install()?;
-    fig_telemetry::set_dispatch_mode(fig_telemetry::DispatchMode::On);
-    fig_telemetry::init_global_telemetry_emitter();
 
     let mut args = std::env::args();
     let subcommand = args.nth(1);
@@ -68,11 +66,7 @@ fn main() -> Result<ExitCode> {
     .enable_all()
     .build()?;
 
-    let result = runtime.block_on(async {
-        let result = parsed.execute().await;
-        fig_telemetry::finish_telemetry().await;
-        result
-    });
+    let result = runtime.block_on(parsed.execute());
 
     match result {
         Ok(exit_code) => Ok(exit_code),

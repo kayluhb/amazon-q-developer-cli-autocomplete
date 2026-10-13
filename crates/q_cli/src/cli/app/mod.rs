@@ -13,7 +13,6 @@ use eyre::{
     bail,
 };
 use fig_install::InstallComponents;
-use fig_ipc::local::update_command;
 use fig_settings::{
     settings,
     state,
@@ -22,10 +21,6 @@ use fig_util::{
     CLI_BINARY_NAME,
     PRODUCT_NAME,
     manifest,
-};
-use tracing::{
-    info,
-    trace,
 };
 
 use crate::util::desktop::{
@@ -48,12 +43,6 @@ pub struct UninstallArgs {
     /// Remove SSH integration
     #[arg(long)]
     pub ssh: bool,
-    /// Do not open the uninstallation page
-    #[arg(long)]
-    pub no_open: bool,
-    /// Only open the uninstallation page
-    #[arg(long)]
-    pub only_open: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Subcommand)]
@@ -161,50 +150,8 @@ impl AppSubcommand {
                 }
             },
             AppSubcommand::Prompts => {
-                if fig_util::manifest::is_minimal() {
-                } else if desktop_app_running() {
-                    let new_version = state::get_string("NEW_VERSION_AVAILABLE").ok().flatten();
-                    if let Some(version) = new_version {
-                        info!("New version {} is available", version);
-                        let autoupdates = !settings::get_bool_or("app.disableAutoupdates", false);
-
-                        if autoupdates {
-                            trace!("starting autoupdate");
-
-                            println!("Updating {} to latest version...", PRODUCT_NAME.magenta());
-                            let already_seen_hint = state::get_bool_or("DISPLAYED_AUTOUPDATE_SETTINGS_HINT", false);
-
-                            if !already_seen_hint {
-                                println!(
-                                    "(To turn off automatic updates, run {})",
-                                    "fig settings app.disableAutoupdates true".magenta()
-                                );
-                                state::set_value("DISPLAYED_AUTOUPDATE_SETTINGS_HINT", true)?;
-                            }
-
-                            // trigger forced update. This will QUIT the macOS app, it must be relaunched...
-                            trace!("sending update commands to macOS app");
-                            update_command(true).await?;
-
-                            // Sleep for a bit
-                            tokio::time::sleep(std::time::Duration::from_millis(3000)).await;
-
-                            trace!("launching updated version");
-                            launch_fig_desktop(LaunchArgs {
-                                wait_for_socket: true,
-                                open_dashboard: false,
-                                immediate_update: true,
-                                verbose: false,
-                            })
-                            .ok();
-                        } else {
-                            trace!("autoupdates are disabled.");
-
-                            println!("A new version of {PRODUCT_NAME} is available. (Autoupdates are disabled)");
-                            println!("To update, run: {}", "fig update".magenta());
-                        }
-                    }
-                } else {
+                // Launch the desktop app if it isn't running
+                if !fig_util::manifest::is_minimal() && !desktop_app_running() {
                     let no_autolaunch = settings::get_bool_or("app.disableAutolaunch", false) || manifest::is_minimal();
                     let user_quit_app = state::get_bool_or("APP_TERMINATED_BY_USER", false);
                     if !no_autolaunch && !user_quit_app && !fig_util::system_info::in_ssh() {
@@ -230,17 +177,7 @@ impl AppSubcommand {
             },
             #[cfg(target_os = "macos")]
             AppSubcommand::Uninstall(args) => {
-                use fig_install::UNINSTALL_URL;
-
-                if !args.no_open && !crate::util::is_brew_reinstall().await {
-                    if let Err(err) = fig_util::open_url_async(UNINSTALL_URL).await {
-                        tracing::error!(%err, %UNINSTALL_URL, "Failed to open uninstall url");
-                    }
-                }
-
-                if !args.only_open {
-                    fig_install::uninstall(args.into(), fig_os_shim::Context::new()).await?;
-                }
+                fig_install::uninstall(args.into(), fig_os_shim::Context::new()).await?;
             },
             #[cfg(not(target_os = "macos"))]
             AppSubcommand::Uninstall(_) => {},

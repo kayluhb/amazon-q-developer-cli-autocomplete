@@ -26,7 +26,6 @@ use async_trait::async_trait;
 use checks::{
     BashVersionCheck,
     FishVersionCheck,
-    MidwayCheck,
     SshdConfigCheck,
 };
 use clap::Args;
@@ -378,15 +377,7 @@ trait DoctorCheck<T = ()>: Sync
 where
     T: Sync + Send + Sized,
 {
-    // Name should be _static_ across different user's devices. It is used to generate
-    // a unique id for the check used in analytics. If name cannot be unique for some reason, you
-    // should override analytics_event_name with the unique name to be sent for analytics.
     fn name(&self) -> Cow<'static, str>;
-
-    fn analytics_event_name(&self) -> String {
-        let name = self.name().to_ascii_lowercase();
-        Regex::new(r"[^a-zA-Z0-9]+").unwrap().replace_all(&name, "_").into()
-    }
 
     async fn get_type(&self, _: &T, _platform: Platform) -> DoctorCheckType {
         DoctorCheckType::NormalCheck
@@ -962,10 +953,6 @@ impl DoctorCheck<Option<Shell>> for DotfileCheck {
         let path = self.short_path();
         let shell = self.integration.get_shell();
         format!("{shell} {path} integration check").into()
-    }
-
-    fn analytics_event_name(&self) -> String {
-        format!("dotfile_check_{}", self.integration.file_name())
     }
 
     async fn get_type(&self, current_shell: &Option<Shell>, _platform: Platform) -> DoctorCheckType {
@@ -1843,25 +1830,6 @@ impl DoctorCheck for WindowsConsoleCheck {
     }
 }
 
-struct LoginStatusCheck;
-
-#[async_trait]
-impl DoctorCheck for LoginStatusCheck {
-    fn name(&self) -> Cow<'static, str> {
-        "Auth".into()
-    }
-
-    async fn check(&self, _: &()) -> Result<(), DoctorError> {
-        if !fig_util::system_info::in_cloudshell() && !fig_auth::is_logged_in().await {
-            return Err(doctor_error!(
-                "Not authenticated. Please run {}",
-                format!("{CLI_BINARY_NAME} login").bold()
-            ));
-        }
-        Ok(())
-    }
-}
-
 struct DashboardHostCheck;
 
 #[async_trait]
@@ -1987,11 +1955,6 @@ where
             continue;
         }
 
-        if result.is_err() {
-            let analytics_event_name = check.analytics_event_name();
-            fig_telemetry::send_doctor_check_failed(analytics_event_name).await;
-        }
-
         if let Err(DoctorError::Error { reason, fix, error, .. }) = result {
             if let Some(fixfn) = fix {
                 println!("Attempting to fix automatically...");
@@ -2113,15 +2076,7 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
         }
     }
 
-    run_checks(
-        "Let's check if you're logged in...".into(),
-        vec![&LoginStatusCheck {}],
-        config,
-        &mut spinner,
-    )
-    .await?;
-
-    // If user is logged in, try to launch fig
+    // Try to launch the desktop app
     launch_fig_desktop(LaunchArgs {
         wait_for_socket: true,
         open_dashboard: false,
@@ -2189,7 +2144,6 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
                 &PluginDevModeCheck,
                 &DashboardHostCheck,
                 &AutocompleteHostCheck,
-                &MidwayCheck,
                 &InlineCheck,
             ],
             config,

@@ -6,14 +6,12 @@ use clap::{
     Args,
     Parser,
     Subcommand,
-    ValueEnum,
 };
 use eyre::{
     Result,
     WrapErr,
     bail,
 };
-use fig_auth::is_logged_in;
 use fig_ipc::local::open_ui_element;
 use fig_os_shim::Os;
 use fig_proto::local::UiElement;
@@ -36,18 +34,14 @@ use crate::util::desktop::{
 use crate::util::{
     CliContext,
     app_not_running_message,
-    qchat_path,
 };
 
 #[derive(Debug, Subcommand, PartialEq, Eq)]
 pub enum SettingsSubcommands {
     /// Open the settings file
     Open,
-    /// List settings
+    /// List configured settings
     List {
-        /// Show all available settings
-        #[arg(long)]
-        all: bool,
         /// Format of the output
         #[arg(long, short, value_enum, default_value_t)]
         format: OutputFormat,
@@ -101,39 +95,22 @@ impl SettingsArgs {
                     bail!("The EDITOR environment variable is not set")
                 }
             },
-            Some(SettingsSubcommands::List { all, format }) => {
-                let mut args = vec!["settings".to_string(), "list".to_string()];
-                if all {
-                    args.push("--all".to_string());
-                }
-                if format != OutputFormat::default() {
-                    args.push("--format".to_string());
-                    args.push(format.to_possible_value().unwrap().get_name().to_string());
-                }
-
-                let status = tokio::process::Command::new(qchat_path()?).args(&args).status().await?;
-
-                Ok(if status.success() {
-                    ExitCode::SUCCESS
-                } else {
-                    ExitCode::FAILURE
-                })
-            },
-            Some(SettingsSubcommands::All { format }) => {
-                let mut args = vec!["settings".to_string(), "list".to_string()];
-
-                if format != OutputFormat::default() {
-                    args.push("--format".to_string());
-                    args.push(format.to_possible_value().unwrap().get_name().to_string());
-                }
-
-                let status = tokio::process::Command::new(qchat_path()?).args(&args).status().await?;
-
-                Ok(if status.success() {
-                    ExitCode::SUCCESS
-                } else {
-                    ExitCode::FAILURE
-                })
+            Some(SettingsSubcommands::List { format } | SettingsSubcommands::All { format }) => {
+                let settings = fig_settings::OldSettings::load()?;
+                let map = settings.map();
+                let mut entries: Vec<_> = map.iter().collect();
+                entries.sort_by(|(a, _), (b, _)| a.cmp(b));
+                format.print(
+                    || {
+                        entries
+                            .iter()
+                            .map(|(key, value)| format!("{key} = {value}"))
+                            .collect::<Vec<_>>()
+                            .join("\n")
+                    },
+                    || &*map,
+                );
+                Ok(ExitCode::SUCCESS)
             },
             None => match &self.key {
                 Some(key) => match (&self.value, self.delete) {
@@ -213,16 +190,12 @@ impl SettingsArgs {
                         verbose: true,
                     })?;
 
-                    if is_logged_in().await {
-                        match open_ui_element(UiElement::Settings, None).await {
-                            Ok(()) => Ok(ExitCode::SUCCESS),
-                            Err(err) => {
-                                print_connection_error!();
-                                Err(err.into())
-                            },
-                        }
-                    } else {
-                        Ok(ExitCode::SUCCESS)
+                    match open_ui_element(UiElement::Settings, None).await {
+                        Ok(()) => Ok(ExitCode::SUCCESS),
+                        Err(err) => {
+                            print_connection_error!();
+                            Err(err.into())
+                        },
                     }
                 },
             },
