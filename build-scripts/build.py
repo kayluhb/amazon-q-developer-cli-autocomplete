@@ -96,7 +96,7 @@ def build_npm_packages(run_test: bool = True) -> NpmBuildOutput:
 
     run_cmd(["pnpm", "build"])
     if run_test:
-        run_cmd(["pnpm", "test", "--", "--run"])
+        run_cmd(["pnpm", "test", "--run"])
 
     # revert the package.json
     package_json_path.write_text(package_json_text)

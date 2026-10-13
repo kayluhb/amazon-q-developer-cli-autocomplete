@@ -1,3 +1,28 @@
+> [!IMPORTANT]
+> **Standalone autocomplete fork.** This is a modified version of
+> [aws/amazon-q-developer-cli-autocomplete](https://github.com/aws/amazon-q-developer-cli-autocomplete)
+> that keeps only the terminal autocomplete and runs fully offline:
+>
+> - No login, telemetry, update checks, chat, translate or AI inline completions.
+>   All AWS service clients have been removed.
+> - Completion specs are built from [withfig/autocomplete](https://github.com/withfig/autocomplete)
+>   (MIT) at a pinned commit and bundled into the app.
+> - macOS only.
+>
+> **Build and install:**
+>
+> ```sh
+> scripts/setup.sh              # once: toolchains
+> scripts/build-local.sh        # builds build/Amazon Q.app and ad-hoc signs it
+> cp -R "build/Amazon Q.app" /Applications/
+> open "/Applications/Amazon Q.app"   # onboarding installs shell integrations
+> ```
+>
+> Accessibility permission is tied to the app's signature, so you may need to
+> re-grant it in System Settings after each rebuild. Custom specs placed in
+> `~/Library/Application Support/amazon-q/autocomplete/specs/` override the bundled ones.
+>
+> Modifications are licensed under the same terms as the original (Apache-2.0 / MIT).
 
 <p align="center">
   <a href="https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-installing.html">
