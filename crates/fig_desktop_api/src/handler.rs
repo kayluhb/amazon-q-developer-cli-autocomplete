@@ -236,9 +236,8 @@ where
                 InstallRequest(request) => install::install(request, &ctx).await,
                 // history
                 HistoryQueryRequest(request) => history::query(request).await,
-                // auth
-                AuthStatusRequest(request) => auth::status(request).await,
                 // Account and AI features are not supported in the standalone build
+                AuthStatusRequest(request) => RequestResult::unimplemented(request),
                 AuthStartPkceAuthorizationRequest(request) => RequestResult::unimplemented(request),
                 AuthFinishPkceAuthorizationRequest(request) => RequestResult::unimplemented(request),
                 AuthCancelPkceAuthorizationRequest(request) => RequestResult::unimplemented(request),

@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use fig_proto::ReflectMessage;
 
-pub mod auth;
 pub mod fs;
 pub mod history;
 pub mod install;

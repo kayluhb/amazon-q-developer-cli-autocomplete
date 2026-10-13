@@ -10,18 +10,7 @@ export const AUTOCOMPLETE_WIKI_URL =
   "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-autocomplete.html";
 export const AUTOCOMPLETE_SSH_WIKI_URL =
   "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-autocomplete-ssh.html";
-export const CHAT_WIKI_URL =
-  "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-chat.html";
-export const TRANSLATE_WIKI_URL =
-  "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-conversation.html";
-export const INLINE_WIKI_URL =
-  "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-inline.html";
-export const TELEMETRY_WIKI_URL =
-  "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/opt-out-IDE.html";
 export const Q_MIGRATION_URL =
   "https://docs.aws.amazon.com/codewhisperer/latest/userguide/whisper-legacy.html";
-export const KIRO_CLI_URL = "https://kiro.dev/cli-upgrade";
-
-export const AMZN_START_URL = "https://amzn.awsapps.com/start";
 
 export const NOTIFICATIONS_SEEN_STATE_KEY = "dashboard.notificationsSeen";
