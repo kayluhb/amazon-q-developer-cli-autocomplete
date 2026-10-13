@@ -78,9 +78,22 @@ def build_specs() -> pathlib.Path:
     shutil.rmtree(repo, ignore_errors=True)
     run_cmd(["git", "clone", "--filter=blob:none", SPECS_REPO, repo])
     run_cmd(["git", "checkout", "--quiet", SPECS_COMMIT], cwd=repo)
-    run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts"], cwd=repo)
-    run_cmd(["pnpm", "build"], cwd=repo)
-    return repo / "build"
+    # --ignore-workspace: BUILD_DIR sits inside this repo's pnpm workspace
+    run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-workspace"], cwd=repo)
+    run_cmd(["pnpm", "--ignore-workspace", "build"], cwd=repo)
+
+    # The spec compiler exits 0 even when specs fail to bundle, so check the output
+    specs_path = repo / "build"
+    index = json.loads((specs_path / "index.json").read_text())
+    missing = [
+        name
+        for name in index["completions"]
+        # diff-versioned specs live at {name}/index.js
+        if not (specs_path / f"{name}.js").exists() and not (specs_path / name / "index.js").exists()
+    ]
+    if missing:
+        raise RuntimeError(f"{len(missing)} completion specs failed to build, e.g. {missing[:5]}")
+    return specs_path
 
 
 @dataclass
