@@ -1,2 +1,2 @@
-export const PRODUCT_NAME = "Amazon Q";
-export const CLI_NAME = "q";
+export const PRODUCT_NAME = "Tab";
+export const CLI_NAME = "tab";

@@ -77,7 +77,7 @@ mod tests {
 // #[test]
 // fn test_terminate() {
 //     // let out = dbg!(running_applications());
-//     running_applications_matching("com.amazon.codewhisperercursor").into_iter().for_each(|app| {
+//     running_applications_matching("com.kayluhb.tabcursor").into_iter().for_each(|app| {
 //         println!("Terminating {}", app.process_identifier);
 //         app.terminate()
 //     })

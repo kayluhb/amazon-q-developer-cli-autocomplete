@@ -1,5 +1,5 @@
 import { InstallCheckWithInstallKey } from "@/types/preferences";
-import { Install } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Install } from "@tab/api-bindings";
 import { useEffect, useState } from "react";
 import {
   Collapsible,

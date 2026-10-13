@@ -100,7 +100,7 @@ impl GenerateSshArgs {
 
             Match all
               RemoteForward '{set_parent_socket_path}' '{remote_socket}'
-              SetEnv Q_SET_PARENT={set_parent_socket_path}
+              SetEnv TAB_SET_PARENT={set_parent_socket_path}
               StreamLocalBindMask 600
               StreamLocalBindUnlink yes
               PermitLocalCommand yes

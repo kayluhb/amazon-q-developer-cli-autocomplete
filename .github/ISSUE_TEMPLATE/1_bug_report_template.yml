@@ -1,5 +1,5 @@
 name: "Bug report"
-description: "File an issue related to Amazon Q Developer CLI"
+description: "File an issue related to Tab"
 
 title: "bug: "
 labels: ["NEED_TO_LABEL"]
@@ -10,9 +10,9 @@ body:
   attributes:
     label: "Checks"
     options:
-    - label: "I have searched [github.com/aws/amazon-q-developer-cli/issues](https://github.com/aws/amazon-q-developer-cli/issues?q=) and there are no duplicates of my issue"
+    - label: "I have searched [github.com/kayluhb/amazon-q-developer-cli-autocomplete/issues](https://github.com/kayluhb/amazon-q-developer-cli-autocomplete/issues?q=) and there are no duplicates of my issue"
       required: true
-    - label: "I have run `q doctor` in the affected terminal session"
+    - label: "I have run `tab doctor` in the affected terminal session"
       required: true
     - label: "I have run `q restart` and replicated the issue again"
       required: true
@@ -50,5 +50,5 @@ body:
   id: "environment"
   attributes:
     label: "Environment"
-    description: "If possible, run `q diagnostic` and paste the output below."
+    description: "If possible, run `tab diagnostic` and paste the output below."
     render: yaml

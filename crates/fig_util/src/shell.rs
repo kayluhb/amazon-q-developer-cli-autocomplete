@@ -15,7 +15,7 @@ use serde::{
 use tokio::process::Command;
 
 use crate::consts::build::SKIP_FISH_TESTS;
-use crate::env_var::Q_ZDOTDIR;
+use crate::env_var::TAB_ZDOTDIR;
 use crate::process_info::get_parent_process_exe;
 use crate::{
     Error,
@@ -108,7 +108,7 @@ impl Shell {
             Shell::Bash => Ok(directories::home_dir()?),
             Shell::Zsh => match env
                 .get_os("ZDOTDIR")
-                .or_else(|| env.get_os(Q_ZDOTDIR))
+                .or_else(|| env.get_os(TAB_ZDOTDIR))
                 .map(PathBuf::from)
             {
                 Some(dir) => Ok(dir),

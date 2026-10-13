@@ -1,7 +1,7 @@
 import logger from "loglevel";
 import { convertSubcommand, initializeDefault } from "@fig/autocomplete-shared";
 import { filepaths, folders } from "@fig/autocomplete-generators";
-import * as Internal from "@aws/amazon-q-developer-cli-shared/internal";
+import * as Internal from "@tab/shared/internal";
 import {
   firstMatchingToken,
   makeArray,
@@ -9,18 +9,15 @@ import {
   SuggestionFlag,
   SuggestionFlags,
   withTimeout,
-} from "@aws/amazon-q-developer-cli-shared/utils";
+} from "@tab/shared/utils";
 import {
   executeCommand,
   executeLoginShell,
   getSetting,
   isInDevMode,
   SETTINGS,
-} from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
-import {
-  Command,
-  substituteAlias,
-} from "@aws/amazon-q-developer-cli-shell-parser";
+} from "@tab/api-bindings-wrappers";
+import { Command, substituteAlias } from "@tab/shell-parser";
 import {
   getSpecPath,
   loadSubcommandCached,

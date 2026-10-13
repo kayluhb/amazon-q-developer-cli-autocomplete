@@ -1,4 +1,4 @@
-import { Result } from "@aws/amazon-q-developer-cli-fuzzysort";
+import { Result } from "@tab/fuzzysort";
 import logger from "loglevel";
 import {
   Option,
@@ -6,7 +6,7 @@ import {
   Arg,
   Suggestion,
   SuggestionType,
-} from "@aws/amazon-q-developer-cli-shared/internal";
+} from "@tab/shared/internal";
 import {
   makeArray,
   SuggestionFlags,
@@ -15,17 +15,13 @@ import {
   memoizeOne,
   localProtocol,
   fieldsAreEqual,
-} from "@aws/amazon-q-developer-cli-shared/utils";
+} from "@tab/shared/utils";
 import {
   countEqualOptions,
   Annotation,
   TokenType,
-} from "@aws/amazon-q-developer-cli-autocomplete-parser";
-import {
-  getSetting,
-  SETTINGS,
-  SettingsMap,
-} from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
+} from "@tab/autocomplete-parser";
+import { getSetting, SETTINGS, SettingsMap } from "@tab/api-bindings-wrappers";
 import { GeneratorState } from "../generators/helpers";
 
 import {

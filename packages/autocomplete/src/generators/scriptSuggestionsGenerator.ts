@@ -1,5 +1,5 @@
 import logger from "loglevel";
-import { executeCommandTimeout } from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
+import { executeCommandTimeout } from "@tab/api-bindings-wrappers";
 import { runPipingConsoleMethods } from "../utils";
 import {
   GeneratorContext,

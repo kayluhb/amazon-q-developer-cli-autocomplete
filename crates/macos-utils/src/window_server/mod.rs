@@ -79,7 +79,7 @@ const BLOCKED_BUNDLE_IDS: &[&str] = &[
     "com.apple.WebKit.Networking",
     "com.apple.controlcenter",
     "com.mschrage.fig",
-    "com.amazon.codewhisperer",
+    "com.kayluhb.tab",
 ];
 
 // TODO: -- should this use fig_util crate Terminal struct?

@@ -204,7 +204,7 @@ def build_macos_ime(
     fig_input_method_bin = build_cargo_bin(
         release=release, variant=Variant.FULL, package="fig_input_method", targets=targets
     )
-    input_method_app = pathlib.Path("build/CodeWhispererInputMethod.app")
+    input_method_app = pathlib.Path("build/TabInputMethod.app")
 
     (input_method_app / "Contents/MacOS").mkdir(parents=True, exist_ok=True)
 
@@ -330,10 +330,10 @@ def build_macos_desktop_app(
         ]
     )
 
-    info("Copying CodeWhispererInputMethod.app into bundle")
+    info("Copying TabInputMethod.app into bundle")
     helpers_dir = app_path / "Contents/Helpers"
     helpers_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(ime_app, helpers_dir.joinpath("CodeWhispererInputMethod.app"))
+    shutil.copytree(ime_app, helpers_dir.joinpath("TabInputMethod.app"))
 
     info("Grabbing themes")
     theme_repo = BUILD_DIR / "themes"

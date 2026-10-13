@@ -1,7 +1,7 @@
 import { InstallCheckWithInstallKey } from "@/types/preferences";
 import accessibility_fig from "@assets/images/accessibility_fig.png?url";
 import { PRODUCT_NAME } from "@/lib/constants";
-import { Platform } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Platform } from "@tab/api-bindings";
 
 const getBackupsDir = (): string => {
   const backupsDir = window?.fig?.constants?.backupsDir;
@@ -9,7 +9,7 @@ const getBackupsDir = (): string => {
   if (backupsDir && home) {
     return backupsDir.replace(home, "~") + "/";
   } else {
-    return "~/.amazon-q.dotfiles.bak/";
+    return "~/.tab.dotfiles.bak/";
   }
 };
 

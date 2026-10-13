@@ -152,11 +152,11 @@ impl Env {
     }
 
     pub fn in_codespaces(&self) -> bool {
-        self.get_os("CODESPACES").is_some() || self.get_os("Q_CODESPACES").is_some()
+        self.get_os("CODESPACES").is_some() || self.get_os("TAB_CODESPACES").is_some()
     }
 
     pub fn in_ci(&self) -> bool {
-        self.get_os("CI").is_some() || self.get_os("Q_CI").is_some()
+        self.get_os("CI").is_some() || self.get_os("TAB_CI").is_some()
     }
 
     /// Whether or not the current executable is run from an AppImage.
@@ -168,39 +168,39 @@ impl Env {
 
     // Q-specific environment variable methods
     pub fn q_fake_is_remote(&self) -> bool {
-        self.get_os("Q_FAKE_IS_REMOTE").is_some()
+        self.get_os("TAB_FAKE_IS_REMOTE").is_some()
     }
 
     pub fn q_log_level(&self) -> Result<String, VarError> {
-        self.get("Q_LOG_LEVEL")
+        self.get("TAB_LOG_LEVEL")
     }
 
     pub fn q_log_stdout(&self) -> bool {
-        self.get_os("Q_LOG_STDOUT").is_some()
+        self.get_os("TAB_LOG_STDOUT").is_some()
     }
 
     pub fn q_parent(&self) -> Result<String, VarError> {
-        self.get("Q_PARENT")
+        self.get("TAB_PARENT")
     }
 
     pub fn q_term(&self) -> Result<String, VarError> {
-        self.get("Q_TERM")
+        self.get("TAB_TERM")
     }
 
     pub fn q_using_zsh_autosuggestions(&self) -> bool {
-        self.get_os("Q_USING_ZSH_AUTOSUGGESTIONS").is_some()
+        self.get_os("TAB_USING_ZSH_AUTOSUGGESTIONS").is_some()
     }
 
     pub fn q_init_snapshot_test(&self) -> bool {
-        self.get_os("Q_INIT_SNAPSHOT_TEST").is_some()
+        self.get_os("TAB_INIT_SNAPSHOT_TEST").is_some()
     }
 
     pub fn q_backend(&self) -> Result<String, VarError> {
-        self.get("Q_BACKEND")
+        self.get("TAB_BACKEND")
     }
 
     pub fn q_prompt_offset_workaround(&self) -> Result<String, VarError> {
-        self.get("Q_PROMPT_OFFSET_WORKAROUND")
+        self.get("TAB_PROMPT_OFFSET_WORKAROUND")
     }
 
     pub fn has_q_parent(&self) -> bool {

@@ -99,7 +99,7 @@ pub enum Processes {
     App,
 }
 
-/// The Amazon Q CLI
+/// The Tab CLI
 #[deny(missing_docs)]
 #[derive(Debug, PartialEq, Subcommand)]
 pub enum CliRootCommands {
@@ -115,7 +115,7 @@ pub enum CliRootCommands {
     /// Setup cli components
     #[command(alias("install"))]
     Setup(internal::InstallArgs),
-    /// Uninstall Amazon Q
+    /// Uninstall Tab
     #[command(hide = true)]
     Uninstall {
         /// Force uninstall
@@ -164,9 +164,9 @@ pub enum CliRootCommands {
 
 const HELP_TEXT: &str = color_print::cstr! {"
 
-<magenta,em>q</magenta,em> (Amazon Q CLI)
+<magenta,em>tab</magenta,em> (Tab CLI)
 
-<magenta,em>Popular Subcommands</magenta,em>              <black!><em>Usage:</em> q [subcommand]</black!>
+<magenta,em>Popular Subcommands</magenta,em>            <black!><em>Usage:</em> tab [subcommand]</black!>
 ╭────────────────────────────────────────────────────╮
 │ <em>setup</em>        <black!>Install shell integrations</black!>            │
 │ <em>doctor</em>       <black!>Debug installation issues</black!>             │
@@ -175,7 +175,7 @@ const HELP_TEXT: &str = color_print::cstr! {"
 ╰────────────────────────────────────────────────────╯
 
 <black!>To see all subcommands, use:</black!>
- <black!>❯</black!> q --help-all
+ <black!>❯</black!> tab --help-all
 ㅤ
 "};
 

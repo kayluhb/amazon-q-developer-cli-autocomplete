@@ -1,10 +1,7 @@
-import { SettingsMap } from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
+import { SettingsMap } from "@tab/api-bindings-wrappers";
 import * as app from "./fig.json";
 import { create } from "@bufbuild/protobuf";
-import {
-  ActionAvailability,
-  ActionSchema,
-} from "@aws/amazon-q-developer-cli-proto/fig";
+import { ActionAvailability, ActionSchema } from "@tab/proto/fig";
 
 const SELECT_SUGGESTION_ACTION_PREFIX = "selectSuggestion";
 

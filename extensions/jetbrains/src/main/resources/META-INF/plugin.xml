@@ -3,7 +3,7 @@
 <idea-plugin>
 
   <!-- Unique id for this plugin. Must stay constant for the life of the plugin. -->
-  <id>com.amazon.codewhisperer.jetbrains</id>
+  <id>com.kayluhb.tab.jetbrains</id>
 
   <!-- Text to display as name on Preferences/Settings | Plugin page -->
   <name>Amazon Q for command line</name>

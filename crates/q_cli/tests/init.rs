@@ -20,7 +20,7 @@ macro_rules! init_test {
             fn [<init_output_ $shell _ $stage _ $file>]() -> Result<String, Box<dyn std::error::Error>> {
                 let mut cmd = Command::cargo_bin("q_cli").unwrap();
                 cmd.arg("init").arg($shell).arg($stage).arg("--rcfile").arg($file);
-                cmd.env("Q_INIT_SNAPSHOT_TEST", "1");
+                cmd.env("TAB_INIT_SNAPSHOT_TEST", "1");
                 let out = cmd.assert().success().get_output().stdout.clone();
                 Ok(String::from_utf8(out)?)
             }
@@ -53,7 +53,7 @@ macro_rules! init_test {
 
                 let mut cmd = Command::new($exe);
                 cmd$(.arg($arg))*.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
-                cmd.env("Q_INIT_SNAPSHOT_TEST", "1");
+                cmd.env("TAB_INIT_SNAPSHOT_TEST", "1");
 
                 let child = cmd.spawn().context(format!("{} is not installed", $exe))?;
                 write!(child.stdin.as_ref().unwrap(), "{}", init)?;

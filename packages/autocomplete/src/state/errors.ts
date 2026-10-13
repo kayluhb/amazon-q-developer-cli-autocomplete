@@ -1,3 +1,3 @@
-import { createErrorInstance } from "@aws/amazon-q-developer-cli-shared/errors";
+import { createErrorInstance } from "@tab/shared/errors";
 
 export const InsertPrefixError = createErrorInstance("InsertPrefixError");

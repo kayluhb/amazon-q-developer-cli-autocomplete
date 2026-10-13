@@ -120,17 +120,17 @@ importers:
 
   packages/api-bindings:
     dependencies:
-      '@aws/amazon-q-developer-cli-proto':
+      '@tab/proto':
         specifier: workspace:^
         version: link:../../proto
       '@bufbuild/protobuf':
         specifier: 2.4.0
         version: 2.4.0
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       '@tsconfig/recommended':
@@ -163,23 +163,23 @@ importers:
 
   packages/api-bindings-wrappers:
     dependencies:
-      '@aws/amazon-q-developer-cli-api-bindings':
+      '@tab/api-bindings':
         specifier: workspace:~
         version: link:../api-bindings
       loglevel:
         specifier: ^1.9.2
         version: 1.9.2
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@aws/amazon-q-developer-cli-shared':
+      '@tab/shared':
         specifier: workspace:^
         version: link:../shared
       '@withfig/autocomplete-types':
@@ -197,19 +197,19 @@ importers:
 
   packages/autocomplete:
     dependencies:
-      '@aws/amazon-q-developer-cli-api-bindings':
+      '@tab/api-bindings':
         specifier: workspace:~
         version: link:../api-bindings
-      '@aws/amazon-q-developer-cli-api-bindings-wrappers':
+      '@tab/api-bindings-wrappers':
         specifier: workspace:^
         version: link:../api-bindings-wrappers
-      '@aws/amazon-q-developer-cli-autocomplete-parser':
+      '@tab/autocomplete-parser':
         specifier: workspace:^
         version: link:../autocomplete-parser
-      '@aws/amazon-q-developer-cli-proto':
+      '@tab/proto':
         specifier: workspace:^
         version: link:../../proto
-      '@aws/amazon-q-developer-cli-shell-parser':
+      '@tab/shell-parser':
         specifier: workspace:^
         version: link:../shell-parser
       '@bufbuild/protobuf':
@@ -252,16 +252,16 @@ importers:
         specifier: ^4.5.6
         version: 4.5.6(@types/react@18.3.18)(react@18.3.1)
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@aws/amazon-q-developer-cli-fuzzysort':
+      '@tab/fuzzysort':
         specifier: workspace:^
         version: link:../fuzzysort
-      '@aws/amazon-q-developer-cli-shared':
+      '@tab/shared':
         specifier: workspace:^
         version: link:../shared
       '@types/js-yaml':
@@ -321,19 +321,19 @@ importers:
 
   packages/autocomplete-app:
     dependencies:
-      '@aws/amazon-q-developer-cli-api-bindings':
+      '@tab/api-bindings':
         specifier: workspace:~
         version: link:../api-bindings
-      '@aws/amazon-q-developer-cli-api-bindings-wrappers':
+      '@tab/api-bindings-wrappers':
         specifier: workspace:^
         version: link:../api-bindings-wrappers
-      '@aws/amazon-q-developer-cli-autocomplete-parser':
+      '@tab/autocomplete-parser':
         specifier: workspace:^
         version: link:../autocomplete-parser
-      '@aws/amazon-q-developer-cli-proto':
+      '@tab/proto':
         specifier: workspace:^
         version: link:../../proto
-      '@aws/amazon-q-developer-cli-shell-parser':
+      '@tab/shell-parser':
         specifier: workspace:^
         version: link:../shell-parser
       '@bufbuild/protobuf':
@@ -376,16 +376,16 @@ importers:
         specifier: ^4.5.6
         version: 4.5.6(@types/react@18.3.18)(react@18.3.1)
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@aws/amazon-q-developer-cli-fuzzysort':
+      '@tab/fuzzysort':
         specifier: workspace:^
         version: link:../fuzzysort
-      '@aws/amazon-q-developer-cli-shared':
+      '@tab/shared':
         specifier: workspace:^
         version: link:../shared
       '@types/js-yaml':
@@ -445,13 +445,13 @@ importers:
 
   packages/autocomplete-parser:
     dependencies:
-      '@aws/amazon-q-developer-cli-api-bindings':
+      '@tab/api-bindings':
         specifier: workspace:^
         version: link:../api-bindings
-      '@aws/amazon-q-developer-cli-api-bindings-wrappers':
+      '@tab/api-bindings-wrappers':
         specifier: workspace:^
         version: link:../api-bindings-wrappers
-      '@aws/amazon-q-developer-cli-shell-parser':
+      '@tab/shell-parser':
         specifier: workspace:^
         version: link:../shell-parser
       '@fig/autocomplete-generators':
@@ -473,16 +473,16 @@ importers:
         specifier: ^3.25.7
         version: 3.25.7
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@aws/amazon-q-developer-cli-shared':
+      '@tab/shared':
         specifier: workspace:^
         version: link:../shared
       '@types/semver':
@@ -503,7 +503,7 @@ importers:
 
   packages/dashboard-app:
     dependencies:
-      '@aws/amazon-q-developer-cli-api-bindings':
+      '@tab/api-bindings':
         specifier: workspace:^
         version: link:../api-bindings
       '@radix-ui/react-collapsible':
@@ -564,7 +564,7 @@ importers:
         specifier: ^4.5.6
         version: 4.5.6(@types/react@18.3.18)(react@18.3.1)
     devDependencies:
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../types
       '@eslint/js':
@@ -621,7 +621,7 @@ importers:
 
   packages/eslint-config:
     devDependencies:
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       '@eslint/js':
@@ -675,16 +675,16 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@aws/amazon-q-developer-cli-fuzzysort':
+      '@tab/fuzzysort':
         specifier: workspace:^
         version: link:../fuzzysort
       '@withfig/autocomplete-types':
@@ -702,14 +702,14 @@ importers:
 
   packages/shell-parser:
     dependencies:
-      '@aws/amazon-q-developer-cli-shared':
+      '@tab/shared':
         specifier: workspace:^
         version: link:../shared
     devDependencies:
-      '@amzn/eslint-config':
+      '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       '@vitest/coverage-v8':
@@ -742,7 +742,7 @@ importers:
         specifier: 2.4.0
         version: 2.4.0
     devDependencies:
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../packages/tsconfig
       '@bufbuild/buf':
@@ -757,13 +757,13 @@ importers:
 
   tests/fig-api:
     devDependencies:
-      '@amzn/tsconfig':
+      '@tab/tsconfig':
         specifier: workspace:^
         version: link:../../packages/tsconfig
-      '@amzn/types':
+      '@tab/types':
         specifier: workspace:^
         version: link:../../packages/types
-      '@aws/amazon-q-developer-cli-api-bindings':
+      '@tab/api-bindings':
         specifier: workspace:^
         version: link:../../packages/api-bindings
       '@types/node':

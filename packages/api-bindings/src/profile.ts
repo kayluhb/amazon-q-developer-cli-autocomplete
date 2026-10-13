@@ -1,4 +1,4 @@
-import { ProfileSchema } from "@aws/amazon-q-developer-cli-proto/fig";
+import { ProfileSchema } from "@tab/proto/fig";
 import {
   sendListAvailableProfilesRequest,
   sendSetProfileRequest,

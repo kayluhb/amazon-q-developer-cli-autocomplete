@@ -1,4 +1,4 @@
-import { Telemetry } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Telemetry } from "@tab/api-bindings";
 import { version } from "../package.json";
 
 export const trackEvent = (

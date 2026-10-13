@@ -270,7 +270,7 @@ pub fn get_system_id() -> Option<&'static str> {
 }
 
 pub fn get_platform() -> &'static str {
-    if let Some(over_ride) = option_env!("Q_OVERRIDE_PLATFORM") {
+    if let Some(over_ride) = option_env!("TAB_OVERRIDE_PLATFORM") {
         over_ride
     } else {
         std::env::consts::OS
@@ -278,7 +278,7 @@ pub fn get_platform() -> &'static str {
 }
 
 pub fn get_arch() -> &'static str {
-    if let Some(over_ride) = option_env!("Q_OVERRIDE_ARCH") {
+    if let Some(over_ride) = option_env!("TAB_OVERRIDE_ARCH") {
         over_ride
     } else {
         std::env::consts::ARCH

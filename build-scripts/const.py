@@ -1,16 +1,16 @@
 import pathlib
 
 
-APP_NAME = "Amazon Q"
-CLI_BINARY_NAME = "q"
-CLI_BINARY_NAME_MINIMAL = "q-minimal"
-PTY_BINARY_NAME = "qterm"
-DESKTOP_BINARY_NAME = "q-desktop"
-URL_SCHEMA = "q"
-TAURI_PRODUCT_NAME = "q_desktop"
+APP_NAME = "Tab"
+CLI_BINARY_NAME = "tab"
+CLI_BINARY_NAME_MINIMAL = "tab-minimal"
+PTY_BINARY_NAME = "tabterm"
+DESKTOP_BINARY_NAME = "tab-desktop"
+URL_SCHEMA = "tab"
+TAURI_PRODUCT_NAME = "tab_desktop"
 
 # macos specific
-MACOS_BUNDLE_ID = "com.amazon.codewhisperer"
+MACOS_BUNDLE_ID = "com.kayluhb.tab"
 DMG_NAME = APP_NAME
 
 # Linux specific

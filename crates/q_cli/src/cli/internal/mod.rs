@@ -62,7 +62,7 @@ use fig_util::directories::{
     logs_dir,
     update_lock_path,
 };
-use fig_util::env_var::QTERM_SESSION_ID;
+use fig_util::env_var::TABTERM_SESSION_ID;
 use fig_util::{
     CLI_BINARY_NAME,
     directories,
@@ -153,7 +153,7 @@ pub enum StateComponent {
 #[command(hide = true, alias = "_")]
 pub enum InternalSubcommand {
     /// Command that is run during the PreCmd section of
-    /// the Amazon Q integrations.
+    /// the Tab integrations.
     PreCmd {
         #[arg(long, allow_hyphen_values = true)]
         alias: Option<String>,
@@ -162,9 +162,9 @@ pub enum InternalSubcommand {
     LocalState(local_state::LocalStateArgs),
     /// Callback used for the internal pseudoterminal
     Callback(CallbackArgs),
-    /// Install the Amazon Q cli
+    /// Install the Tab CLI
     Install(InstallArgs),
-    /// Uninstall the Amazon Q cli
+    /// Uninstall the Tab CLI
     Uninstall {
         /// Uninstall only the shell integrations
         #[arg(long)]
@@ -186,7 +186,7 @@ pub enum InternalSubcommand {
     /// Exit code:
     /// - 0 execute figterm
     /// - 1 dont execute figterm
-    /// - 2 fallback to Q_TERM env
+    /// - 2 fallback to TAB_TERM env
     ShouldFigtermLaunch,
     Event {
         /// Name of the event.
@@ -296,7 +296,7 @@ impl InternalSubcommand {
                     InstallComponents::all()
                 };
                 if components.contains(InstallComponents::BINARY) {
-                    if option_env!("Q_IS_PACKAGE_MANAGED").is_some() {
+                    if option_env!("TAB_IS_PACKAGE_MANAGED").is_some() {
                         println!("Please uninstall using your package manager");
                     } else {
                         fig_install::uninstall(InstallComponents::BINARY, Arc::clone(&ctx)).await?;
@@ -604,7 +604,7 @@ impl InternalSubcommand {
                 })
                 .ok();
 
-                if let Ok(session_id) = std::env::var(QTERM_SESSION_ID) {
+                if let Ok(session_id) = std::env::var(TABTERM_SESSION_ID) {
                     let mut conn =
                         BufferedUnixStream::connect(fig_util::directories::figterm_socket_path(&session_id)?).await?;
                     conn.send_message(FigtermRequestMessage {
@@ -748,7 +748,7 @@ impl InternalSubcommand {
 }
 
 pub async fn pre_cmd(alias: Option<String>) -> ExitCode {
-    let Ok(session_id) = std::env::var(QTERM_SESSION_ID) else {
+    let Ok(session_id) = std::env::var(TABTERM_SESSION_ID) else {
         return ExitCode::FAILURE;
     };
 

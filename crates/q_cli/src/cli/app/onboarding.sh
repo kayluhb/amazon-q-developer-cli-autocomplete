@@ -7,7 +7,7 @@ set -e
 # Force current process to be shell, rather than `env`.
 cd ~
 TTY=$(tty)
-q hook prompt $$ "$TTY" 1>/dev/null 2>&1 
+tab hook prompt $$ "$TTY" 1>/dev/null 2>&1 
 
 # Colors
 YELLOW=$(tput setaf 3)
@@ -40,7 +40,7 @@ function prepare_prompt {
 }
 
 function reset_prompt {
-    (q hook pre-exec $$ "$TTY" 1>/dev/null 2>&1 )
+    (tab hook pre-exec $$ "$TTY" 1>/dev/null 2>&1 )
 }
 
 print_special() {
@@ -76,7 +76,7 @@ exit_script_nice() {
 clear 
 cat <<EOF
 
-  ${BOLD}${UNDERLINE}Amazon Q's onboarding was quit${NORMAL}
+  ${BOLD}${UNDERLINE}Tab's onboarding was quit${NORMAL}
   
   You can redo this onboarding any time. Just run ${BOLD}${MAGENTA}fig onboarding${NORMAL}
    
@@ -118,9 +118,9 @@ EOF
 
 ## you can also use <<-'EOF' to strip tab character from start of each line
 cat <<EOF 
-   Hey! Welcome to ${MAGENTA}${BOLD}Amazon Q${NORMAL}.
+   Hey! Welcome to ${MAGENTA}${BOLD}Tab${NORMAL}.
 
-   This quick walkthrough will show you how Amazon Q works.
+   This quick walkthrough will show you how Tab works.
 
 
 
@@ -134,7 +134,7 @@ clear
 
 cat <<EOF
    
-   ${BOLD}${MAGENTA}Amazon Q${NORMAL} suggests commands, options, and arguments as you type.
+   ${BOLD}${MAGENTA}Tab${NORMAL} suggests commands, options, and arguments as you type.
 
    ${BOLD}Autocomplete Basics${NORMAL}
 
@@ -148,7 +148,7 @@ EOF
 press_enter_to_continue
 clear
 
-(q hook init $$ "$TTY" 1>/dev/null 2>&1)
+(tab hook init $$ "$TTY" 1>/dev/null 2>&1)
 cat <<EOF
 
    ${BOLD}Example${NORMAL}
@@ -189,7 +189,7 @@ while true; do
   esac
 done
 
-(q hook init $$ "$TTY" 1>/dev/null 2>&1)
+(tab hook init $$ "$TTY" 1>/dev/null 2>&1)
 clear 
 cat <<EOF
 
@@ -233,7 +233,7 @@ done
 
 clear 
 
-(q hook init $$ "$TTY" 1>/dev/null 2>&1)
+(tab hook init $$ "$TTY" 1>/dev/null 2>&1)
 cat <<EOF
    
    ${BOLD}Last Step: The ${MAGENTA}Fig${NORMAL} ${BOLD}CLI${NORMAL}
@@ -255,7 +255,7 @@ echo
 # Font name = Ivrit
 clear
 # Prompt user to restart terminal after running Fig doctor
-q _ local-state doctor.prompt-restart-terminal true 1>/dev/null 2>&1
+tab _ local-state doctor.prompt-restart-terminal true 1>/dev/null 2>&1
 cat <<EOF
 
    ${BOLD}One last thing...${NORMAL}

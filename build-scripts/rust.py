@@ -56,16 +56,16 @@ def rust_env(release: bool, variant: Optional[Variant] = None, linker=None) -> D
     if isDarwin():
         env["MACOSX_DEPLOYMENT_TARGET"] = "10.13"
 
-    env["AMAZON_Q_BUILD_TARGET_TRIPLE"] = get_target_triple()
-    env["AMAZON_Q_BUILD_HASH"] = build_hash()
-    env["AMAZON_Q_BUILD_DATETIME"] = build_datetime()
+    env["TAB_BUILD_TARGET_TRIPLE"] = get_target_triple()
+    env["TAB_BUILD_HASH"] = build_hash()
+    env["TAB_BUILD_DATETIME"] = build_datetime()
     if variant:
-        env["AMAZON_Q_BUILD_VARIANT"] = variant.name
+        env["TAB_BUILD_VARIANT"] = variant.name
 
     # Test related env vars:
-    env["Q_TELEMETRY_CLIENT_ID"] = "ffffffff-ffff-ffff-ffff-ffffffffffff"
+    env["TAB_TELEMETRY_CLIENT_ID"] = "ffffffff-ffff-ffff-ffff-ffffffffffff"
     if skip_fish_tests():
-        env["AMAZON_Q_BUILD_SKIP_FISH_TESTS"] = "1"
+        env["TAB_BUILD_SKIP_FISH_TESTS"] = "1"
 
     return env
 
@@ -86,7 +86,7 @@ def get_target_triple() -> str:
     """
     Returns the target triple to be built and defined in the application manifest.
     """
-    env = environ.get("AMAZON_Q_BUILD_TARGET_TRIPLE")
+    env = environ.get("TAB_BUILD_TARGET_TRIPLE")
     if env:
         return env
     return "universal-apple-darwin"

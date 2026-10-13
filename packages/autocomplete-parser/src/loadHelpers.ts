@@ -1,14 +1,7 @@
 import logger, { Logger } from "loglevel";
 import * as semver from "semver";
-import {
-  ensureTrailingSlash,
-  withTimeout,
-} from "@aws/amazon-q-developer-cli-shared/utils";
-import {
-  executeCommand,
-  fread,
-  isInDevMode,
-} from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
+import { ensureTrailingSlash, withTimeout } from "@tab/shared/utils";
+import { executeCommand, fread, isInDevMode } from "@tab/api-bindings-wrappers";
 import z from "zod";
 import { MOST_USED_SPECS } from "./constants.js";
 import { LoadLocalSpecError, SpecCDNError } from "./errors.js";

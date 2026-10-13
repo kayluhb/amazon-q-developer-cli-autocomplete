@@ -11,9 +11,9 @@ license.workspace = true
 workspace = true
 
 [package.metadata.bundle]
-bundle_name = "CodeWhispererInputMethod"
-bundle_identifier = "com.amazon.inputmethod.codewhisperer"
-input_source_identifier = "com.amazon.inputmethod.codewhisperer"
+bundle_name = "TabInputMethod"
+bundle_identifier = "com.kayluhb.inputmethod.tab"
+input_source_identifier = "com.kayluhb.inputmethod.tab"
 invisible_in_system_ui = true
 input_method_type = "palette"
 

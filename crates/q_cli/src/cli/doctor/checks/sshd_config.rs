@@ -25,7 +25,7 @@ impl DoctorCheck<()> for SshdConfigCheck {
     async fn check(&self, _: &()) -> Result<(), DoctorError> {
         let info = vec![
             "The /etc/ssh/sshd_config file needs to have the following line:".into(),
-            "  AcceptEnv Q_SET_PARENT".magenta().to_string().into(),
+            "  AcceptEnv TAB_SET_PARENT".magenta().to_string().into(),
             "  AllowStreamLocalForwarding yes".magenta().to_string().into(),
             "".into(),
             "If your sshd_config is already configured correctly then:".into(),
@@ -91,7 +91,7 @@ impl DoctorCheck<()> for SshdConfigCheck {
 }
 
 fn is_sshd_config_valid(sshd_config: &str) -> bool {
-    let accept_env_regex = Regex::new(r"(?m)^\s*AcceptEnv\s+.*(Q_\*|Q_SET_PARENT)([^\S\r\n]+.*$|$)").unwrap();
+    let accept_env_regex = Regex::new(r"(?m)^\s*AcceptEnv\s+.*(Q_\*|TAB_SET_PARENT)([^\S\r\n]+.*$|$)").unwrap();
 
     let allow_stream_local_forwarding_regex =
         Regex::new(r"(?m)^\s*AllowStreamLocalForwarding\s+yes([^\S\r\n]+.*$|$)").unwrap();
@@ -118,15 +118,15 @@ mod tests {
     #[test]
     fn test_is_sshd_config_valid() {
         let valid_configs = [
-            "AcceptEnv Q_SET_PARENT\nAllowStreamLocalForwarding yes",
-            "AcceptEnv Q_SET_PARENT\nAllowStreamLocalForwarding yes\n# Some comment",
-            "# Some comment\nAcceptEnv Q_SET_PARENT\nAllowStreamLocalForwarding yes",
-            "Other config 1\nAcceptEnv Q_SET_PARENT\nAllowStreamLocalForwarding yes\n# Some other comment\nOther config 2",
+            "AcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes",
+            "AcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes\n# Some comment",
+            "# Some comment\nAcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes",
+            "Other config 1\nAcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes\n# Some other comment\nOther config 2",
         ];
 
         let invalid_config = [
-            "AcceptEnv Q_SET_PARENT\nAllowStreamLocalForwarding no",
-            "AcceptEnv Q_SET_PARENT\n# AllowStreamLocalForwarding yes",
+            "AcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding no",
+            "AcceptEnv TAB_SET_PARENT\n# AllowStreamLocalForwarding yes",
             "Other config 1\nAllowStreamLocalForwarding yes\nOther config 2",
         ];
 

@@ -1,6 +1,6 @@
-import { Suggestion } from "@aws/amazon-q-developer-cli-shared/internal";
-import { SETTINGS } from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
-import * as settings from "@aws/amazon-q-developer-cli-api-bindings-wrappers";
+import { Suggestion } from "@tab/shared/internal";
+import { SETTINGS } from "@tab/api-bindings-wrappers";
+import * as settings from "@tab/api-bindings-wrappers";
 import {
   MockInstance,
   afterAll,

@@ -12,12 +12,12 @@ export TTY
 
 export SHELL_PID="$$"
 
-Q_LAST_PS1="$PS1"
-Q_LAST_PS2="$PS2"
-Q_LAST_PS3="$PS3"
+TAB_LAST_PS1="$PS1"
+TAB_LAST_PS2="$PS2"
+TAB_LAST_PS3="$PS3"
 
-if [[ -z "${Q_SHELL:-}" ]]; then
-  Q_SHELL=$({{CLI_BINARY_NAME}} _ get-shell)
+if [[ -z "${TAB_SHELL:-}" ]]; then
+  TAB_SHELL=$({{CLI_BINARY_NAME}} _ get-shell)
 fi
 
 # Construct Operating System Command.
@@ -25,22 +25,22 @@ fi
 function fig_osc { printf "\033]697;$1\007" "${@:2}"; }
 
 function __fig_preexec() {
-  fig_osc "OSCLock=%s" "${QTERM_SESSION_ID}"
+  fig_osc "OSCLock=%s" "${TABTERM_SESSION_ID}"
   fig_osc PreExec
 
   # Reset user prompts before executing a command, but only if it hasn't
   # changed since we last set it.
-  if [[ -n "${Q_USER_PS1+x}" && "${PS1}" = "${Q_LAST_PS1}" ]]; then
-    Q_LAST_PS1="${Q_USER_PS1}"
-    PS1="${Q_USER_PS1}"
+  if [[ -n "${TAB_USER_PS1+x}" && "${PS1}" = "${TAB_LAST_PS1}" ]]; then
+    TAB_LAST_PS1="${TAB_USER_PS1}"
+    PS1="${TAB_USER_PS1}"
   fi
-  if [[ -n "${Q_USER_PS2+x}" && "${PS2}" = "${Q_LAST_PS2}" ]]; then
-    Q_LAST_PS2="${Q_USER_PS2}"
-    PS2="${Q_USER_PS2}"
+  if [[ -n "${TAB_USER_PS2+x}" && "${PS2}" = "${TAB_LAST_PS2}" ]]; then
+    TAB_LAST_PS2="${TAB_USER_PS2}"
+    PS2="${TAB_USER_PS2}"
   fi
-  if [[ -n "${Q_USER_PS3+x}" && "${PS3}" = "${Q_LAST_PS3}" ]]; then
-    Q_LAST_PS3="${Q_USER_PS3}"
-    PS3="${Q_USER_PS3}"
+  if [[ -n "${TAB_USER_PS3+x}" && "${PS3}" = "${TAB_LAST_PS3}" ]]; then
+    TAB_LAST_PS3="${TAB_USER_PS3}"
+    PS3="${TAB_USER_PS3}"
   fi
 
   _fig_done_preexec="yes"
@@ -55,17 +55,17 @@ function __fig_preexec_preserve_status() {
 function __fig_pre_prompt () {
   __fig_ret_value="$?"
 
-  fig_osc "OSCUnlock=%s" "${QTERM_SESSION_ID}"
+  fig_osc "OSCUnlock=%s" "${TABTERM_SESSION_ID}"
   fig_osc "Dir=%s" "${PWD}"
   fig_osc "Shell=bash"
-  fig_osc "ShellPath=%s" "${Q_SHELL:-$SHELL}"
+  fig_osc "ShellPath=%s" "${TAB_SHELL:-$SHELL}"
   if [[ -n "${WSL_DISTRO_NAME}" ]]; then
     fig_osc "WSLDistro=%s" "${WSL_DISTRO_NAME}"
   fi
   fig_osc "PID=%d" "$$"
   fig_osc "ExitCode=%s" "$__fig_ret_value"
   fig_osc "TTY=%s" "${TTY}"
-  fig_osc "Log=%s" "${Q_LOG_LEVEL}"
+  fig_osc "Log=%s" "${TAB_LOG_LEVEL}"
   fig_osc "User=%s" "${USER:-root}"
 
   if command -v {{CLI_BINARY_NAME}} >/dev/null 2>&1; then
@@ -86,32 +86,32 @@ function __fig_post_prompt () {
 
   __fig_reset_hooks
 
-  # If Q_USER_PSx is undefined or PSx changed by user, update Q_USER_PSx.
-  if [[ -z "${Q_USER_PS1+x}" || "${PS1}" != "${Q_LAST_PS1}" ]]; then
-    Q_USER_PS1="${PS1}"
+  # If TAB_USER_PSx is undefined or PSx changed by user, update TAB_USER_PSx.
+  if [[ -z "${TAB_USER_PS1+x}" || "${PS1}" != "${TAB_LAST_PS1}" ]]; then
+    TAB_USER_PS1="${PS1}"
   fi
-  if [[ -z "${Q_USER_PS2+x}" || "${PS2}" != "${Q_LAST_PS2}" ]]; then
-    Q_USER_PS2="${PS2}"
+  if [[ -z "${TAB_USER_PS2+x}" || "${PS2}" != "${TAB_LAST_PS2}" ]]; then
+    TAB_USER_PS2="${PS2}"
   fi
-  if [[ -z "${Q_USER_PS3+x}" || "${PS3}" != "${Q_LAST_PS3}" ]]; then
-    Q_USER_PS3="${PS3}"
+  if [[ -z "${TAB_USER_PS3+x}" || "${PS3}" != "${TAB_LAST_PS3}" ]]; then
+    TAB_USER_PS3="${PS3}"
   fi
 
   START_PROMPT="\[$(fig_osc StartPrompt)\]"
   END_PROMPT="\[$(fig_osc EndPrompt)\]"
   # shellcheck disable=SC2086
   # it's already double quoted, dummy
-  NEW_CMD="\[$(fig_osc NewCmd=${QTERM_SESSION_ID})\]"
+  NEW_CMD="\[$(fig_osc NewCmd=${TABTERM_SESSION_ID})\]"
 
-  # Reset $? first in case it's used in $Q_USER_PSx.
+  # Reset $? first in case it's used in $TAB_USER_PSx.
   __bp_set_ret_value "${__fig_ret_value}" "${__bp_last_argument_prev_command}"
-  PS1="${START_PROMPT}${Q_USER_PS1}${END_PROMPT}${NEW_CMD}"
-  PS2="${START_PROMPT}${Q_USER_PS2}${END_PROMPT}"
-  PS3="${START_PROMPT}${Q_USER_PS3}${END_PROMPT}${NEW_CMD}"
+  PS1="${START_PROMPT}${TAB_USER_PS1}${END_PROMPT}${NEW_CMD}"
+  PS2="${START_PROMPT}${TAB_USER_PS2}${END_PROMPT}"
+  PS3="${START_PROMPT}${TAB_USER_PS3}${END_PROMPT}${NEW_CMD}"
 
-  Q_LAST_PS1="${PS1}"
-  Q_LAST_PS2="${PS2}"
-  Q_LAST_PS3="${PS3}"
+  TAB_LAST_PS1="${PS1}"
+  TAB_LAST_PS2="${PS2}"
+  TAB_LAST_PS3="${PS3}"
 }
 
 __fig_reset_hooks() {
@@ -174,7 +174,7 @@ if [[ "${TERM_PROGRAM}" != "WarpTerminal" ]]; then
   __bp_install_after_session_init
 fi
 __fig_reset_hooks
-if [[ -n "${PROCESS_LAUNCHED_BY_Q:-}" ]]; then
+if [[ -n "${PROCESS_LAUNCHED_BY_TAB:-}" ]]; then
   fig_osc DoneSourcing
 fi
 

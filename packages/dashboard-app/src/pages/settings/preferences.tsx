@@ -1,7 +1,7 @@
 import { UserPrefView } from "@/components/preference/list";
 import { Button } from "@/components/ui/button";
 import settings from "@/data/preferences";
-import { Native } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Native } from "@tab/api-bindings";
 
 export default function Page() {
   return (
@@ -19,7 +19,7 @@ export default function Page() {
           className="px-0 text-blue-500 hover:underline decoration-1 underline-offset-1 hover:text-blue-800 hover:underline-offset-4 transition-all duration-100 text-sm"
           onClick={() => {
             Native.open(
-              "file:///Applications/Amazon Q.app/Contents/Resources/dashboard/license/NOTICE.txt",
+              "file:///Applications/Tab.app/Contents/Resources/dashboard/license/NOTICE.txt",
             );
           }}
         >

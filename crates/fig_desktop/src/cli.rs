@@ -15,7 +15,7 @@ pub struct Cli {
     /// Allow launching multiple instances of `fig_desktop`
     #[arg(long)]
     pub allow_multiple: bool,
-    /// Accepted for compatibility with `q launch`; the standalone build never updates
+    /// Accepted for compatibility with `tab launch`; the standalone build never updates
     #[arg(long, hide = true)]
     pub ignore_immediate_update: bool,
     /// Url to open

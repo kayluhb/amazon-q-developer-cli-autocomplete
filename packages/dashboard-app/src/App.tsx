@@ -9,7 +9,7 @@ import Keybindings from "./pages/settings/keybindings";
 import Licenses from "./pages/licenses";
 import { Suspense, useContext, useEffect, useRef } from "react";
 import Modal from "./components/modal";
-import { Telemetry, Event } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Telemetry, Event } from "@tab/api-bindings";
 import InstallModal from "./components/installs/modal";
 import { getIconFromName } from "./lib/icons";
 import { StoreContext } from "./context/zustand";
@@ -24,7 +24,7 @@ import WhatsNew from "./pages/whats-new";
 import notificationFeedItems from "../../../feed.json";
 import { useState } from "react";
 import { usePlatformInfo } from "./hooks/store/usePlatformInfo";
-import { Platform } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Platform } from "@tab/api-bindings";
 import { matchesPlatformRestrictions } from "./lib/platform";
 
 function App() {

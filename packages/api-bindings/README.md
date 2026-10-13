@@ -1,6 +1,6 @@
 # TS API Bindings
 
-The Typescript definitions for the Amazon Q for command line API.
+The Typescript definitions for the Tab for command line API.
 
 Note: The protobuf definitions are updated automatically whenever withfig/proto-api is changed.
 

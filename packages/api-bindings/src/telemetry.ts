@@ -1,7 +1,4 @@
-import {
-  TelemetryProperty,
-  TelemetryPropertySchema,
-} from "@aws/amazon-q-developer-cli-proto/fig";
+import { TelemetryProperty, TelemetryPropertySchema } from "@tab/proto/fig";
 import {
   sendTelemetryPageRequest,
   sendTelemetryTrackRequest,

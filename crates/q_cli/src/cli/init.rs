@@ -16,7 +16,7 @@ use fig_integrations::shell::{
     When,
 };
 use fig_os_shim::Context;
-use fig_util::env_var::Q_SHELL;
+use fig_util::env_var::TAB_SHELL;
 use fig_util::{
     CLI_BINARY_NAME,
     PRODUCT_NAME,
@@ -131,7 +131,7 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
     if let Some(parent_process) = get_parent_process_exe() {
         to_source.push(assign_shell_variable(
             shell,
-            Q_SHELL,
+            TAB_SHELL,
             if *IS_SNAPSHOT_TEST {
                 Path::new("/bin/zsh").display()
             } else {
@@ -147,20 +147,20 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
         } else {
             should_figterm_launch_exit_status(&Context::new(), true)
         };
-        to_source.push(assign_shell_variable(shell, "SHOULD_QTERM_LAUNCH", status, false));
+        to_source.push(assign_shell_variable(shell, "SHOULD_TABTERM_LAUNCH", status, false));
     }
 
     let is_jetbrains_terminal = Terminal::is_jetbrains_terminal();
 
     if when == &When::Pre && shell == &Shell::Bash && is_jetbrains_terminal {
         // JediTerm does not launch as a 'true' login shell, so our normal "shopt -q login_shell" check does
-        // not work. Thus, Q_IS_LOGIN_SHELL will be incorrect. We must manually set it so the
+        // not work. Thus, TAB_IS_LOGIN_SHELL will be incorrect. We must manually set it so the
         // user's bash_profile is sourced. https://github.com/JetBrains/intellij-community/blob/master/plugins/terminal/resources/jediterm-bash.in
-        to_source.push("Q_IS_LOGIN_SHELL=1".into());
+        to_source.push("TAB_IS_LOGIN_SHELL=1".into());
     }
 
     if let Some(path) = fig_settings::settings::get_string_opt("qterm.path") {
-        to_source.push(assign_shell_variable(shell, "Q_TERM_PATH", path, false));
+        to_source.push(assign_shell_variable(shell, "TAB_TERM_PATH", path, false));
     }
 
     let shell_integration_source = shell.get_fig_integration_source(when);
@@ -204,7 +204,7 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
             to_source.push(guard_source(
                 shell,
                 false,
-                "Q_JETBRAINS_SHELL_INTEGRATION",
+                "TAB_JETBRAINS_SHELL_INTEGRATION",
                 GuardAssignment::BeforeSourcing,
                 source,
             ));
@@ -233,7 +233,7 @@ fn shell_integrations_disabled_code(shell: Shell) -> String {
     guard_source(
         &shell,
         false,
-        "Q_SHELL_INTEGRATION_DISABLED",
+        "TAB_SHELL_INTEGRATION_DISABLED",
         GuardAssignment::AfterSourcing,
         format!(
             "printf '{PRODUCT_NAME} shell integration is disabled.\\nRe-enable by running: {}\\n'",
@@ -247,7 +247,7 @@ fn input_method_prompt_code(shell: Shell, terminal: &Terminal) -> String {
     guard_source(
         &shell,
         false,
-        "Q_INPUT_METHOD_PROMPT",
+        "TAB_INPUT_METHOD_PROMPT",
         GuardAssignment::AfterSourcing,
         format!(
             "printf '\\n🚀 {PRODUCT_NAME} supports {terminal}!\\n\\nEnable integrations with {terminal} by \

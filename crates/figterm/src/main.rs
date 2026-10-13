@@ -62,10 +62,10 @@ use fig_proto::remote_hooks::{
 use fig_settings::state;
 use fig_util::consts::CLI_BINARY_NAME;
 use fig_util::env_var::{
-    Q_LOG_LEVEL,
-    Q_SHELL,
-    Q_TERM,
-    QTERM_SESSION_ID,
+    TAB_LOG_LEVEL,
+    TAB_SHELL,
+    TAB_TERM,
+    TABTERM_SESSION_ID,
 };
 use fig_util::process_info::{
     Pid,
@@ -320,10 +320,10 @@ where
     shell_enabled && !insertion_locked && !preexec
 }
 
-const Q_DISABLE_AUTOCOMPLETE: &str = "Q_DISABLE_AUTOCOMPLETE";
+const TAB_DISABLE_AUTOCOMPLETE: &str = "TAB_DISABLE_AUTOCOMPLETE";
 
 fn autocomplete_enabled(env: &Env) -> bool {
-    env.get_os(Q_DISABLE_AUTOCOMPLETE).is_none_or(|s| s.is_empty())
+    env.get_os(TAB_DISABLE_AUTOCOMPLETE).is_none_or(|s| s.is_empty())
 }
 
 static AUTOCOMPLETE_ENABLED: LazyLock<bool> = LazyLock::new(|| autocomplete_enabled(&Env::new()));
@@ -364,12 +364,12 @@ where
 }
 
 fn get_parent_shell() -> Result<String> {
-    match env::var(Q_SHELL).ok().filter(|s| !s.is_empty()) {
+    match env::var(TAB_SHELL).ok().filter(|s| !s.is_empty()) {
         Some(v) => Ok(v),
         None => match env::var("SHELL").ok().filter(|s| !s.is_empty()) {
             Some(shell) => Ok(shell),
             None => {
-                anyhow::bail!("No Q_SHELL or SHELL found");
+                anyhow::bail!("No TAB_SHELL or SHELL found");
             },
         },
     }
@@ -390,15 +390,15 @@ fn build_shell_command(command: Option<&[String]>) -> Result<CommandBuilder> {
             let parent_shell = get_parent_shell()?;
             let mut builder = CommandBuilder::new(parent_shell);
 
-            if env::var("Q_IS_LOGIN_SHELL").ok().as_deref() == Some("1") {
+            if env::var("TAB_IS_LOGIN_SHELL").ok().as_deref() == Some("1") {
                 builder.arg("--login");
             }
 
-            if let Some(execution_string) = env::var("Q_EXECUTION_STRING").ok().filter(|s| !s.is_empty()) {
+            if let Some(execution_string) = env::var("TAB_EXECUTION_STRING").ok().filter(|s| !s.is_empty()) {
                 builder.args(["-c", &execution_string]);
             }
 
-            if let Some(extra_args) = env::var("Q_SHELL_EXTRA_ARGS").ok().filter(|s| !s.is_empty()) {
+            if let Some(extra_args) = env::var("TAB_SHELL_EXTRA_ARGS").ok().filter(|s| !s.is_empty()) {
                 builder.args(extra_args.split_whitespace().filter(|arg| arg != &"--login"));
             }
 
@@ -406,17 +406,17 @@ fn build_shell_command(command: Option<&[String]>) -> Result<CommandBuilder> {
         },
     };
 
-    builder.env(Q_TERM, env!("CARGO_PKG_VERSION"));
+    builder.env(TAB_TERM, env!("CARGO_PKG_VERSION"));
     if env::var_os("TMUX").is_some() {
-        builder.env("Q_TERM_TMUX", env!("CARGO_PKG_VERSION"));
+        builder.env("TAB_TERM_TMUX", env!("CARGO_PKG_VERSION"));
     }
 
     // Clean up environment and launch shell.
-    builder.env_remove(Q_SHELL);
-    builder.env_remove("Q_IS_LOGIN_SHELL");
-    builder.env_remove("Q_START_TEXT");
-    builder.env_remove("Q_SHELL_EXTRA_ARGS");
-    builder.env_remove("Q_EXECUTION_STRING");
+    builder.env_remove(TAB_SHELL);
+    builder.env_remove("TAB_IS_LOGIN_SHELL");
+    builder.env_remove("TAB_START_TEXT");
+    builder.env_remove("TAB_SHELL_EXTRA_ARGS");
+    builder.env_remove("TAB_EXECUTION_STRING");
 
     if let Ok(dir) = std::env::current_dir() {
         builder.cwd(dir);
@@ -452,13 +452,13 @@ fn launch_shell(command: Option<&[String]>) -> Result<()> {
 fn figterm_main(command: Option<&[String]>) -> Result<()> {
     fig_settings::settings::init_global().ok();
 
-    let session_id = match std::env::var("MOCK_QTERM_SESSION_ID") {
+    let session_id = match std::env::var("MOCK_TABTERM_SESSION_ID") {
         Ok(id) => id,
         Err(_) => uuid::Uuid::new_v4().simple().to_string(),
     };
 
     unsafe {
-        std::env::set_var(QTERM_SESSION_ID, &session_id);
+        std::env::set_var(TABTERM_SESSION_ID, &session_id);
     }
 
     let parent_id = fig_os_shim::Env::new().q_parent().ok();
@@ -581,7 +581,7 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
         let result: Result<()> = 'select_loop: loop {
             if first_time && term.shell_state().has_seen_prompt {
                 trace!("Has seen prompt and first time");
-                let initial_command = env::var("Q_START_TEXT").ok().filter(|s| !s.is_empty());
+                let initial_command = env::var("TAB_START_TEXT").ok().filter(|s| !s.is_empty());
                 if let Some(mut initial_command) = initial_command {
                     debug!("Sending initial text: {initial_command}");
                     initial_command.push('\n');
@@ -934,7 +934,7 @@ fn main() {
     let cli = Cli::parse();
     let command = cli.command.as_deref();
 
-    logger::stdio_debug_log(format!("{Q_LOG_LEVEL}={}", fig_log::get_log_level()));
+    logger::stdio_debug_log(format!("{TAB_LOG_LEVEL}={}", fig_log::get_log_level()));
 
     if !state::get_bool_or("qterm.enabled", true) {
         println!("[NOTE] qterm is disabled. Autocomplete will not work.");
@@ -967,13 +967,16 @@ mod tests {
     #[test]
     fn autocomplete_enabled_test() {
         assert!(autocomplete_enabled(&Env::new_fake()));
-        assert!(autocomplete_enabled(&Env::from_slice(&[(Q_DISABLE_AUTOCOMPLETE, "")])));
+        assert!(autocomplete_enabled(&Env::from_slice(&[(
+            TAB_DISABLE_AUTOCOMPLETE,
+            ""
+        )])));
         assert!(!autocomplete_enabled(&Env::from_slice(&[(
-            Q_DISABLE_AUTOCOMPLETE,
+            TAB_DISABLE_AUTOCOMPLETE,
             "1"
         )])));
         assert!(!autocomplete_enabled(&Env::from_slice(&[(
-            Q_DISABLE_AUTOCOMPLETE,
+            TAB_DISABLE_AUTOCOMPLETE,
             "1"
         )])));
     }

@@ -1,7 +1,4 @@
-import {
-  SettingsChangedNotification,
-  NotificationType,
-} from "@aws/amazon-q-developer-cli-proto/fig";
+import { SettingsChangedNotification, NotificationType } from "@tab/proto/fig";
 import { _subscribe, NotificationResponse } from "./notifications.js";
 
 import {

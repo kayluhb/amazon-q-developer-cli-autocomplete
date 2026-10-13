@@ -15,9 +15,9 @@ let config = vscode.workspace.getConfiguration();
 // enable logging.
 let shouldLog = config.get("q.log") === true;
 
-// Ensure that any VSCode terminal session has Q_NEW_SESSION set as an environment variable
+// Ensure that any VSCode terminal session has TAB_NEW_SESSION set as an environment variable
 let osxEnv = config.get("terminal.integrated.env.osx");
-osxEnv["Q_NEW_SESSION"] = "1";
+osxEnv["TAB_NEW_SESSION"] = "1";
 config.update("terminal.integrated.env.osx", osxEnv, true);
 
 function log(...args) {
@@ -40,7 +40,7 @@ function updateActiveTerminal(terminal) {
   activeTerminal.processId.then((processId) => {
     if (processId) {
       runCommand(
-        `q hook keyboard-focus-changed ${vscode.env.uriScheme} ${processId}`,
+        `tab hook keyboard-focus-changed ${vscode.env.uriScheme} ${processId}`,
       );
     }
   });
@@ -76,7 +76,7 @@ function activate() {
     });
 
     vscode.window.onDidChangeTextEditorSelection(() => {
-      runCommand(`q hook keyboard-focus-changed ${vscode.env.uriScheme} 0`);
+      runCommand(`tab hook keyboard-focus-changed ${vscode.env.uriScheme} 0`);
     });
   } catch (e) {
     logError(e);

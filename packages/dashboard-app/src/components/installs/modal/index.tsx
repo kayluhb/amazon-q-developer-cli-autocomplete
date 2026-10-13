@@ -1,13 +1,13 @@
 import { InstallCheck } from "@/types/preferences";
-import { Fig, Internal } from "@aws/amazon-q-developer-cli-api-bindings";
+import { Fig, Internal } from "@tab/api-bindings";
 import { useEffect, useState } from "react";
 import { Button } from "../../ui/button";
-import Lockup from "../../svg/logo";
 import onboarding from "@/data/onboarding";
 import { useStatusCheck } from "@/hooks/store/useStatusCheck";
 import InstallModal from "./install";
 import { useLocalState, useRefreshLocalState } from "@/hooks/store/useState";
 import migrate_dark from "@assets/images/fig-migration/dark.png?url";
+import appIcon from "@assets/images/icon.png?url";
 import { usePlatformInfo } from "@/hooks/store/usePlatformInfo";
 import { matchesPlatformRestrictions } from "@/lib/platform";
 
@@ -113,7 +113,7 @@ export function WelcomeModal({
         {figMigration ? (
           <img src={migrate_dark} className="w-40" />
         ) : (
-          <Lockup />
+          <img src={appIcon} className="w-24" />
         )}
         <div className="flex flex-col gap-2 items-center text-center">
           <h2 className="text-2xl text-white font-semibold select-none leading-none font-ember tracking-tight">

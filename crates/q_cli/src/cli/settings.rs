@@ -115,7 +115,7 @@ impl SettingsArgs {
             None => match &self.key {
                 Some(key) => match (&self.value, self.delete) {
                     (Some(_), true) => Err(eyre::eyre!(
-                        "the argument '--delete' cannot be used with '[VALUE]'\n Usage: q settings --delete {key}"
+                        "the argument '--delete' cannot be used with '[VALUE]'\n Usage: tab settings --delete {key}"
                     )),
                     (None, false) => match fig_settings::settings::get_value(key)? {
                         Some(value) => {
@@ -174,7 +174,7 @@ impl SettingsArgs {
                 None => {
                     if self.delete {
                         return Err(eyre::eyre!(
-                            "the argument '--delete' requires a <KEY>\n Usage: q settings --delete <KEY>"
+                            "the argument '--delete' requires a <KEY>\n Usage: tab settings --delete <KEY>"
                         ));
                     }
 
