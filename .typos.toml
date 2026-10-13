@@ -1,4 +1,5 @@
 [files]
+extend-exclude = ["*.png", "*.icns", "*.ico"]
 
 [default.extend-words]
 mmaped = "mmaped"

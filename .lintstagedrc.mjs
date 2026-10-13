@@ -1,6 +1,6 @@
 export default {
   "*.{rs,toml}": () => [
-    "cargo +nightly fmt --check -- --color always",
+    "cargo +nightly-2025-11-01 fmt --check -- --color always",
     "cargo clippy --locked --color always -- -D warnings",
   ],
   "*.proto": () => [
