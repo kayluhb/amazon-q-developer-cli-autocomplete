@@ -12,7 +12,7 @@ export default function Page() {
         </h1>
       </div>
       <div className="flex flex-col gap-2 w-full border bg-zinc-50 border-zinc-200 dark:bg-zinc-900 dark:border-zinc-600 rounded-lg p-4 mb-4 overflow-x-auto">
-        <h2 className="font-bold font-ember tracking-tight text-lg dark:text-zinc-300">
+        <h2 className="font-bold font-heading tracking-tight text-lg dark:text-zinc-300">
           Launch a new shell session to start using autocomplete!
         </h2>
         <ol className="flex flex-col gap-0.5 text-zinc-600 dark:text-zinc-400">

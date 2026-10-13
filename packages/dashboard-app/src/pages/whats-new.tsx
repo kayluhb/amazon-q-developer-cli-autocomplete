@@ -151,7 +151,7 @@ function FeedItem({ item }: { item: FeedItemData }) {
             <span className="opacity-50 font-extralight ml-2">{date}</span>
           )}
         </div>
-        <h2 className="text-xl font-bold font-ember">{item.title}</h2>
+        <h2 className="text-xl font-bold font-heading">{item.title}</h2>
         <Markdown {...MARKDOWN_OPTIONS} className="text-sm mb-1">
           {item.description}
         </Markdown>

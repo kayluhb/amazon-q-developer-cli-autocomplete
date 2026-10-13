@@ -27,7 +27,7 @@ function FeatureIntro({ intro }: { intro: Intro }) {
             {getIconFromName(intro.title, 48)}
           </div>
           <div className="flex flex-col">
-            <h1 className="font-bold text-2xl font-ember leading-none">
+            <h1 className="font-bold text-2xl font-heading leading-none">
               {intro.title}
             </h1>
             <p className="text-base">

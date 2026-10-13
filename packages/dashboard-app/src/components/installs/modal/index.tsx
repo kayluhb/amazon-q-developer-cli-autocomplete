@@ -116,7 +116,7 @@ export function WelcomeModal({
           <img src={appIcon} className="w-24" />
         )}
         <div className="flex flex-col gap-2 items-center text-center">
-          <h2 className="text-2xl text-white font-semibold select-none leading-none font-ember tracking-tight">
+          <h2 className="text-2xl text-white font-semibold select-none leading-none font-heading tracking-tight">
             {figMigration ? "Almost done upgrading!" : "Welcome!"}
           </h2>
           <p className="text-sm">Let's get you set up...</p>

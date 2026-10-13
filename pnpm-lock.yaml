@@ -120,12 +120,12 @@ importers:
 
   packages/api-bindings:
     dependencies:
-      '@tab/proto':
-        specifier: workspace:^
-        version: link:../../proto
       '@bufbuild/protobuf':
         specifier: 2.4.0
         version: 2.4.0
+      '@tab/proto':
+        specifier: workspace:^
+        version: link:../../proto
     devDependencies:
       '@tab/eslint-config':
         specifier: workspace:^
@@ -173,15 +173,15 @@ importers:
       '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
+      '@tab/shared':
+        specifier: workspace:^
+        version: link:../shared
       '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@tab/shared':
-        specifier: workspace:^
-        version: link:../shared
       '@withfig/autocomplete-types':
         specifier: ^1.31.0
         version: 1.31.0
@@ -197,6 +197,18 @@ importers:
 
   packages/autocomplete:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 2.4.0
+        version: 2.4.0
+      '@fig/autocomplete-helpers':
+        specifier: ^2.0.0
+        version: 2.0.0
+      '@fig/autocomplete-shared':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@juggle/resize-observer':
+        specifier: ^3.4.0
+        version: 3.4.0
       '@tab/api-bindings':
         specifier: workspace:~
         version: link:../api-bindings
@@ -212,18 +224,6 @@ importers:
       '@tab/shell-parser':
         specifier: workspace:^
         version: link:../shell-parser
-      '@bufbuild/protobuf':
-        specifier: 2.4.0
-        version: 2.4.0
-      '@fig/autocomplete-helpers':
-        specifier: ^2.0.0
-        version: 2.0.0
-      '@fig/autocomplete-shared':
-        specifier: ^1.1.2
-        version: 1.1.2
-      '@juggle/resize-observer':
-        specifier: ^3.4.0
-        version: 3.4.0
       deep-object-diff:
         specifier: ^1.1.9
         version: 1.1.9
@@ -255,15 +255,15 @@ importers:
       '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@tab/types':
-        specifier: workspace:^
-        version: link:../types
       '@tab/fuzzysort':
         specifier: workspace:^
         version: link:../fuzzysort
       '@tab/shared':
         specifier: workspace:^
         version: link:../shared
+      '@tab/types':
+        specifier: workspace:^
+        version: link:../types
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -321,6 +321,18 @@ importers:
 
   packages/autocomplete-app:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 2.4.0
+        version: 2.4.0
+      '@fig/autocomplete-helpers':
+        specifier: ^2.0.0
+        version: 2.0.0
+      '@fig/autocomplete-shared':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@juggle/resize-observer':
+        specifier: ^3.4.0
+        version: 3.4.0
       '@tab/api-bindings':
         specifier: workspace:~
         version: link:../api-bindings
@@ -336,18 +348,6 @@ importers:
       '@tab/shell-parser':
         specifier: workspace:^
         version: link:../shell-parser
-      '@bufbuild/protobuf':
-        specifier: 2.4.0
-        version: 2.4.0
-      '@fig/autocomplete-helpers':
-        specifier: ^2.0.0
-        version: 2.0.0
-      '@fig/autocomplete-shared':
-        specifier: ^1.1.2
-        version: 1.1.2
-      '@juggle/resize-observer':
-        specifier: ^3.4.0
-        version: 3.4.0
       deep-object-diff:
         specifier: ^1.1.9
         version: 1.1.9
@@ -379,15 +379,15 @@ importers:
       '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
-      '@tab/types':
-        specifier: workspace:^
-        version: link:../types
       '@tab/fuzzysort':
         specifier: workspace:^
         version: link:../fuzzysort
       '@tab/shared':
         specifier: workspace:^
         version: link:../shared
+      '@tab/types':
+        specifier: workspace:^
+        version: link:../types
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -445,15 +445,6 @@ importers:
 
   packages/autocomplete-parser:
     dependencies:
-      '@tab/api-bindings':
-        specifier: workspace:^
-        version: link:../api-bindings
-      '@tab/api-bindings-wrappers':
-        specifier: workspace:^
-        version: link:../api-bindings-wrappers
-      '@tab/shell-parser':
-        specifier: workspace:^
-        version: link:../shell-parser
       '@fig/autocomplete-generators':
         specifier: ^2.4.0
         version: 2.4.0
@@ -463,6 +454,15 @@ importers:
       '@fig/autocomplete-shared':
         specifier: ^1.1.2
         version: 1.1.2
+      '@tab/api-bindings':
+        specifier: workspace:^
+        version: link:../api-bindings
+      '@tab/api-bindings-wrappers':
+        specifier: workspace:^
+        version: link:../api-bindings-wrappers
+      '@tab/shell-parser':
+        specifier: workspace:^
+        version: link:../shell-parser
       loglevel:
         specifier: ^1.9.2
         version: 1.9.2
@@ -476,15 +476,15 @@ importers:
       '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
+      '@tab/shared':
+        specifier: workspace:^
+        version: link:../shared
       '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@tab/shared':
-        specifier: workspace:^
-        version: link:../shared
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
@@ -503,9 +503,9 @@ importers:
 
   packages/dashboard-app:
     dependencies:
-      '@tab/api-bindings':
-        specifier: workspace:^
-        version: link:../api-bindings
+      '@fontsource-variable/inter':
+        specifier: 5.3.0
+        version: 5.3.0
       '@radix-ui/react-collapsible':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -527,6 +527,9 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tab/api-bindings':
+        specifier: workspace:^
+        version: link:../api-bindings
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -564,12 +567,12 @@ importers:
         specifier: ^4.5.6
         version: 4.5.6(@types/react@18.3.18)(react@18.3.1)
     devDependencies:
-      '@tab/types':
-        specifier: workspace:^
-        version: link:../types
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.18.0
+      '@tab/types':
+        specifier: workspace:^
+        version: link:../types
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.18
@@ -621,12 +624,12 @@ importers:
 
   packages/eslint-config:
     devDependencies:
-      '@tab/tsconfig':
-        specifier: workspace:^
-        version: link:../tsconfig
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.18.0
+      '@tab/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
       '@types/eslint__js':
         specifier: ^8.42.3
         version: 8.42.3
@@ -678,15 +681,15 @@ importers:
       '@tab/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
+      '@tab/fuzzysort':
+        specifier: workspace:^
+        version: link:../fuzzysort
       '@tab/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
       '@tab/types':
         specifier: workspace:^
         version: link:../types
-      '@tab/fuzzysort':
-        specifier: workspace:^
-        version: link:../fuzzysort
       '@withfig/autocomplete-types':
         specifier: ^1.31.0
         version: 1.31.0
@@ -742,30 +745,30 @@ importers:
         specifier: 2.4.0
         version: 2.4.0
     devDependencies:
-      '@tab/tsconfig':
-        specifier: workspace:^
-        version: link:../packages/tsconfig
       '@bufbuild/buf':
         specifier: ^1.54.0
         version: 1.54.0
       '@bufbuild/protoc-gen-es':
         specifier: ^2.2.5
         version: 2.2.5(@bufbuild/protobuf@2.4.0)
+      '@tab/tsconfig':
+        specifier: workspace:^
+        version: link:../packages/tsconfig
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
 
   tests/fig-api:
     devDependencies:
+      '@tab/api-bindings':
+        specifier: workspace:^
+        version: link:../../packages/api-bindings
       '@tab/tsconfig':
         specifier: workspace:^
         version: link:../../packages/tsconfig
       '@tab/types':
         specifier: workspace:^
         version: link:../../packages/types
-      '@tab/api-bindings':
-        specifier: workspace:^
-        version: link:../../packages/api-bindings
       '@types/node':
         specifier: ^22.15.20
         version: 22.15.20
@@ -1726,6 +1729,9 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
+  '@fontsource-variable/inter@5.3.0':
+    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
+
   '@gi.ts/cli@1.5.10':
     resolution: {integrity: sha512-F5kwlc6waq1yK3zMJNUHQuq9PYbioI1QN5GiC1kXeqSSnwZYZGhUSfpCU8Xd6phl1nuFR/5wmVwaGlk+clMAlg==}
     engines: {node: '>=12.0.0'}
@@ -2651,6 +2657,7 @@ packages:
 
   '@ungap/structured-clone@1.2.1':
     resolution: {integrity: sha512-fEzPV3hSkSMltkw152tJKNARhOupqbH96MZWyRjNaYZOMIzbrTeQDG+MTc6Mr2pgzFQzFxAfmhGDNP5QK++2ZA==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitejs/plugin-legacy@6.1.1':
     resolution: {integrity: sha512-BvusL+mYZ0q5qS5Rq3D70QxZBmhyiHRaXLtYJHH5AEsAmdSqJR4xe5KwMi1H3w8/9lVJwhkLYqFQ9vmWYWy6kA==}
@@ -3566,6 +3573,7 @@ packages:
   eslint@9.18.0:
     resolution: {integrity: sha512-+waTfRWQlSbpt3KWE+CjrPPYnbq9kfZIYUqapc0uBXyjTp8aYXZDsUH16m39Ryq3NjAVP4tjuF7KaukeqoCoaA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -3797,16 +3805,18 @@ packages:
 
   glob@10.4.5:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@11.0.2:
     resolution: {integrity: sha512-YT7U7Vye+t5fZ/QMkBFrTJ7ZQxInIUjwyAjVj84CYXqgBdv30MFUPGnBR6sQaVq6Is15wYJUsnzTuWaGRBhBAQ==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   globals@11.12.0:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
@@ -4862,6 +4872,7 @@ packages:
   prebuild-install@7.1.2:
     resolution: {integrity: sha512-UnNke3IQb6sgarcZIDU3gbMeTp/9SSU1DAIkil7PrqG1vZlBtY5msYccSKSHDqa3hNg436IXK+SNImReuA1wEQ==}
     engines: {node: '>=10'}
+    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
     hasBin: true
 
   prelude-ls@1.2.1:
@@ -5724,6 +5735,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -5819,6 +5831,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -7077,6 +7090,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.9': {}
+
+  '@fontsource-variable/inter@5.3.0': {}
 
   '@gi.ts/cli@1.5.10(@gi.ts/lib@1.5.13)(@types/node@22.15.20)(typescript@5.8.3)':
     dependencies:

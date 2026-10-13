@@ -126,7 +126,7 @@ export default {
         shine: "shine 4s ease-in-out infinite",
       },
       fontFamily: {
-        ember: ["Ember", "sans-serif"],
+        heading: ["Inter Variable", "sans-serif"],
       },
     },
   },
