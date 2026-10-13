@@ -632,6 +632,6 @@ mod tests {
     #[test]
     fn macos_tempdir_test() {
         let tmpdir = macos_tempdir().unwrap();
-        println!("{:?}", tmpdir);
+        println!("{tmpdir:?}");
     }
 }

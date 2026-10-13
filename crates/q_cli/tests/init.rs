@@ -18,7 +18,7 @@ macro_rules! init_test {
     ($shell:expr, $stage:expr, $file:expr, [$exe:expr, $($arg:expr),*]) => {
         paste! {
             fn [<init_output_ $shell _ $stage _ $file>]() -> Result<String, Box<dyn std::error::Error>> {
-                let mut cmd = Command::cargo_bin("q_cli").unwrap();
+                let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("q_cli"));
                 cmd.arg("init").arg($shell).arg($stage).arg("--rcfile").arg($file);
                 cmd.env("TAB_INIT_SNAPSHOT_TEST", "1");
                 let out = cmd.assert().success().get_output().stdout.clone();

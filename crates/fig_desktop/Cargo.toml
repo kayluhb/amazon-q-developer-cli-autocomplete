@@ -76,7 +76,7 @@ time.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tray-icon = { version = "0.19.2", default-features = false }
-url.workspace = true
+url = { workspace = true, features = ["serde"] }
 uuid.workspace = true
 whoami.workspace = true
 wry = { version = "0.48.1", default-features = false, features = [

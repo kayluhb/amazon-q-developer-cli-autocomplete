@@ -848,8 +848,8 @@ mod test {
     fn test_split_shebang() {
         let shebang = "#!/usr/bin/env sh";
         let contents = "echo hello world";
-        let with_shebang = format!("{}\n{}", shebang, contents);
-        let with_shebang_no_lf = format!("{}{}", shebang, contents);
+        let with_shebang = format!("{shebang}\n{contents}");
+        let with_shebang_no_lf = format!("{shebang}{contents}");
         let without_shebang = contents;
         assert_eq!(
             (format!("{shebang}\n").as_str(), contents),

@@ -202,7 +202,7 @@ impl CommandBuilder {
                 .ok_or_else(|| anyhow::anyhow!("argument cannot be represented as utf8"))?;
             strs.push(s);
         }
-        shlex::try_join(strs).map_err(|e| anyhow::anyhow!("Failed to join command arguments: {}", e))
+        shlex::try_join(strs).map_err(|e| anyhow::anyhow!("Failed to join command arguments: {e}"))
     }
 }
 

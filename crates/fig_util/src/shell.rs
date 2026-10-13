@@ -206,7 +206,7 @@ mod tests {
             let exe_path = Path::new(exe_path_str);
             let version: String = shell_version(&shell, exe_path)
                 .await
-                .unwrap_or_else(|err| panic!("exe {} failed. Error: {:?}", exe_path_str, err));
+                .unwrap_or_else(|err| panic!("exe {exe_path_str} failed. Error: {err:?}"));
             println!("{}: {version:?}\n", exe_path.display());
         }
     }

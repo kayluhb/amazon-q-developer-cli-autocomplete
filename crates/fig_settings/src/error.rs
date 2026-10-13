@@ -62,8 +62,8 @@ mod tests {
     #[test]
     fn test_error_display_debug() {
         for error in all_errors() {
-            eprintln!("{}", error);
-            eprintln!("{:?}", error);
+            eprintln!("{error}");
+            eprintln!("{error:?}");
         }
     }
 }

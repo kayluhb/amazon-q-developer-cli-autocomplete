@@ -67,7 +67,7 @@ impl std::fmt::Display for VerboseMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{}", self.title)?;
         if let Some(message) = &self.message {
-            writeln!(f, "\n{}\n", message)?;
+            writeln!(f, "\n{message}\n")?;
         }
         Ok(())
     }

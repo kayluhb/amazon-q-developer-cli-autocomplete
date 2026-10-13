@@ -238,7 +238,7 @@ pub async fn bundle_metadata(ctx: &Context) -> LocalResult {
         )))),
         Err(err) => Err(LocalResponse::Error {
             code: None,
-            message: Some(format!("Failed to get the bundled metadata: {:?}", err)),
+            message: Some(format!("Failed to get the bundled metadata: {err:?}")),
         }),
     }
 }

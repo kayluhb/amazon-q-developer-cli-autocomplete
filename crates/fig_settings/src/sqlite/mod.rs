@@ -350,7 +350,7 @@ mod tests {
             MIGRATIONS
                 .iter()
                 .enumerate()
-                .all(|(i, m)| m.name.starts_with(&format!("{:03}_", i)))
+                .all(|(i, m)| m.name.starts_with(&format!("{i:03}_")))
         );
 
         // Assert all the files in migrations/ are in the list
@@ -437,7 +437,7 @@ mod tests {
             db.get_state_value("test").unwrap().unwrap();
         }
         let elapsed = instant.elapsed() / test_count;
-        println!("time: {:?}", elapsed);
+        println!("time: {elapsed:?}");
     }
 
     #[test]

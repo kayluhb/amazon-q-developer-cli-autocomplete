@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn test_running_applications() {
         let applications = running_applications();
-        println!("{:#?}", applications);
+        println!("{applications:#?}");
     }
 }
 

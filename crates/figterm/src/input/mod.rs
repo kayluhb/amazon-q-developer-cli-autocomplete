@@ -810,7 +810,7 @@ impl KeyCode {
                         10 => "\x1b[21",
                         11 => "\x1b[23",
                         12 => "\x1b[24",
-                        _ => bail!("unhandled fkey number {}", n),
+                        _ => bail!("unhandled fkey number {n}"),
                     };
                     let encoded_mods = encode_modifiers(mods);
                     if encoded_mods == 0 {

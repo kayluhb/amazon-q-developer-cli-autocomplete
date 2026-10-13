@@ -259,9 +259,7 @@ mod test {
             assert_eq!(
                 get_desktop_environment(&env).unwrap(),
                 expected_desktop_env,
-                "expected: {:?} from env: {:?}",
-                expected_desktop_env,
-                env
+                "expected: {expected_desktop_env:?} from env: {env:?}"
             );
         }
     }

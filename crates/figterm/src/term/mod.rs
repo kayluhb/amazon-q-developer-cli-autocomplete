@@ -85,7 +85,7 @@ pub trait Terminal {
 pub type SystemTerminal = UnixTerminal;
 
 pub fn cast<T: NumCast + Display + Copy, U: NumCast>(n: T) -> Result<U> {
-    num_traits::cast(n).ok_or_else(|| anyhow::anyhow!("{} is out of bounds for this system", n))
+    num_traits::cast(n).ok_or_else(|| anyhow::anyhow!("{n} is out of bounds for this system"))
 }
 
 #[cfg(test)]
