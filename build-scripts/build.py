@@ -60,6 +60,9 @@ def build_specs() -> pathlib.Path:
     shutil.rmtree(repo, ignore_errors=True)
     run_cmd(["git", "clone", "--filter=blob:none", SPECS_REPO, repo])
     run_cmd(["git", "checkout", "--quiet", SPECS_COMMIT], cwd=repo)
+    # Specs maintained in this repo, for tools withfig has no spec for
+    for spec in pathlib.Path("specs").glob("*.ts"):
+        shutil.copy2(spec, repo / "src" / spec.name)
     # --ignore-workspace: BUILD_DIR sits inside this repo's pnpm workspace
     run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-workspace"], cwd=repo)
     run_cmd(["pnpm", "--ignore-workspace", "build"], cwd=repo)

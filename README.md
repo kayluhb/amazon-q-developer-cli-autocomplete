@@ -93,6 +93,9 @@ Use the same layout as the withfig build output: an `index.json` listing the spe
 `<name>.js` files. To bundle newer withfig specs, change `SPECS_COMMIT` in
 `build-scripts/build.py` and rebuild.
 
+Specs that withfig doesn't have, such as `claude` for Claude Code, live in `specs/` as
+TypeScript. The build copies them into the withfig source tree and compiles them with the rest.
+
 ### Troubleshooting
 
 - Run `tab doctor` in a new terminal window. It must run inside a Tab session, so it reports
