@@ -18,7 +18,6 @@ use crate::env_var::{
     TAB_BUNDLE_METADATA_PATH,
     TAB_PARENT,
 };
-use crate::linux::PACKAGE_NAME;
 use crate::system_info::{
     in_cloudshell,
     is_remote,
@@ -27,7 +26,6 @@ use crate::{
     BACKUP_DIR_NAME,
     DATA_DIR_NAME,
     RUNTIME_DIR_NAME,
-    TAURI_PRODUCT_NAME,
 };
 
 macro_rules! utf8_dir {
@@ -67,8 +65,6 @@ pub enum DirectoryError {
     IntoString(#[from] std::ffi::IntoStringError),
     #[error("{TAB_PARENT} env variable not set")]
     QParentNotSet,
-    #[error("must be ran from an appimage executable")]
-    NotAppImage,
 }
 
 type Result<T, E = DirectoryError> = std::result::Result<T, E>;
@@ -358,8 +354,6 @@ pub fn figterm_socket_path(session_id: impl Display) -> Result<PathBuf> {
 /// The path to the resources directory
 ///
 /// - MacOS: "/Applications/{app_name}.app/Contents/Resources"
-/// - Linux: "/usr/share/fig"
-/// - Windows: "%LOCALAPPDATA%\{data_dir}\resources"
 pub fn resources_path() -> Result<PathBuf> {
     Ok(crate::app_bundle_path().join(crate::macos::BUNDLE_CONTENTS_RESOURCE_PATH))
 }
@@ -368,17 +362,6 @@ pub fn resources_path_ctx<Ctx: EnvProvider + PlatformProvider>(ctx: &Ctx) -> Res
     let os = ctx.platform().os();
     match os {
         fig_os_shim::Os::Mac => Ok(crate::app_bundle_path().join(crate::macos::BUNDLE_CONTENTS_RESOURCE_PATH)),
-        fig_os_shim::Os::Linux => {
-            if ctx.env().in_appimage() {
-                Ok(ctx
-                    .env()
-                    .current_dir()?
-                    .join(format!("lib/{}", TAURI_PRODUCT_NAME.replace("_", "-"))))
-            } else {
-                Ok(format!("/usr/share/{}", PACKAGE_NAME).into())
-            }
-        },
-        fig_os_shim::Os::Windows => Ok(fig_data_dir()?.join("resources")),
         _ => Err(DirectoryError::UnsupportedOs(os)),
     }
 }
@@ -427,68 +410,6 @@ pub fn update_lock_path(ctx: &impl FsProvider) -> Result<PathBuf> {
 /// Path: `$HOME/.midway/cookie`
 pub fn midway_cookie_path() -> Result<PathBuf> {
     Ok(home_dir()?.join(".midway").join("cookie"))
-}
-
-/// The path to the .zip bundle containing the GNOME Shell Extension identified by
-/// `extension_uuid`.
-pub fn bundled_gnome_extension_zip_path<Ctx: EnvProvider + PlatformProvider>(
-    ctx: &Ctx,
-    extension_uuid: &str,
-) -> Result<PathBuf> {
-    let os = ctx.platform().os();
-    if os != Os::Linux {
-        return Err(DirectoryError::UnsupportedOs(os));
-    }
-    Ok(resources_path_ctx(ctx)?
-        .join(extension_uuid)
-        .join(format!("{}.zip", extension_uuid)))
-}
-
-/// The path to the text file containing the version of the bundled GNOME Shell Extension.
-/// identified by `extension_uuid`.
-pub fn bundled_gnome_extension_version_path<Ctx: EnvProvider + PlatformProvider>(
-    ctx: &Ctx,
-    extension_uuid: &str,
-) -> Result<PathBuf> {
-    let os = ctx.platform().os();
-    if os != Os::Linux {
-        return Err(DirectoryError::UnsupportedOs(os));
-    }
-    Ok(resources_path_ctx(ctx)?
-        .join(extension_uuid)
-        .join(format!("{}.version.txt", extension_uuid)))
-}
-
-/// The path to the desktop entry bundled with the AppImage.
-///
-/// Only applicable to the desktop app binary when ran as an AppImage.
-pub fn appimage_desktop_entry_path<Ctx: EnvProvider>(ctx: &Ctx) -> Result<PathBuf> {
-    if !ctx.env().in_appimage() {
-        return Err(DirectoryError::NotAppImage);
-    }
-    Ok(ctx.env().current_dir()?.join("share/applications/q-desktop.desktop"))
-}
-
-/// The path to the icon bundled with the AppImage to be used for the desktop entry file.
-///
-/// Only applicable to the desktop app binary when ran as an AppImage.
-pub fn appimage_desktop_entry_icon_path<Ctx: EnvProvider>(ctx: &Ctx) -> Result<PathBuf> {
-    if !ctx.env().in_appimage() {
-        return Err(DirectoryError::NotAppImage);
-    }
-    Ok(ctx
-        .env()
-        .current_dir()?
-        .join("share/icons/hicolor/128x128/apps/q-desktop.png"))
-}
-
-/// The path to the data directory auto-created by the Linux windowing application.
-pub fn local_webview_data_dir<Ctx: FsProvider + EnvProvider + PlatformProvider>(ctx: &Ctx) -> Result<PathBuf> {
-    let os = ctx.platform().os();
-    if os != Os::Linux {
-        return Err(DirectoryError::UnsupportedOs(os));
-    }
-    Ok(local_data_dir(ctx)?.join(crate::consts::linux::DESKTOP_APP_WM_CLASS))
 }
 
 utf8_dir!(home_dir);

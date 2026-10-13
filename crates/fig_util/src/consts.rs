@@ -73,16 +73,6 @@ pub mod macos {
     pub const BUNDLE_CONTENTS_INFO_PLIST_PATH: &str = "Contents/Info.plist";
 }
 
-pub mod linux {
-    pub const DESKTOP_ENTRY_NAME: &str = "amazon-q.desktop";
-
-    /// Name of the deb package.
-    pub const PACKAGE_NAME: &str = "amazon-q";
-
-    /// The wm_class used for the application windows.
-    pub const DESKTOP_APP_WM_CLASS: &str = "Amazon-q";
-}
-
 pub mod env_var {
     macro_rules! define_env_vars {
         ($($(#[$meta:meta])* $ident:ident = $name:expr),*) => {

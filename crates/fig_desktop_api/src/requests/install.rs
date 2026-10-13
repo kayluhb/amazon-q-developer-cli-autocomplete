@@ -2,10 +2,6 @@ use std::fmt::Display;
 
 use anstream::adapter::strip_str;
 use fig_integrations::Integration;
-use fig_integrations::desktop_entry::{
-    AutostartIntegration,
-    DesktopEntryIntegration,
-};
 use fig_integrations::shell::ShellExt;
 use fig_integrations::ssh::SshIntegration;
 use fig_os_shim::{
@@ -29,7 +25,6 @@ use fig_proto::fig::{
 use fig_settings::settings::SettingsProvider;
 use fig_settings::state::StateProvider;
 use fig_util::Shell;
-use tracing::error;
 
 use super::RequestResult;
 
@@ -175,214 +170,10 @@ where
 
             integration_status(InputMethod::default()).await
         },
-        (InstallComponent::DesktopEntry, action) => {
-            if !ctx.env().in_appimage() {
-                integration_result(Err(
-                    "Desktop entry installation is only supported for AppImage bundles.",
-                ))
-            } else {
-                let exec_path = ctx.env().get("APPIMAGE").map_err(super::Error::from_std)?;
-                let entry_path = ctx
-                    .env()
-                    .current_dir()
-                    .map_err(super::Error::from_std)?
-                    .join("share/applications/q-desktop.desktop");
-                let icon_path = ctx
-                    .env()
-                    .current_dir()
-                    .map_err(super::Error::from_std)?
-                    .join("share/icons/hicolor/128x128/apps/q-desktop.png");
-                let desktop_integration =
-                    DesktopEntryIntegration::new(ctx, Some(entry_path), Some(icon_path), Some(exec_path.into()));
-                match action {
-                    InstallAction::Install => {
-                        ctx.state()
-                            .set_value("appimage.manageDesktopEntry", true)
-                            .map_err(|err| error!(?err, "unable to set `appimage.manageDesktopEntry`"))
-                            .ok();
-                        integration_result(desktop_integration.install().await)
-                    },
-                    InstallAction::Uninstall => {
-                        ctx.state()
-                            .set_value("appimage.manageDesktopEntry", false)
-                            .map_err(|err| error!(?err, "unable to set `appimage.manageDesktopEntry`"))
-                            .ok();
-                        integration_result(desktop_integration.uninstall().await)
-                    },
-                    InstallAction::Status => integration_status(desktop_integration).await,
-                }
-            }
-        },
-        (InstallComponent::AutostartEntry, action) => {
-            let ctx = ctx.context();
-            let integration = AutostartIntegration::new(&ctx).map_err(super::Error::from_std)?;
-            match action {
-                InstallAction::Install => integration_result(integration.install().await),
-                InstallAction::Uninstall => integration_result(integration.uninstall().await),
-                InstallAction::Status => integration_status(integration).await,
-            }
-        },
-        #[allow(unused_variables)]
-        (InstallComponent::GnomeExtension, action) => {
-            integration_result(Err("Not supported on platforms other than Linux."))
+        (InstallComponent::DesktopEntry | InstallComponent::AutostartEntry | InstallComponent::GnomeExtension, _) => {
+            integration_result(Err("Not supported on macOS."))
         },
     };
 
     RequestResult::Ok(Box::new(response))
-}
-
-#[cfg(test)]
-mod tests {
-    use std::sync::Arc;
-
-    use fig_integrations::desktop_entry::global_entry_path;
-    use fig_os_shim::{
-        Context,
-        ContextProvider,
-    };
-    use fig_proto::fig::server_originated_message::Submessage;
-    use fig_settings::{
-        Settings,
-        State,
-    };
-    use fig_util::directories::{
-        appimage_desktop_entry_icon_path,
-        appimage_desktop_entry_path,
-    };
-
-    use super::*;
-
-    #[derive(Debug, Clone)]
-    struct TestContext {
-        ctx: Arc<Context>,
-        settings: Settings,
-        state: State,
-    }
-
-    impl SettingsProvider for TestContext {
-        fn settings(&self) -> &Settings {
-            &self.settings
-        }
-    }
-
-    impl StateProvider for TestContext {
-        fn state(&self) -> &fig_settings::State {
-            &self.state
-        }
-    }
-
-    impl ContextProvider for TestContext {
-        fn context(&self) -> &Context {
-            &self.ctx
-        }
-    }
-
-    impl ContextArcProvider for TestContext {
-        fn context_arc(&self) -> Arc<Context> {
-            Arc::clone(&self.ctx)
-        }
-    }
-
-    async fn assert_status(ctx: &TestContext, component: InstallComponent, expected_status: InstallationStatus) {
-        let request = InstallRequest {
-            component: component.into(),
-            action: InstallAction::Status.into(),
-        };
-        let response = install(request, ctx).await.unwrap();
-        assert_submessage_status(*response, expected_status, "");
-    }
-
-    fn assert_submessage_status(submessage: Submessage, expected_status: InstallationStatus, message: &str) {
-        if let Submessage::InstallResponse(InstallResponse {
-            response: Some(Response::InstallationStatus(actual_status)),
-        }) = submessage
-        {
-            let expected_status: i32 = expected_status.into();
-            assert_eq!(actual_status, expected_status, "{}", message);
-        } else {
-            panic!("unexpected response: {:?}", submessage);
-        }
-    }
-
-    #[tokio::test]
-    async fn test_desktop_entry_installation_and_uninstallation() {
-        let ctx = Context::builder()
-            .with_test_home()
-            .await
-            .unwrap()
-            .with_env_var("APPIMAGE", "/test.appimage")
-            .build();
-        let fs = ctx.fs();
-        let entry_path = appimage_desktop_entry_path(&ctx).unwrap();
-        let icon_path = appimage_desktop_entry_icon_path(&ctx).unwrap();
-        fs.create_dir_all(entry_path.parent().unwrap()).await.unwrap();
-        fs.write(&entry_path, "[Desktop Entry]\nExec=q-desktop").await.unwrap();
-        fs.create_dir_all(icon_path.parent().unwrap()).await.unwrap();
-        fs.write(&icon_path, "image").await.unwrap();
-        let ctx = TestContext {
-            ctx,
-            settings: Settings::new_fake(),
-            state: State::new_fake(),
-        };
-
-        // Test installation
-        assert_status(&ctx, InstallComponent::DesktopEntry, InstallationStatus::NotInstalled).await;
-        let request = InstallRequest {
-            component: InstallComponent::DesktopEntry.into(),
-            action: InstallAction::Install.into(),
-        };
-        install(request, &ctx).await.unwrap();
-        assert_eq!(ctx.state.get_bool("appimage.manageDesktopEntry").unwrap(), Some(true));
-        assert_status(&ctx, InstallComponent::DesktopEntry, InstallationStatus::Installed).await;
-
-        // Test uninstallation
-        let request = InstallRequest {
-            component: InstallComponent::DesktopEntry.into(),
-            action: InstallAction::Uninstall.into(),
-        };
-        install(request, &ctx).await.unwrap();
-        assert_eq!(ctx.state.get_bool("appimage.manageDesktopEntry").unwrap(), Some(false));
-        assert_status(&ctx, InstallComponent::DesktopEntry, InstallationStatus::NotInstalled).await;
-    }
-
-    #[tokio::test]
-    async fn test_autostart_entry_installation_and_uninstallation() {
-        let ctx = Context::builder().with_test_home().await.unwrap().build_fake();
-        // Create global desktop entry
-        {
-            let global_path = global_entry_path(&ctx);
-            ctx.fs().create_dir_all(global_path.parent().unwrap()).await.unwrap();
-            ctx.fs().write(global_path, "[Desktop Entry]").await.unwrap();
-        }
-        let ctx = TestContext {
-            ctx,
-            settings: Settings::new_fake(),
-            state: State::new_fake(),
-        };
-
-        // Test installation
-        assert_status(&ctx, InstallComponent::AutostartEntry, InstallationStatus::NotInstalled).await;
-        let request = InstallRequest {
-            component: InstallComponent::AutostartEntry.into(),
-            action: InstallAction::Install.into(),
-        };
-        install(request, &ctx).await.unwrap();
-        assert_status(&ctx, InstallComponent::AutostartEntry, InstallationStatus::Installed).await;
-        assert!(
-            AutostartIntegration::to_global(&ctx).is_installed().await.is_ok(),
-            "Autostart entry should have been installed."
-        );
-
-        // Test uninstallation
-        let request = InstallRequest {
-            component: InstallComponent::AutostartEntry.into(),
-            action: InstallAction::Uninstall.into(),
-        };
-        install(request, &ctx).await.unwrap();
-        assert_status(&ctx, InstallComponent::AutostartEntry, InstallationStatus::NotInstalled).await;
-        assert!(
-            AutostartIntegration::to_global(&ctx).is_installed().await.is_err(),
-            "Autostart entry should have been uninstalled."
-        );
-    }
 }

@@ -40,10 +40,7 @@ use fig_ipc::{
     SendMessage,
     SendRecvMessage,
 };
-use fig_os_shim::{
-    Context as OsContext,
-    Os,
-};
+use fig_os_shim::Context as OsContext;
 use fig_proto::ReflectMessage;
 use fig_proto::figterm::figterm_request_message::Request as FigtermRequest;
 use fig_proto::figterm::{
@@ -220,10 +217,6 @@ pub enum InternalSubcommand {
         recv: bool,
     },
     UninstallForAllUsers,
-    RemoveDataDir {
-        #[arg(long)]
-        force: bool,
-    },
     Uuidgen,
     /// Displays prompt to install remote shell integrations
     SshLocalCommand {
@@ -539,7 +532,6 @@ impl InternalSubcommand {
 
                 Ok(ExitCode::SUCCESS)
             },
-            InternalSubcommand::RemoveDataDir { force } => remove_data_dir(ctx, force).await,
             InternalSubcommand::StreamFromSocket => {
                 let mut stdout = tokio::io::stdout();
                 let mut stdin = tokio::io::stdin();
@@ -787,31 +779,6 @@ pub async fn pre_cmd(alias: Option<String>) -> ExitCode {
     }
 }
 
-async fn remove_data_dir(ctx: Arc<OsContext>, force: bool) -> Result<ExitCode> {
-    if ctx.platform().os() != Os::Linux {
-        bail!("remove-data-dir is only supported on Linux");
-    }
-    if !force {
-        bail!("remove-data-dir is dangerous! If you meant to run this command, pass --force");
-    }
-
-    let data_dir = directories::fig_data_dir_ctx(&ctx)?;
-    match ctx.fs().remove_dir_all(&data_dir).await {
-        Ok(_) => (),
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => (),
-        Err(err) => bail!("Failed to remove data dir: {:?}", err),
-    }
-
-    let webview_dir = directories::local_webview_data_dir(&ctx)?;
-    match ctx.fs().remove_dir_all(&webview_dir).await {
-        Ok(_) => (),
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => (),
-        Err(err) => bail!("Failed to remove data dir: {:?}", err),
-    }
-
-    Ok(ExitCode::SUCCESS)
-}
-
 #[cfg(test)]
 mod tests {
     use clap::Parser;
@@ -844,39 +811,5 @@ mod tests {
                 }
             }
         );
-    }
-
-    #[tokio::test]
-    async fn test_remove_data_dir() {
-        assert!(
-            remove_data_dir(OsContext::builder().with_os(Os::Mac).build_fake(), true)
-                .await
-                .is_err(),
-            "should fail on Mac"
-        );
-
-        let ctx = OsContext::builder()
-            .with_os(Os::Linux)
-            .with_test_home()
-            .await
-            .unwrap()
-            .build_fake();
-
-        assert!(
-            remove_data_dir(Arc::clone(&ctx), false).await.is_err(),
-            "should error if force not true"
-        );
-        assert!(
-            remove_data_dir(Arc::clone(&ctx), true).await.is_ok(),
-            "should succeed if directory doesn't exist"
-        );
-
-        // Verify that data dir is created and deleted correctly.
-        let fs = ctx.fs();
-        let data_dir = directories::fig_data_dir_ctx(&ctx).unwrap();
-        fs.create_dir_all(&data_dir).await.unwrap();
-        assert!(fs.exists(&data_dir), "data dir exists prior");
-        assert!(remove_data_dir(Arc::clone(&ctx), true).await.is_ok());
-        assert!(!fs.exists(&data_dir), "data dir should be deleted");
     }
 }

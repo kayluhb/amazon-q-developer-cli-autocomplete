@@ -1,5 +1,4 @@
 pub mod backup;
-pub mod desktop_entry;
 pub mod error;
 pub mod file;
 pub mod input_method;
