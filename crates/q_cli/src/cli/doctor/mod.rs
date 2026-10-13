@@ -84,6 +84,7 @@ use fig_util::{
     APP_BUNDLE_NAME,
     CLI_BINARY_NAME,
     CLI_CRATE_NAME,
+    GITHUB_REPO_NAME,
     OLD_CLI_BINARY_NAMES,
     PRODUCT_NAME,
     PTY_BINARY_NAME,
@@ -1367,8 +1368,8 @@ impl DoctorCheck<SupportedTerminalCheckContext> for SupportedTerminalCheck {
             } else {
                 Err(DoctorError::Error {
                     reason: format!(
-                        "Unsupported terminal, if you believe this is a mistake or would like to see support for your terminal, run {}", 
-                        format!("{CLI_BINARY_NAME} issue").magenta()
+                        "Unsupported terminal, if you believe this is a mistake or would like to see support for your terminal, open an issue at {}",
+                        format!("https://github.com/{GITHUB_REPO_NAME}/issues").magenta()
                     ).into(),
                     info: vec![
                         format!(
@@ -2125,8 +2126,8 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
         println!("{} Doctor found errors. Please fix them and try again.", CROSS.red());
         println!();
         println!(
-            "If you are not sure how to fix it, please open an issue with {} to let us know!",
-            format!("{CLI_BINARY_NAME} issue").magenta()
+            "If you are not sure how to fix it, please open an issue at {} to let us know!",
+            format!("https://github.com/{GITHUB_REPO_NAME}/issues").magenta()
         );
         println!();
     } else {
@@ -2136,8 +2137,8 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
         }
         println!();
         println!(
-            "  {PRODUCT_NAME} still not working? Run {} to let us know!",
-            format!("{CLI_BINARY_NAME} issue").magenta()
+            "  {PRODUCT_NAME} still not working? Open an issue at {} to let us know!",
+            format!("https://github.com/{GITHUB_REPO_NAME}/issues").magenta()
         );
         println!();
     }

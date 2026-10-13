@@ -19,6 +19,7 @@ use fig_os_shim::Env;
 use fig_util::directories::home_dir;
 use fig_util::{
     CLI_BINARY_NAME,
+    GITHUB_REPO_NAME,
     Shell,
 };
 use nix::libc::uid_t;
@@ -74,14 +75,14 @@ pub fn fix_permissions(env: &Env) -> Result<()> {
     }
 
     println!(
-        "\n{}\n\nIf you continue to experience issues:\n  1. Run {}\n  2. Report the issue with {}\n",
+        "\n{}\n\nIf you continue to experience issues:\n  1. Run {}\n  2. Report the issue at {}\n",
         if updated {
             "The permissions should be fixed now!".bold()
         } else {
             "The permissions have not been modified".bold()
         },
         format!("{CLI_BINARY_NAME} doctor").magenta(),
-        format!("{CLI_BINARY_NAME} issue").magenta(),
+        format!("https://github.com/{GITHUB_REPO_NAME}/issues").magenta(),
     );
 
     Ok(())

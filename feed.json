@@ -12,13 +12,39 @@
     },
     {
       "type": "release",
-      "date": "2025-11-17",
-      "version": "1.19.7",
-      "title": "Version 1.19.7",
+      "date": "2026-10-13",
+      "version": "2.0.0",
+      "title": "Version 2.0.0",
+      "description": "Amazon Q terminal autocomplete is now Tab: a standalone, offline fork that keeps working after Kiro CLI sunsets autocomplete.",
+      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
       "changes": [
         {
+          "type": "changed",
+          "description": "Renamed to Tab: `Tab.app`, the `tab` CLI and `tabterm`. Settings and data now live in `~/Library/Application Support/tab`."
+        },
+        {
+          "type": "changed",
+          "description": "Autocomplete works without signing in."
+        },
+        {
           "type": "added",
-          "description": "Kiro CLI announcement. Learn more at kiro.dev/cli-upgrade"
+          "description": "Completion specs and icons are bundled with the app, so autocomplete works offline."
+        },
+        {
+          "type": "added",
+          "description": "Custom specs in `~/Library/Application Support/tab/autocomplete/specs/` override the bundled ones."
+        },
+        {
+          "type": "removed",
+          "description": "Login, telemetry, automatic updates, chat, translate and AI inline completions. Tab makes no network requests."
+        },
+        {
+          "type": "removed",
+          "description": "Linux and Windows support. Tab is macOS only."
+        },
+        {
+          "type": "changed",
+          "description": "The dashboard uses the Inter font."
         }
       ]
     },
