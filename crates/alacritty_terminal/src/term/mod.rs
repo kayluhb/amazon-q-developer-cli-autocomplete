@@ -130,8 +130,12 @@ pub struct SizeInfo {
 }
 
 impl SizeInfo {
+    /// Clamped to the minimum size, since terminals can report 0x0 while a window is being created
     pub fn new(screen_lines: usize, columns: usize) -> SizeInfo {
-        SizeInfo { screen_lines, columns }
+        SizeInfo {
+            screen_lines: max(screen_lines, MIN_SCREEN_LINES),
+            columns: max(columns, MIN_COLUMNS),
+        }
     }
 
     #[inline]
