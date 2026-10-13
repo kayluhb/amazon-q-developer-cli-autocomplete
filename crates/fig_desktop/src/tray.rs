@@ -334,7 +334,8 @@ pub async fn build_tray(
     _event_loop_window_target: &EventLoopWindowTarget,
     _figterm_state: &FigtermState,
 ) -> tray_icon::Result<TrayIcon> {
-    let is_logged_in = fig_auth::is_logged_in().await;
+    // Standalone build has no login; always render the signed-in tray
+    let is_logged_in = true;
     TrayIconBuilder::new()
         .with_icon(get_icon(is_logged_in))
         .with_icon_as_template(true)

@@ -5,7 +5,6 @@ import { Button } from "../../ui/button";
 import Lockup from "../../svg/logo";
 import onboarding from "@/data/onboarding";
 import { useStatusCheck } from "@/hooks/store/useStatusCheck";
-import LoginModal from "./login";
 import InstallModal from "./install";
 import { useLocalState, useRefreshLocalState } from "@/hooks/store/useState";
 import migrate_dark from "@assets/images/fig-migration/dark.png?url";
@@ -87,6 +86,15 @@ export default function OnboardingModal() {
     }
   }
 
+  // Past the last step (including skipped platform-restricted steps)
+  const done = step >= onboarding.length;
+  useEffect(() => {
+    if (done) finish();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
+
+  if (done) return null;
+
   if (
     platformInfo &&
     !matchesPlatformRestrictions(platformInfo, check.platformRestrictions)
@@ -108,10 +116,6 @@ export default function OnboardingModal() {
     )
   ) {
     return <InstallModal check={check} skip={skipInstall} next={nextStep} />;
-  }
-
-  if (check.id === "login") {
-    return <LoginModal next={finish} />;
   }
 
   return null;
