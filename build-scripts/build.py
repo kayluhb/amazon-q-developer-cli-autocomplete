@@ -60,11 +60,27 @@ BUILD_DIR_RELATIVE = pathlib.Path(os.environ.get("BUILD_DIR") or "build")
 BUILD_DIR = BUILD_DIR_RELATIVE.absolute()
 
 
+# Completion specs, built from source and bundled into the app
+SPECS_REPO = "https://github.com/withfig/autocomplete.git"
+SPECS_COMMIT = "aef52acff84c45edde61ae610cc2c964802b9a38"
+
+
 @dataclass
 class NpmBuildOutput:
     dashboard_path: pathlib.Path
     autocomplete_path: pathlib.Path
+    specs_path: pathlib.Path
     vscode_path: pathlib.Path
+
+
+def build_specs() -> pathlib.Path:
+    repo = BUILD_DIR / "autocomplete-specs"
+    shutil.rmtree(repo, ignore_errors=True)
+    run_cmd(["git", "clone", "--filter=blob:none", SPECS_REPO, repo])
+    run_cmd(["git", "checkout", "--quiet", SPECS_COMMIT], cwd=repo)
+    run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts"], cwd=repo)
+    run_cmd(["pnpm", "build"], cwd=repo)
+    return repo / "build"
 
 
 @dataclass
@@ -107,7 +123,12 @@ def build_npm_packages(run_test: bool = True) -> NpmBuildOutput:
         "crates/fig_integrations/src/vscode/vscode-plugin.vsix",
     )
 
-    return NpmBuildOutput(dashboard_path=dashboard_path, autocomplete_path=autocomplete_path, vscode_path=vscode_path)
+    return NpmBuildOutput(
+        dashboard_path=dashboard_path,
+        autocomplete_path=autocomplete_path,
+        specs_path=build_specs(),
+        vscode_path=vscode_path,
+    )
 
 
 def build_cargo_bin(
@@ -395,6 +416,9 @@ def build_macos_desktop_app(
 
     info("Copying autocomplete into bundle")
     shutil.copytree(npm_packages.autocomplete_path, app_path / "Contents/Resources/autocomplete")
+
+    info("Copying completion specs into bundle")
+    shutil.copytree(npm_packages.specs_path, app_path / "Contents/Resources/specs")
 
     # Add symlinks
     # os.symlink(f"./{CLI_BINARY_NAME}", app_path / "Contents/MacOS/cli")

@@ -1,2 +1,6 @@
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
+# Explicit so newer ruff releases don't change the rule set under us
+select = ["E4", "E7", "E9", "F"]
