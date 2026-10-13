@@ -5,12 +5,12 @@ import { tempDir } from "./util.js";
 window.fig = { constants: undefined, quiet: true };
 
 // Build CLI so we get warnings/errors if there are any
-childProcess.execSync("cargo build -p fig-api-mock -q");
+childProcess.execSync("cargo build -p tab-api-mock -q");
 
 // Init constants
 eval(
   childProcess
-    .execSync("cargo run -p fig-api-mock -- init", {
+    .execSync("cargo run -p tab-api-mock -- init", {
       stdio: "pipe",
     })
     .toString(),
@@ -20,7 +20,7 @@ eval(
 window.ipc = {
   postMessage: (message: string) => {
     let detail = childProcess.execSync(
-      `cargo run -p fig-api-mock -q -- request --cwd ${tempDir} ${message}`,
+      `cargo run -p tab-api-mock -q -- request --cwd ${tempDir} ${message}`,
       { stdio: "pipe" },
     );
     document.dispatchEvent(

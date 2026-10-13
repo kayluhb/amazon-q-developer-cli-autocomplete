@@ -26,7 +26,7 @@ def test(shell: str, stage: str, cycles: int):
     id = random.randbytes(10).hex()
     print(f"testing {shell} {stage} with id {id}", file=sys.stderr)
     generate = subprocess.run(
-        f"cargo run -p q_cli --release -- init {shell} {stage}",
+        f"cargo run -p tab_cli --release -- init {shell} {stage}",
         shell=True,
         stdout=subprocess.PIPE,
     )

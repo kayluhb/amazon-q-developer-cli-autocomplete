@@ -64,11 +64,11 @@ version = "2.0.0"
 dependencies = [
  "bitflags 2.13.2",
  "camino",
- "fig_os_shim",
  "serde",
  "serde_json",
  "serde_yaml",
  "shell-color",
+ "tab_os_shim",
  "tracing",
  "unicode-width 0.2.2",
  "vte 0.15.0",
@@ -1826,453 +1826,6 @@ checksum = "38e2275cc4e4fc009b0669731a1e5ab7ebf11f469eaede2bab9309a5b4d6057f"
 dependencies = [
  "memoffset 0.9.1",
  "rustc_version",
-]
-
-[[package]]
-name = "fig-api-mock"
-version = "2.0.0"
-dependencies = [
- "async-trait",
- "clap",
- "fig_desktop_api",
- "fig_os_shim",
- "fig_proto",
- "fig_settings",
- "tokio",
-]
-
-[[package]]
-name = "fig_desktop"
-version = "2.0.0"
-dependencies = [
- "accessibility-sys",
- "anyhow",
- "async-trait",
- "base64 0.22.1",
- "bytes",
- "camino",
- "clap",
- "cocoa",
- "core-foundation 0.10.1",
- "core-graphics",
- "dashmap",
- "fig_desktop_api",
- "fig_install",
- "fig_integrations",
- "fig_ipc",
- "fig_log",
- "fig_os_shim",
- "fig_proto",
- "fig_remote_ipc",
- "fig_settings",
- "fig_util",
- "flume",
- "fnv",
- "image",
- "infer",
- "keyboard-types 0.8.3",
- "libc",
- "macos-utils",
- "mime",
- "moka",
- "muda",
- "nix 0.29.0",
- "notify",
- "objc",
- "objc2 0.5.3",
- "objc2-app-kit 0.2.2",
- "objc2-foundation 0.2.2",
- "parking_lot",
- "paste",
- "percent-encoding",
- "rand 0.9.5",
- "regex",
- "rfd",
- "semver",
- "serde",
- "serde_json",
- "shellexpand",
- "sysinfo",
- "system-configuration",
- "tao",
- "tempfile",
- "time",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "tray-icon",
- "url",
- "uuid",
- "whoami",
- "wry",
-]
-
-[[package]]
-name = "fig_desktop-fuzz"
-version = "0.0.0"
-dependencies = [
- "fig_ipc",
- "fig_proto",
- "fig_util",
- "libfuzzer-sys",
- "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "fig_desktop_api"
-version = "2.0.0"
-dependencies = [
- "anstream 0.6.21",
- "async-trait",
- "base64 0.22.1",
- "bincode",
- "camino",
- "dashmap",
- "fig_integrations",
- "fig_os_shim",
- "fig_proto",
- "fig_settings",
- "fig_util",
- "fnv",
- "macos-utils",
- "reqwest",
- "serde",
- "serde_json",
- "shellexpand",
- "thiserror 2.0.21",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "which",
- "whoami",
-]
-
-[[package]]
-name = "fig_diagnostic"
-version = "2.0.0"
-dependencies = [
- "cfg-if",
- "clap",
- "fig_ipc",
- "fig_os_shim",
- "fig_proto",
- "fig_util",
- "serde",
- "serde_json",
- "sysinfo",
- "time",
- "tokio",
- "toml",
- "whoami",
-]
-
-[[package]]
-name = "fig_input_method"
-version = "2.0.0"
-dependencies = [
- "apple-bundle",
- "fig_ipc",
- "fig_log",
- "fig_proto",
- "fig_util",
- "macos-utils",
- "objc2 0.5.3",
- "objc2-app-kit 0.2.2",
- "objc2-foundation 0.2.2",
- "objc2-input-method-kit",
- "plist",
- "serde",
- "tokio",
- "toml",
- "tracing",
-]
-
-[[package]]
-name = "fig_install"
-version = "2.0.0"
-dependencies = [
- "bitflags 2.13.2",
- "bytes",
- "camino",
- "cookie",
- "fig_integrations",
- "fig_ipc",
- "fig_os_shim",
- "fig_settings",
- "fig_test_utils",
- "fig_util",
- "libc",
- "security-framework",
- "semver",
- "serde_json",
- "strum 0.27.2",
- "thiserror 2.0.21",
- "time",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "fig_integrations"
-version = "2.0.0"
-dependencies = [
- "accessibility-sys",
- "async-trait",
- "cfg-if",
- "clap",
- "core-foundation 0.10.1",
- "dirs 5.0.1",
- "dispatch",
- "fig_os_shim",
- "fig_settings",
- "fig_util",
- "indoc",
- "macos-utils",
- "nix 0.29.0",
- "objc",
- "owo-colors",
- "plist",
- "regex",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.21",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "fig_ipc"
-version = "2.0.0"
-dependencies = [
- "async-trait",
- "base64 0.22.1",
- "bytes",
- "fig_proto",
- "fig_util",
- "flate2",
- "nix 0.29.0",
- "pin-project-lite",
- "rand 0.9.5",
- "tempfile",
- "thiserror 2.0.21",
- "tokio",
- "tokio-util",
- "tracing",
- "uuid",
- "whoami",
-]
-
-[[package]]
-name = "fig_log"
-version = "2.0.0"
-dependencies = [
- "fig_os_shim",
- "fig_util",
- "parking_lot",
- "tempfile",
- "thiserror 2.0.21",
- "tracing",
- "tracing-appender",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "fig_os_shim"
-version = "2.0.0"
-dependencies = [
- "dirs 5.0.1",
- "nix 0.29.0",
- "serde",
- "sysinfo",
- "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "fig_proto"
-version = "2.0.0"
-dependencies = [
- "arbitrary",
- "bytes",
- "fig_util",
- "flate2",
- "hex",
- "nix 0.29.0",
- "prost",
- "prost-build",
- "prost-reflect",
- "prost-reflect-build",
- "rand 0.9.5",
- "rmp-serde",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.21",
- "uuid",
-]
-
-[[package]]
-name = "fig_remote_ipc"
-version = "2.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "fig_ipc",
- "fig_proto",
- "fig_util",
- "flume",
- "parking_lot",
- "serde",
- "time",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "fig_settings"
-version = "2.0.0"
-dependencies = [
- "fd-lock",
- "fig_util",
- "parking_lot",
- "r2d2",
- "r2d2_sqlite",
- "rusqlite",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.21",
- "tokio",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "fig_test_macro"
-version = "2.0.0"
-dependencies = [
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "fig_test_utils"
-version = "2.0.0"
-dependencies = [
- "bytes",
- "fig_os_shim",
- "fig_util",
- "hex",
- "http",
- "http-body-util",
- "hyper",
- "hyper-util",
- "reqwest",
- "ring",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
-name = "fig_util"
-version = "2.0.0"
-dependencies = [
- "appkit-nsworkspace-bindings",
- "camino",
- "clap",
- "core-foundation 0.10.1",
- "dirs 5.0.1",
- "fig_os_shim",
- "hex",
- "indoc",
- "insta",
- "libc",
- "macos-utils",
- "nix 0.29.0",
- "objc2 0.5.3",
- "objc2-app-kit 0.2.2",
- "objc2-foundation 0.2.2",
- "paste",
- "rand 0.9.5",
- "regex",
- "serde",
- "serde_json",
- "sha2",
- "strum 0.27.2",
- "sysinfo",
- "thiserror 2.0.21",
- "time",
- "tokio",
- "tracing",
- "uuid",
- "whoami",
-]
-
-[[package]]
-name = "figterm"
-version = "2.0.0"
-dependencies = [
- "alacritty_terminal",
- "anyhow",
- "assert_cmd",
- "async-trait",
- "bitflags 2.13.2",
- "bstr",
- "bytes",
- "clap",
- "dashmap",
- "fig_ipc",
- "fig_log",
- "fig_os_shim",
- "fig_proto",
- "fig_settings",
- "fig_util",
- "filedescriptor",
- "flume",
- "fnv",
- "indoc",
- "memmem",
- "mimalloc",
- "nix 0.29.0",
- "num-traits",
- "parking_lot",
- "pin-project",
- "portable-pty",
- "predicates",
- "serde",
- "serde_json",
- "shell-color",
- "shell-words",
- "shlex 1.3.0",
- "sysinfo",
- "tempfile",
- "time",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "which",
-]
-
-[[package]]
-name = "figterm2"
-version = "2.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "fig_ipc",
- "fig_proto",
- "fig_remote_ipc",
- "fig_util",
- "portable-pty",
- "tempfile",
- "tokio",
- "uuid",
 ]
 
 [[package]]
@@ -5512,76 +5065,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
 
 [[package]]
-name = "q_cli"
-version = "2.0.0"
-dependencies = [
- "anstream 0.6.21",
- "appkit-nsworkspace-bindings",
- "assert_cmd",
- "async-trait",
- "base64 0.22.1",
- "bitflags 2.13.2",
- "bytes",
- "clap",
- "clap_complete",
- "clap_complete_fig",
- "color-eyre",
- "color-print",
- "convert_case 0.8.0",
- "criterion",
- "crossterm",
- "ctrlc",
- "dialoguer",
- "eyre",
- "fig_diagnostic",
- "fig_install",
- "fig_integrations",
- "fig_ipc",
- "fig_log",
- "fig_os_shim",
- "fig_proto",
- "fig_remote_ipc",
- "fig_settings",
- "fig_util",
- "flume",
- "futures",
- "glob",
- "globset",
- "indoc",
- "insta",
- "macos-utils",
- "mimalloc",
- "nix 0.29.0",
- "objc2 0.5.3",
- "objc2-app-kit 0.2.2",
- "objc2-foundation 0.2.2",
- "owo-colors",
- "parking_lot",
- "paste",
- "predicates",
- "rand 0.9.5",
- "regex",
- "semver",
- "serde",
- "serde_json",
- "spinners",
- "sysinfo",
- "tempfile",
- "thiserror 2.0.21",
- "time",
- "tokio",
- "tokio-tungstenite",
- "tokio-util",
- "tracing",
- "tracing-subscriber",
- "unicode-width 0.2.2",
- "uuid",
- "walkdir",
- "which",
- "whoami",
-]
-
-[[package]]
 name = "qoi"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6967,6 +6450,523 @@ dependencies = [
  "pkg-config",
  "toml",
  "version-compare",
+]
+
+[[package]]
+name = "tab-api-mock"
+version = "2.0.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "tab_desktop_api",
+ "tab_os_shim",
+ "tab_proto",
+ "tab_settings",
+ "tokio",
+]
+
+[[package]]
+name = "tab_cli"
+version = "2.0.0"
+dependencies = [
+ "anstream 0.6.21",
+ "appkit-nsworkspace-bindings",
+ "assert_cmd",
+ "async-trait",
+ "base64 0.22.1",
+ "bitflags 2.13.2",
+ "bytes",
+ "clap",
+ "clap_complete",
+ "clap_complete_fig",
+ "color-eyre",
+ "color-print",
+ "convert_case 0.8.0",
+ "criterion",
+ "crossterm",
+ "ctrlc",
+ "dialoguer",
+ "eyre",
+ "flume",
+ "futures",
+ "glob",
+ "globset",
+ "indoc",
+ "insta",
+ "macos-utils",
+ "mimalloc",
+ "nix 0.29.0",
+ "objc2 0.5.3",
+ "objc2-app-kit 0.2.2",
+ "objc2-foundation 0.2.2",
+ "owo-colors",
+ "parking_lot",
+ "paste",
+ "predicates",
+ "rand 0.9.5",
+ "regex",
+ "semver",
+ "serde",
+ "serde_json",
+ "spinners",
+ "sysinfo",
+ "tab_diagnostic",
+ "tab_install",
+ "tab_integrations",
+ "tab_ipc",
+ "tab_log",
+ "tab_os_shim",
+ "tab_proto",
+ "tab_remote_ipc",
+ "tab_settings",
+ "tab_util",
+ "tempfile",
+ "thiserror 2.0.21",
+ "time",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+ "unicode-width 0.2.2",
+ "uuid",
+ "walkdir",
+ "which",
+ "whoami",
+]
+
+[[package]]
+name = "tab_desktop"
+version = "2.0.0"
+dependencies = [
+ "accessibility-sys",
+ "anyhow",
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "camino",
+ "clap",
+ "cocoa",
+ "core-foundation 0.10.1",
+ "core-graphics",
+ "dashmap",
+ "flume",
+ "fnv",
+ "image",
+ "infer",
+ "keyboard-types 0.8.3",
+ "libc",
+ "macos-utils",
+ "mime",
+ "moka",
+ "muda",
+ "nix 0.29.0",
+ "notify",
+ "objc",
+ "objc2 0.5.3",
+ "objc2-app-kit 0.2.2",
+ "objc2-foundation 0.2.2",
+ "parking_lot",
+ "paste",
+ "percent-encoding",
+ "rand 0.9.5",
+ "regex",
+ "rfd",
+ "semver",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "sysinfo",
+ "system-configuration",
+ "tab_desktop_api",
+ "tab_install",
+ "tab_integrations",
+ "tab_ipc",
+ "tab_log",
+ "tab_os_shim",
+ "tab_proto",
+ "tab_remote_ipc",
+ "tab_settings",
+ "tab_util",
+ "tao",
+ "tempfile",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "tray-icon",
+ "url",
+ "uuid",
+ "whoami",
+ "wry",
+]
+
+[[package]]
+name = "tab_desktop-fuzz"
+version = "0.0.0"
+dependencies = [
+ "libfuzzer-sys",
+ "tab_ipc",
+ "tab_proto",
+ "tab_util",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
+name = "tab_desktop_api"
+version = "2.0.0"
+dependencies = [
+ "anstream 0.6.21",
+ "async-trait",
+ "base64 0.22.1",
+ "bincode",
+ "camino",
+ "dashmap",
+ "fnv",
+ "macos-utils",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "tab_integrations",
+ "tab_os_shim",
+ "tab_proto",
+ "tab_settings",
+ "tab_util",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "which",
+ "whoami",
+]
+
+[[package]]
+name = "tab_diagnostic"
+version = "2.0.0"
+dependencies = [
+ "cfg-if",
+ "clap",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tab_ipc",
+ "tab_os_shim",
+ "tab_proto",
+ "tab_util",
+ "time",
+ "tokio",
+ "toml",
+ "whoami",
+]
+
+[[package]]
+name = "tab_input_method"
+version = "2.0.0"
+dependencies = [
+ "apple-bundle",
+ "macos-utils",
+ "objc2 0.5.3",
+ "objc2-app-kit 0.2.2",
+ "objc2-foundation 0.2.2",
+ "objc2-input-method-kit",
+ "plist",
+ "serde",
+ "tab_ipc",
+ "tab_log",
+ "tab_proto",
+ "tab_util",
+ "tokio",
+ "toml",
+ "tracing",
+]
+
+[[package]]
+name = "tab_install"
+version = "2.0.0"
+dependencies = [
+ "bitflags 2.13.2",
+ "bytes",
+ "camino",
+ "cookie",
+ "libc",
+ "security-framework",
+ "semver",
+ "serde_json",
+ "strum 0.27.2",
+ "tab_integrations",
+ "tab_ipc",
+ "tab_os_shim",
+ "tab_settings",
+ "tab_test_utils",
+ "tab_util",
+ "thiserror 2.0.21",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "tab_integrations"
+version = "2.0.0"
+dependencies = [
+ "accessibility-sys",
+ "async-trait",
+ "cfg-if",
+ "clap",
+ "core-foundation 0.10.1",
+ "dirs 5.0.1",
+ "dispatch",
+ "indoc",
+ "macos-utils",
+ "nix 0.29.0",
+ "objc",
+ "owo-colors",
+ "plist",
+ "regex",
+ "serde",
+ "serde_json",
+ "tab_os_shim",
+ "tab_settings",
+ "tab_util",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "tab_ipc"
+version = "2.0.0"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "flate2",
+ "nix 0.29.0",
+ "pin-project-lite",
+ "rand 0.9.5",
+ "tab_proto",
+ "tab_util",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+ "whoami",
+]
+
+[[package]]
+name = "tab_log"
+version = "2.0.0"
+dependencies = [
+ "parking_lot",
+ "tab_os_shim",
+ "tab_util",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "tab_os_shim"
+version = "2.0.0"
+dependencies = [
+ "dirs 5.0.1",
+ "nix 0.29.0",
+ "serde",
+ "sysinfo",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
+name = "tab_proto"
+version = "2.0.0"
+dependencies = [
+ "arbitrary",
+ "bytes",
+ "flate2",
+ "hex",
+ "nix 0.29.0",
+ "prost",
+ "prost-build",
+ "prost-reflect",
+ "prost-reflect-build",
+ "rand 0.9.5",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "tab_util",
+ "tempfile",
+ "thiserror 2.0.21",
+ "uuid",
+]
+
+[[package]]
+name = "tab_remote_ipc"
+version = "2.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "flume",
+ "parking_lot",
+ "serde",
+ "tab_ipc",
+ "tab_proto",
+ "tab_util",
+ "time",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "tab_settings"
+version = "2.0.0"
+dependencies = [
+ "fd-lock",
+ "parking_lot",
+ "r2d2",
+ "r2d2_sqlite",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tab_util",
+ "tempfile",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "tab_test_macro"
+version = "2.0.0"
+dependencies = [
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "tab_test_utils"
+version = "2.0.0"
+dependencies = [
+ "bytes",
+ "hex",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "reqwest",
+ "ring",
+ "tab_os_shim",
+ "tab_util",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "tab_util"
+version = "2.0.0"
+dependencies = [
+ "appkit-nsworkspace-bindings",
+ "camino",
+ "clap",
+ "core-foundation 0.10.1",
+ "dirs 5.0.1",
+ "hex",
+ "indoc",
+ "insta",
+ "libc",
+ "macos-utils",
+ "nix 0.29.0",
+ "objc2 0.5.3",
+ "objc2-app-kit 0.2.2",
+ "objc2-foundation 0.2.2",
+ "paste",
+ "rand 0.9.5",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "strum 0.27.2",
+ "sysinfo",
+ "tab_os_shim",
+ "thiserror 2.0.21",
+ "time",
+ "tokio",
+ "tracing",
+ "uuid",
+ "whoami",
+]
+
+[[package]]
+name = "tabterm"
+version = "2.0.0"
+dependencies = [
+ "alacritty_terminal",
+ "anyhow",
+ "assert_cmd",
+ "async-trait",
+ "bitflags 2.13.2",
+ "bstr",
+ "bytes",
+ "clap",
+ "dashmap",
+ "filedescriptor",
+ "flume",
+ "fnv",
+ "indoc",
+ "memmem",
+ "mimalloc",
+ "nix 0.29.0",
+ "num-traits",
+ "parking_lot",
+ "pin-project",
+ "portable-pty",
+ "predicates",
+ "serde",
+ "serde_json",
+ "shell-color",
+ "shell-words",
+ "shlex 1.3.0",
+ "sysinfo",
+ "tab_ipc",
+ "tab_log",
+ "tab_os_shim",
+ "tab_proto",
+ "tab_settings",
+ "tab_util",
+ "tempfile",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "which",
+]
+
+[[package]]
+name = "tabterm2"
+version = "2.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "portable-pty",
+ "tab_ipc",
+ "tab_proto",
+ "tab_remote_ipc",
+ "tab_util",
+ "tempfile",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]

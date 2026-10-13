@@ -115,7 +115,7 @@ def build_npm_packages(run_test: bool = True) -> NpmBuildOutput:
     shutil.copy2(f"extensions/vscode/codewhisperer-for-command-line-companion-{version()}.vsix", vscode_path)
     shutil.copy2(
         f"extensions/vscode/codewhisperer-for-command-line-companion-{version()}.vsix",
-        "crates/fig_integrations/src/vscode/vscode-plugin.vsix",
+        "crates/tab_integrations/src/vscode/vscode-plugin.vsix",
     )
 
     return NpmBuildOutput(
@@ -202,7 +202,7 @@ def build_macos_ime(
     targets: Sequence[str] = [],
 ) -> pathlib.Path:
     fig_input_method_bin = build_cargo_bin(
-        release=release, variant=Variant.FULL, package="fig_input_method", targets=targets
+        release=release, variant=Variant.FULL, package="tab_input_method", targets=targets
     )
     input_method_app = pathlib.Path("build/TabInputMethod.app")
 
@@ -210,14 +210,14 @@ def build_macos_ime(
 
     shutil.copy2(
         fig_input_method_bin,
-        input_method_app / "Contents/MacOS/fig_input_method",
+        input_method_app / "Contents/MacOS/tab_input_method",
     )
     shutil.copy2(
-        "crates/fig_input_method/Info.plist",
+        "crates/tab_input_method/Info.plist",
         input_method_app / "Contents/Info.plist",
     )
     shutil.copytree(
-        "crates/fig_input_method/resources",
+        "crates/tab_input_method/resources",
         input_method_app / "Contents/Resources",
         dirs_exist_ok=True,
     )

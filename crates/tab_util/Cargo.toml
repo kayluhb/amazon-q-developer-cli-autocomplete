@@ -1,0 +1,51 @@
+[package]
+name = "tab_util"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+publish.workspace = true
+version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = []
+
+[dependencies]
+camino.workspace = true
+clap.workspace = true
+dirs.workspace = true
+tab_os_shim.workspace = true
+hex.workspace = true
+indoc.workspace = true
+libc.workspace = true
+paste = "1.0.11"
+rand.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2 = "0.10.9"
+strum = { version = "0.27.1", features = ["derive"] }
+thiserror.workspace = true
+time.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+whoami.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+appkit-nsworkspace-bindings.workspace = true
+core-foundation = "0.10.0"
+macos-utils = { path = "../macos-utils" }
+objc2.workspace = true
+objc2-app-kit = { workspace = true, features = ["NSWorkspace"] }
+objc2-foundation = { workspace = true, features = ["NSURL"] }
+
+[target.'cfg(unix)'.dependencies]
+sysinfo.workspace = true
+nix.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+uuid.workspace = true

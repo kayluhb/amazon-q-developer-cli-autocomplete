@@ -46,12 +46,12 @@ To uninstall, run `tab uninstall`.
 
 - [`packages/autocomplete`](packages/autocomplete/): the autocomplete React app
 - [`packages/dashboard-app`](packages/dashboard-app/): the settings dashboard
-- [`crates/figterm`](crates/figterm/): `tabterm`, the pseudoterminal that reads the
+- [`crates/tabterm`](crates/tabterm/): `tabterm`, the pseudoterminal that reads the
   terminal edit buffer
-- [`crates/q_cli`](crates/q_cli/): the `tab` CLI
-- [`crates/fig_desktop`](crates/fig_desktop/): the desktop app
+- [`crates/tab_cli`](crates/tab_cli/): the `tab` CLI
+- [`crates/tab_desktop`](crates/tab_desktop/): the desktop app
   ([`tao`](https://docs.rs/tao/latest/tao/)/[`wry`](https://docs.rs/wry/latest/wry/))
-- [`crates/fig_input_method`](crates/fig_input_method/): the input method that gets the
+- [`crates/tab_input_method`](crates/tab_input_method/): the input method that gets the
   cursor position
 - [`build-scripts/`](build-scripts/): Python build scripts
 - [`proto/`](proto/): protocol buffer messages for IPC

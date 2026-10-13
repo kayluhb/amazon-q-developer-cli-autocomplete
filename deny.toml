@@ -13,7 +13,7 @@ ignore = [
   # paste is used in core deps
   "RUSTSEC-2024-0436",
   # Unmaintained, no fixed release available:
-  # bincode, used directly by fig_desktop_api
+  # bincode, used directly by tab_desktop_api
   "RUSTSEC-2025-0141",
   # fxhash, via wry -> kuchikiki -> selectors
   "RUSTSEC-2025-0057",

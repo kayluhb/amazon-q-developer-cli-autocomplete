@@ -1,0 +1,17 @@
+[package]
+name = "tab-api-mock"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+publish.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+clap.workspace = true
+tab_desktop_api.workspace = true
+tab_os_shim.workspace = true
+tab_proto.workspace = true
+tab_settings.workspace = true
+tokio.workspace = true

@@ -1,4 +1,4 @@
-// These should match the rust constants in fig_util::consts
+// These should match the rust constants in tab_util::consts
 export const PRODUCT_NAME = "Tab";
 export const CLI_BINARY_NAME = "tab";
 

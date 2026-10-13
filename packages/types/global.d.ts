@@ -1,7 +1,7 @@
 declare global {
   namespace fig {
     /**
-     * [Rust Definition](../../crates/fig_desktop_api/src/init_script.rs)
+     * [Rust Definition](../../crates/tab_desktop_api/src/init_script.rs)
      */
     const constants:
       | {

@@ -14,7 +14,7 @@ else
     if [[ -n "${MOCKED_OUTPUT}" ]]; then
         echo $MOCKED_OUTPUT
     else
-        "$HOME/q_cli/q_cli" "$@"
+        "$HOME/tab_cli/tab_cli" "$@"
         EXIT_CODE=$?
     fi
 fi

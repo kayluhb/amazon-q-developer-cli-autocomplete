@@ -2,14 +2,14 @@
 resolver = "3"
 members = [
     "crates/*",
-    "crates/fig_desktop/fuzz",
+    "crates/tab_desktop/fuzz",
     "crates/macos-utils/accessibility-master/accessibility",
     "crates/macos-utils/accessibility-master/accessibility-sys",
     "crates/macos-utils/appkit-nsworkspace-bindings",
-    "tests/fig-api/fig-api-mock",
-    "tests/figterm2",
+    "tests/fig-api/tab-api-mock",
+    "tests/tabterm2",
 ]
-default-members = ["crates/q_cli"]
+default-members = ["crates/tab_cli"]
 
 [workspace.package]
 authors = [
@@ -54,18 +54,18 @@ crossterm = { version = "0.28.1", features = ["event-stream", "events"] }
 dashmap = "6.0.1"
 dirs = "5.0.0"
 eyre = "0.6.8"
-fig_desktop_api = { path = "crates/fig_desktop_api" }
-fig_diagnostic = { path = "crates/fig_diagnostic" }
-fig_install = { path = "crates/fig_install" }
-fig_integrations = { path = "crates/fig_integrations" }
-fig_ipc = { path = "crates/fig_ipc" }
-fig_log = { path = "crates/fig_log" }
-fig_os_shim = { path = "crates/fig_os_shim" }
-fig_proto = { path = "crates/fig_proto" }
-fig_remote_ipc = { path = "crates/fig_remote_ipc" }
-fig_settings = { path = "crates/fig_settings" }
-fig_test_utils = { path = "crates/fig_test_utils" }
-fig_util = { path = "crates/fig_util" }
+tab_desktop_api = { path = "crates/tab_desktop_api" }
+tab_diagnostic = { path = "crates/tab_diagnostic" }
+tab_install = { path = "crates/tab_install" }
+tab_integrations = { path = "crates/tab_integrations" }
+tab_ipc = { path = "crates/tab_ipc" }
+tab_log = { path = "crates/tab_log" }
+tab_os_shim = { path = "crates/tab_os_shim" }
+tab_proto = { path = "crates/tab_proto" }
+tab_remote_ipc = { path = "crates/tab_remote_ipc" }
+tab_settings = { path = "crates/tab_settings" }
+tab_test_utils = { path = "crates/tab_test_utils" }
+tab_util = { path = "crates/tab_util" }
 flate2 = "1.1.1"
 flume = "0.11.0"
 futures = "0.3.26"

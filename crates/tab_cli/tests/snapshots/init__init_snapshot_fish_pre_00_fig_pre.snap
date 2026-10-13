@@ -1,0 +1,57 @@
+---
+source: crates/tab_cli/tests/init.rs
+expression: init
+---
+set -g TAB_SHELL "/bin/zsh"
+set -g SHOULD_TABTERM_LAUNCH "0"
+command mkdir -p ~/.local/bin >/dev/null
+
+builtin contains $HOME/.local/bin $PATH
+or set --append PATH $HOME/.local/bin
+
+if not test -z "$TAB_NEW_SESSION"
+    set --erase TABTERM_SESSION_ID
+    set --erase TAB_TERM
+    set --erase TAB_NEW_SESSION
+end
+
+# Load parent from env variables
+if test -n "$TAB_PARENT"; and test -z "$TAB_SET_PARENT"
+    set --export TAB_PARENT $TAB_SET_PARENT
+end
+
+if test -z "$SHOULD_TABTERM_LAUNCH"
+    # 0 = Yes, 1 = No, 2 = Fallback to TAB_TERM
+    tab _ should-figterm-launch 1>/dev/null 2>&1
+    set SHOULD_TABTERM_LAUNCH $status
+end
+
+if test -t 1
+    and test -z "$PROCESS_LAUNCHED_BY_TAB"
+    and command -v tabterm 1>/dev/null 2>/dev/null
+    and test "$SHOULD_TABTERM_LAUNCH" -eq 0 -o \( "$SHOULD_TABTERM_LAUNCH" -eq 2 -a \( -z "$TAB_TERM" -o \( -z "$TAB_TERM_TMUX" -a -n "$TMUX" \) \) \)
+
+    if test -z "$TAB_SHELL"
+        set TAB_SHELL (tab _ get-shell)
+    end
+    set TAB_IS_LOGIN_SHELL 0
+    if status --is-login
+        set TAB_IS_LOGIN_SHELL 1
+    end
+
+    # Do not launch tabterm in non-interactive shells (like VSCode Tasks)
+    if status --is-interactive
+        set TAB_TERM_NAME (command basename "$TAB_SHELL")" (tabterm)"
+        if not set -q TAB_TERM_PATH
+            if test -x "$HOME/.local/bin/$TAB_TERM_NAME"
+                set TAB_TERM_PATH "$HOME/.local/bin/$TAB_TERM_NAME"
+            else
+                set TAB_TERM_PATH (command -v tabterm || echo "$HOME/.local/bin/tabterm")
+            end
+        end
+
+        # Need to exec bash because we're using 'exec -a <name>'
+        # to set argv[0] and fish's exec doesn't have this option
+        exec bash -c "TAB_PARENT=$TAB_PARENT TAB_SHELL=$TAB_SHELL TAB_IS_LOGIN_SHELL=$TAB_IS_LOGIN_SHELL exec -a \"$TAB_TERM_NAME\" \"$TAB_TERM_PATH\""
+    end
+end

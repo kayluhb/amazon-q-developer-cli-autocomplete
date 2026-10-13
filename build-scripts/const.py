@@ -16,12 +16,12 @@ DMG_NAME = APP_NAME
 # Linux specific
 
 # cargo packages
-CLI_PACKAGE_NAME = "q_cli"
-PTY_PACKAGE_NAME = "figterm"
-DESKTOP_PACKAGE_NAME = "fig_desktop"
-DESKTOP_FUZZ_PACKAGE_NAME = "fig_desktop-fuzz"
+CLI_PACKAGE_NAME = "tab_cli"
+PTY_PACKAGE_NAME = "tabterm"
+DESKTOP_PACKAGE_NAME = "tab_desktop"
+DESKTOP_FUZZ_PACKAGE_NAME = "tab_desktop-fuzz"
 
-DESKTOP_PACKAGE_PATH = pathlib.Path("crates", "fig_desktop")
+DESKTOP_PACKAGE_PATH = pathlib.Path("crates", "tab_desktop")
 
 # AMZN Mobile LLC
 APPLE_TEAM_ID = "94KV3E626L"

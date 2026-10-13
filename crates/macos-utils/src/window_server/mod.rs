@@ -82,7 +82,7 @@ const BLOCKED_BUNDLE_IDS: &[&str] = &[
     "com.kayluhb.tab",
 ];
 
-// TODO: -- should this use fig_util crate Terminal struct?
+// TODO: -- should this use tab_util crate Terminal struct?
 pub const XTERM_BUNDLE_IDS: &[&str] = &[
     "com.microsoft.VSCodeInsiders",
     "com.microsoft.VSCode",
