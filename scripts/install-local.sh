@@ -18,7 +18,14 @@ dest="/Applications/${app_name}.app"
 
 if pgrep -xq "$process_name"; then
   "$dest/Contents/MacOS/$cli_name" quit || true
-  sleep 2
+  for _ in {1..20}; do
+    pgrep -xq "$process_name" || break
+    sleep 0.5
+  done
+  if pgrep -xq "$process_name"; then
+    echo "$process_name is still running, quit it and try again" >&2
+    exit 1
+  fi
 fi
 
 rm -rf "$dest"

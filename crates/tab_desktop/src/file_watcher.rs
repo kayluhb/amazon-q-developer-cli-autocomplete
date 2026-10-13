@@ -63,25 +63,20 @@ pub async fn setup_listeners(notifications_state: Arc<WebviewNotificationsState>
         },
     };
 
-    let midway_path = match directories::midway_cookie_path() {
-        Ok(macos_utils) => match macos_utils.parent() {
-            Some(midway_dir) => match watcher.watch(midway_dir, RecursiveMode::NonRecursive) {
-                Ok(()) => {
-                    trace!("watching midway file at {midway_dir:?}");
-                    Some(macos_utils)
-                },
-                Err(err) => {
-                    error!(%err, "failed to watch midway dir");
-                    None
-                },
+    let specs_dir = match directories::autocomplete_specs_dir() {
+        Ok(specs_dir) => match watcher.watch(&specs_dir, RecursiveMode::Recursive) {
+            Ok(()) => {
+                trace!("watching user specs at {specs_dir:?}");
+                Some(specs_dir)
             },
-            None => {
-                error!("failed to get midway file dir");
+            // The user specs dir is optional, so it often does not exist
+            Err(err) => {
+                debug!(%err, "not watching user specs dir");
                 None
             },
         },
         Err(err) => {
-            error!(%err, "failed to get midway file path");
+            error!(%err, "failed to get user specs dir");
             None
         },
     };
@@ -147,16 +142,17 @@ pub async fn setup_listeners(notifications_state: Arc<WebviewNotificationsState>
                 }
             }
 
-            if let Some(midway_path) = &midway_path {
-                if event.paths.contains(midway_path)
+            if let Some(specs_dir) = &specs_dir {
+                if event.paths.iter().any(|path| path.starts_with(specs_dir))
                     && matches!(
                         event.kind,
                         EventKind::Create(_)
+                            | EventKind::Remove(_)
                             | EventKind::Modify(ModifyKind::Any | ModifyKind::Data(_) | ModifyKind::Name(_))
                     )
                 {
-                    debug!("Midway file changed");
-                    NOTIFICATION_BUS.send_midway();
+                    debug!("User specs changed");
+                    NOTIFICATION_BUS.send_specs_changed();
                 }
             }
         }

@@ -4,6 +4,7 @@ import json
 import datetime
 import pathlib
 import shutil
+import subprocess
 from typing import Dict, List, Mapping, Sequence
 from util import (
     Variant,
@@ -55,17 +56,27 @@ class NpmBuildOutput:
     vscode_path: pathlib.Path
 
 
+def specs_built(repo: pathlib.Path) -> bool:
+    if not (repo / "build" / "index.json").exists():
+        return False
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True)
+    return head.returncode == 0 and head.stdout.strip() == SPECS_COMMIT
+
+
 def build_specs() -> pathlib.Path:
     repo = BUILD_DIR / "autocomplete-specs"
-    shutil.rmtree(repo, ignore_errors=True)
-    run_cmd(["git", "clone", "--filter=blob:none", SPECS_REPO, repo])
-    run_cmd(["git", "checkout", "--quiet", SPECS_COMMIT], cwd=repo)
-    # --ignore-workspace: BUILD_DIR sits inside this repo's pnpm workspace
-    run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-workspace"], cwd=repo)
-    run_cmd(["pnpm", "--ignore-workspace", "build"], cwd=repo)
+    specs_path = repo / "build"
+    if specs_built(repo):
+        info(f"Specs already built at {SPECS_COMMIT}")
+    else:
+        shutil.rmtree(repo, ignore_errors=True)
+        run_cmd(["git", "clone", "--filter=blob:none", SPECS_REPO, repo])
+        run_cmd(["git", "checkout", "--quiet", SPECS_COMMIT], cwd=repo)
+        # --ignore-workspace: BUILD_DIR sits inside this repo's pnpm workspace
+        run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-workspace"], cwd=repo)
+        run_cmd(["pnpm", "--ignore-workspace", "build"], cwd=repo)
 
     # The spec compiler exits 0 even when specs fail to bundle, so check the output
-    specs_path = repo / "build"
     index = json.loads((specs_path / "index.json").read_text())
     missing = [
         name

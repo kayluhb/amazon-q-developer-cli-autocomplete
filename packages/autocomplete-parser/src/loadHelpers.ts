@@ -65,15 +65,19 @@ export async function importSpecFromFile(
  */
 export const canLoadSpecProtocol = () => window.location.protocol !== "https:";
 
+const assertSpecProtocol = () => {
+  if (!canLoadSpecProtocol()) {
+    throw new SpecCDNError("spec:// protocol unavailable over https");
+  }
+};
+
 // Specs are served from local disk by the desktop app's spec:// protocol;
 // there is no remote CDN fallback.
 // TODO: this is a problem for diff-versioned specs
 export async function importFromPublicCDN<T = SpecFileImport>(
   name: string,
 ): Promise<T> {
-  if (!canLoadSpecProtocol()) {
-    throw new SpecCDNError("spec:// protocol unavailable over https");
-  }
+  assertSpecProtocol();
   return withTimeout(
     20000,
     import(
@@ -84,9 +88,7 @@ export async function importFromPublicCDN<T = SpecFileImport>(
 }
 
 async function jsonFromPublicCDN(path: string): Promise<unknown> {
-  if (!canLoadSpecProtocol()) {
-    throw new SpecCDNError("spec:// protocol unavailable over https");
-  }
+  assertSpecProtocol();
   return fetch(`spec://localhost/${path}.json`).then((res) => res.json());
 }
 
@@ -172,7 +174,8 @@ const createPublicSpecsRequest = async () => {
         completions: new Set(index.completions),
         diffVersionedSpecs: new Set(index.diffVersionedCompletions),
       }))
-      .catch(() => {
+      .catch((error) => {
+        logger.error("Failed to load the spec index", error);
         publicSpecsRequest = undefined;
         return { completions: new Set(), diffVersionedSpecs: new Set() };
       });

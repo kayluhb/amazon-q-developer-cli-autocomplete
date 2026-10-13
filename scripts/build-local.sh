@@ -30,15 +30,17 @@ app="build/${app_name}.app"
 # change on every build, so prefer the stable local certificate from
 # scripts/create-signing-cert.sh when it exists.
 identity="Tab Local Code Signing"
-if security find-certificate -c "$identity" >/dev/null 2>&1; then
+if security find-identity -p codesigning | grep -qF "\"$identity\""; then
   signed_with="\"$identity\""
 else
   identity="-"
   signed_with="ad-hoc (run scripts/create-signing-cert.sh to keep Accessibility across rebuilds)"
 fi
-codesign --force --deep --sign "$identity" "$app"
+# The hardened runtime blocks dylib injection into a process that holds Accessibility
+codesign --force --deep --options runtime \
+  --entitlements crates/tab_desktop/entitlements.plist --sign "$identity" "$app"
 codesign --verify --deep --strict "$app"
 
 echo
 echo "Built and signed with $signed_with: $app"
-echo "Install: rm -rf \"/Applications/${app_name}.app\" && cp -R \"$app\" /Applications/"
+echo "Install: scripts/install-local.sh"

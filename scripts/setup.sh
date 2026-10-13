@@ -13,23 +13,12 @@ install_macos_deps() {
 install_rust() {
   echo "Installing Rust toolchain..."
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    # Detect shell and source the correct env file
-
-  SHELL_NAME=$(basename "$SHELL")
-  case "$SHELL_NAME" in
-    fish)
-      source "$HOME/.cargo/env.fish"
-      ;;
-    nu)
-      source "$HOME/.cargo/env.nu"
-      ;;
-    *)
-      . "$HOME/.cargo/env"
-      ;;
-  esac
+  # This script runs in bash, whatever the login shell is
+  . "$HOME/.cargo/env"
 
   rustup default stable
-  rustup toolchain install nightly
+  # Pinned: newer nightlies reformat the existing code
+  rustup toolchain install nightly-2025-11-01 --component rustfmt
   cargo install typos-cli
 
   if [[ "$OS" == "Darwin" ]]; then

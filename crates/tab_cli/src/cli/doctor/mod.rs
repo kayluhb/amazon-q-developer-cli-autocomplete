@@ -639,7 +639,7 @@ impl DoctorCheck for FigIntegrationsCheck {
             });
         }
 
-        // Check that ~/.local/bin/qterm exists
+        // Check that ~/.local/bin/tabterm exists
         // TODO(grant): Check figterm exe exists
         // let figterm_path = fig_directories::fig_dir()
         //    .context("Could not find ~/.fig")?
@@ -741,7 +741,7 @@ struct PtySocketCheck;
 #[async_trait]
 impl DoctorCheck for PtySocketCheck {
     fn name(&self) -> Cow<'static, str> {
-        "Qterm Socket Check".into()
+        "Tabterm Socket Check".into()
     }
 
     async fn check(&self, _: &()) -> Result<(), DoctorError> {
@@ -750,11 +750,11 @@ impl DoctorCheck for PtySocketCheck {
             Ok(session) => session,
             Err(_) => {
                 return Err(doctor_error!(
-                    "Qterm is not running, please restart your terminal. TABTERM_SESSION_ID is unset."
+                    "Tabterm is not running, please restart your terminal. TABTERM_SESSION_ID is unset."
                 ));
             },
         };
-        let socket_path = tab_util::directories::figterm_socket_path(term_session).context("No qterm path")?;
+        let socket_path = tab_util::directories::figterm_socket_path(term_session).context("No tabterm socket path")?;
 
         check_socket_perms(&socket_path).await?;
 
@@ -1695,40 +1695,6 @@ impl DoctorCheck<SupportedTerminalCheckContext> for ImeStatusCheck {
             _ => (),
         }
 
-        Ok(())
-    }
-}
-
-struct DesktopCompatibilityCheck;
-
-#[async_trait]
-impl DoctorCheck for DesktopCompatibilityCheck {
-    fn name(&self) -> Cow<'static, str> {
-        "Desktop Compatibility Check".into()
-    }
-
-    async fn get_type(&self, _: &(), _: Platform) -> DoctorCheckType {
-        DoctorCheckType::NormalCheck
-    }
-
-    async fn check(&self, _: &()) -> Result<(), DoctorError> {
-        Ok(())
-    }
-}
-
-struct WindowsConsoleCheck;
-
-#[async_trait]
-impl DoctorCheck for WindowsConsoleCheck {
-    fn name(&self) -> Cow<'static, str> {
-        "Windows Console Check".into()
-    }
-
-    async fn get_type(&self, _: &(), _: Platform) -> DoctorCheckType {
-        DoctorCheckType::NormalCheck
-    }
-
-    async fn check(&self, _: &()) -> Result<(), DoctorError> {
         Ok(())
     }
 }

@@ -91,7 +91,7 @@ impl DoctorCheck<()> for SshdConfigCheck {
 }
 
 fn is_sshd_config_valid(sshd_config: &str) -> bool {
-    let accept_env_regex = Regex::new(r"(?m)^\s*AcceptEnv\s+.*(Q_\*|TAB_SET_PARENT)([^\S\r\n]+.*$|$)").unwrap();
+    let accept_env_regex = Regex::new(r"(?m)^\s*AcceptEnv\s+.*(TAB_\*|TAB_SET_PARENT)([^\S\r\n]+.*$|$)").unwrap();
 
     let allow_stream_local_forwarding_regex =
         Regex::new(r"(?m)^\s*AllowStreamLocalForwarding\s+yes([^\S\r\n]+.*$|$)").unwrap();
@@ -122,12 +122,14 @@ mod tests {
             "AcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes\n# Some comment",
             "# Some comment\nAcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes",
             "Other config 1\nAcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding yes\n# Some other comment\nOther config 2",
+            "AcceptEnv TAB_*\nAllowStreamLocalForwarding yes",
         ];
 
         let invalid_config = [
             "AcceptEnv TAB_SET_PARENT\nAllowStreamLocalForwarding no",
             "AcceptEnv TAB_SET_PARENT\n# AllowStreamLocalForwarding yes",
             "Other config 1\nAllowStreamLocalForwarding yes\nOther config 2",
+            "AcceptEnv Q_*\nAllowStreamLocalForwarding yes",
         ];
 
         for config in valid_configs {

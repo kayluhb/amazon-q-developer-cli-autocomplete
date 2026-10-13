@@ -28,14 +28,8 @@ pub const GITHUB_REPO_NAME: &str = "kayluhb/amazon-q-developer-cli-autocomplete"
 
 pub mod url {
     pub const USER_MANUAL: &str = "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html";
-    pub const AUTOCOMPLETE_WIKI: &str =
-        "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-autocomplete.html";
     pub const AUTOCOMPLETE_SSH_WIKI: &str =
         "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-autocomplete-ssh.html";
-    pub const CHAT_WIKI: &str = "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-chat.html";
-    pub const TRANSLATE_WIKI: &str =
-        "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-conversation.html";
-    pub const TELEMETRY_WIKI: &str = "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/opt-out-IDE.html";
 }
 
 /// Build time env vars

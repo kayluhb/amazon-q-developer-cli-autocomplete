@@ -14,7 +14,7 @@ body:
       required: true
     - label: "I have run `tab doctor` in the affected terminal session"
       required: true
-    - label: "I have run `q restart` and replicated the issue again"
+    - label: "I have run `tab restart` and replicated the issue again"
       required: true
 
 - type: input

@@ -42,6 +42,7 @@ use tab_util::macos::BUNDLE_CONTENTS_MACOS_PATH;
 use tab_util::{
     APP_BUNDLE_NAME,
     CLI_BINARY_NAME,
+    GITHUB_REPO_NAME,
     PRODUCT_NAME,
     PTY_BINARY_NAME,
     Shell,
@@ -478,7 +479,10 @@ impl DebugSubcommand {
                 }
                 println!("\n\n\n-------\nFinished writing to {}", outfile.display());
                 println!("Please send this file to the development team");
-                println!("Or attach it to a Github issue (run '{}')", "fig issue".magenta());
+                println!(
+                    "Or attach it to a GitHub issue: {}",
+                    format!("https://github.com/{GITHUB_REPO_NAME}/issues").magenta()
+                );
             },
             DebugSubcommand::VerifyCodesign => {
                 Command::new("codesign")

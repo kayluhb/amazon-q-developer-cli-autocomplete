@@ -200,7 +200,6 @@ async fn handle_local_ipc<Ctx>(
                                 &webview_notifications_state,
                                 &platform_state,
                             ),
-                            ConnectToIbus(_) => commands::connect_to_ibus(proxy.clone(), &platform_state).await,
                             BundleMetadata(_) => commands::bundle_metadata(&ctx.context_arc()).await,
                             Devtools(command) => {
                                 let window_id = match command.window() {
@@ -225,6 +224,8 @@ async fn handle_local_ipc<Ctx>(
                             | RunInstallScript(_)
                             | ResetCache(_)
                             | InputMethod(_)
+                            // IBus is Linux-only
+                            | ConnectToIbus(_)
                             // No accounts or update server in the standalone build
                             | Login(_)
                             | Logout(_)

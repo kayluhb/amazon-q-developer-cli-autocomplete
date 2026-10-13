@@ -921,9 +921,9 @@ async fn init_webview_notification_listeners(proxy: EventLoopProxy) {
     //     ));
     // });
 
-    // Midway watcher
+    // Clear the spec caches when user specs change
     tokio::spawn(async move {
-        let mut res = NOTIFICATION_BUS.subscribe_midway();
+        let mut res = NOTIFICATION_BUS.subscribe_specs_changed();
 
         let (tx, mut rx) = tokio::sync::mpsc::channel(1);
 
@@ -967,7 +967,7 @@ async fn init_webview_notification_listeners(proxy: EventLoopProxy) {
                     }
                 },
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                    warn!("Notification bus 'midway' lagged by {n} messages");
+                    warn!("Notification bus 'specs changed' lagged by {n} messages");
                 },
                 Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
             }
