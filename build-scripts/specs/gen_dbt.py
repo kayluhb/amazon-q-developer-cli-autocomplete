@@ -1,0 +1,130 @@
+"""Builds specs/dbt.ts from dbt-core's click command tree. To regenerate after a dbt release:
+
+    uvx --from dbt-core==<version> python -I build-scripts/specs/gen_dbt.py > specs/dbt.ts
+    npx prettier --write specs/dbt.ts --parser typescript
+
+This reads the same metadata `dbt <command> --help` prints (it never runs a command), so hidden
+options and commands are left out just as the help output leaves them out. Every dbt command
+accepts the global options, so they are emitted once on the root as persistent options and each
+command only lists its own. Suggestions that help can't provide (selector methods, common target
+names and so on) come from withfig's hand-written spec and live in OVERRIDES."""
+
+import json
+import re
+
+import click
+from dbt.cli.main import cli
+from dbt.version import __version__
+
+# Selector method prefixes, as upstream suggested for --select/--exclude
+SELECTOR_METHODS = ["path:", "tag:", "config:", "test_type:", "test_name:"]
+YAML_HINT = "A short YAML string eg. '{my_variable: my_value}'"
+
+# Extra arg fields keyed by option or argument name, from withfig's hand-written spec
+OVERRIDES = {
+    "--select": {"suggestions": SELECTOR_METHODS},
+    "--models": {"suggestions": SELECTOR_METHODS},
+    "--exclude": {"suggestions": SELECTOR_METHODS},
+    "--target": {"suggestions": ["dev", "prod"]},
+    "--profile": {"suggestions": ["default"]},
+    "--profiles-dir": {
+        "description": "Directory containing profiles.yml",
+        "template": "folders",
+        "suggestions": ["profiles"],
+    },
+    "--project-dir": {"template": "folders"},
+    "--vars": {"description": YAML_HINT},
+    "--args": {"description": YAML_HINT},
+}
+# Hidden aliases that upstream offered
+ALIASES = {"list": ["ls"]}
+
+
+def sentence(text):
+    """First sentence of a help string, on one line, capitalized and without the trailing period."""
+    text = re.sub(r"\s+", " ", (text or "").split("\n\n")[0]).strip()
+    text = re.split(r"(?<=[a-z0-9)`'])\. (?=[A-Z])", text)[0]
+    text = text.rstrip(".").strip()
+    return text[:1].upper() + text[1:]
+
+
+def arg_for(param):
+    t = param.type
+    if isinstance(t, click.Path):
+        arg = {"name": t.name, "template": "filepaths" if t.file_okay else "folders"}
+    else:
+        arg = {"name": param.name.replace("_", "-")}
+    choices = getattr(t, "choices", None)
+    if choices:
+        arg["suggestions"] = list(choices)
+    if type(param).__name__ == "MultiOption":
+        arg["isVariadic"] = True
+    if param.param_type_name == "argument" and not param.required:
+        arg["isOptional"] = True
+    for name in getattr(param, "opts", [param.name]):
+        arg.update(OVERRIDES.get(name, {}))
+    return arg
+
+
+def option_names(opts):
+    # Long names first, short names after, otherwise in click order (canonical name first)
+    return sorted(opts, key=lambda o: not o.startswith("--"))
+
+
+def options(params, persistent=False):
+    out = []
+    for p in params:
+        # --deprecated-* options are shown in help but documented as internal
+        if not isinstance(p, click.Option) or p.hidden or p.opts[0].startswith("--deprecated-"):
+            continue
+        desc = sentence(p.help)
+        names = option_names(p.opts)
+        opt = {"name": names if len(names) > 1 else names[0], "description": desc}
+        if not p.is_flag:
+            opt["args"] = arg_for(p)
+        if p.multiple and type(p).__name__ != "MultiOption":
+            opt["isRepeatable"] = True
+        if persistent:
+            opt["isPersistent"] = True
+        out.append(opt)
+        for neg in p.secondary_opts:
+            neg_opt = {"name": neg, "description": f"Negate {names[0]}"}
+            if persistent:
+                neg_opt["isPersistent"] = True
+            out.append(neg_opt)
+    return out
+
+
+def command(name, cmd, inherited):
+    spec = {"name": [name, *ALIASES[name]] if name in ALIASES else name, "description": sentence(cmd.help)}
+    if isinstance(cmd, click.Group):
+        spec["subcommands"] = [command(n, c, inherited) for n, c in cmd.commands.items() if not c.hidden]
+    own = [p for p in cmd.params if p.name not in inherited]
+    opts = options(own)
+    if opts:
+        spec["options"] = opts
+    args = [arg_for(p) for p in cmd.params if isinstance(p, click.Argument)]
+    if args:
+        spec["args"] = args[0] if len(args) == 1 else args
+    return spec
+
+
+def main():
+    inherited = {p.name for p in cli.params}
+    spec = {
+        "name": "dbt",
+        "description": "CLI for dbt - Data Build Tool",
+        "subcommands": sorted(
+            (command(n, c, inherited) for n, c in cli.commands.items() if not c.hidden),
+            key=lambda s: s["name"] if isinstance(s["name"], str) else s["name"][0],
+        ),
+        "options": [
+            *options(cli.params, persistent=True),
+            {"name": ["--help", "-h"], "description": "Show help for command", "isPersistent": True},
+        ],
+    }
+    print(f"// Generated by build-scripts/specs/gen_dbt.py from dbt-core version {__version__}; don't edit by hand")
+    print(f"const completionSpec: Fig.Spec = {json.dumps(spec, indent=2)};\n\nexport default completionSpec;")
+
+
+main()
