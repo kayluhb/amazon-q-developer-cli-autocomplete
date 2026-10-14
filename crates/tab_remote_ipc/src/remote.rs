@@ -126,7 +126,10 @@ pub async fn handle_remote_ipc(
             }
             message = reader.recv_message::<Hostbound>() => match message {
                 Ok(Some(message)) => {
-                    trace!(?message, "Received remote message");
+                    // The handshake carries the client secret, so do not log it
+                    if !matches!(message.packet, Some(hostbound::Packet::Handshake(_))) {
+                        trace!(?message, "Received remote message");
+                    }
                     if let Some(response) = match message.packet {
                         Some(hostbound::Packet::Handshake(handshake)) => {
                             let result = if initialized {

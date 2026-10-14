@@ -149,7 +149,8 @@ declare_class!(
                                 width: 0.0,
                             },
                         };
-                        let _: () = unsafe { msg_send![client, attributesForCharacterIndex: 0 lineHeightRectangle: &mut rect] };
+                        // `attributesForCharacterIndex:lineHeightRectangle:` returns a nullable `NSDictionary`
+                        let _: Option<&AnyObject> = unsafe { msg_send![client, attributesForCharacterIndex: 0 lineHeightRectangle: &mut rect] };
 
                         let hook = new_caret_position_hook(
                             rect.origin.x,

@@ -143,4 +143,17 @@ mod tests {
         mock.inner.set_position(0);
         assert!(mock.recv_message::<tab_proto::local::LocalMessage>().await.is_err());
     }
+
+    #[tokio::test]
+    async fn too_large_header() {
+        let mut header = b"\x1b@fig-pbuf".to_vec();
+        header.extend_from_slice(&u64::MAX.to_be_bytes());
+        let mut mock = mock(header);
+        mock.inner.set_position(0);
+        let err = mock.recv_message::<tab_proto::local::LocalMessage>().await.unwrap_err();
+        assert!(matches!(
+            err,
+            RecvError::Parse(tab_proto::FigMessageParseError::TooLarge(u64::MAX))
+        ));
+    }
 }

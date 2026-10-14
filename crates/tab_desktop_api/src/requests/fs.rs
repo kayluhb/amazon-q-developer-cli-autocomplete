@@ -70,13 +70,14 @@ pub async fn append_to_file(request: AppendToFileRequest, env: &Env) -> RequestR
     use tab_proto::fig::append_to_file_request::Data;
     let path = request.path.as_ref().ok_or_else(|| "No path provided".to_string())?;
     let resolved_path = resolve_filepath(path, env);
+    let data = request.data.ok_or("No data provided")?;
     let mut file = OpenOptions::new()
         .append(true)
         .open(&*resolved_path)
         .await
         .map_err(|err| format!("Failed opening file at {resolved_path}: {err}"))?;
 
-    match request.data.ok_or("No data provided")? {
+    match data {
         Data::Binary(data) => file
             .write(&data)
             .await
@@ -251,20 +252,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_append_to_file_without_data() {
-        let path = std::env::temp_dir().join(format!("tab_desktop_api_append_{}", std::process::id()));
-        std::fs::write(&path, "").unwrap();
-
+        // The data check runs before the file is opened, so the path does not need to exist
         let request = AppendToFileRequest {
             path: Some(FilePath {
-                path: path.to_str().unwrap().into(),
+                path: "/nonexistent/tab_desktop_api_append.txt".into(),
                 relative_to: None,
                 expand_tilde_in_path: None,
             }),
             data: None,
         };
 
-        let result = append_to_file(request, &Env::new()).await;
-        std::fs::remove_file(&path).unwrap();
-        assert_eq!(result.unwrap_err().to_string(), "No data provided");
+        let err = append_to_file(request, &Env::new()).await.unwrap_err();
+        assert_eq!(err.to_string(), "No data provided");
     }
 }

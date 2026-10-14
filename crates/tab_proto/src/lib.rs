@@ -323,7 +323,10 @@ mod tests {
     fn parse_accepts_max_len() {
         let buf = header_with_len(MAX_MESSAGE_LEN);
         let err = FigMessage::parse(&mut buf.as_slice()).unwrap_err();
-        assert!(matches!(err, FigMessageParseError::Incomplete(FigMessageComponent::Body, _)));
+        assert!(matches!(
+            err,
+            FigMessageParseError::Incomplete(FigMessageComponent::Body, missing) if missing == MAX_MESSAGE_LEN as usize
+        ));
     }
 
     #[test]
