@@ -33,6 +33,10 @@
         {
           "type": "fixed",
           "description": "Editing or removing a repo spec now always rebuilds the bundled specs, and a removed spec no longer lingers in the build."
+        },
+        {
+          "type": "security",
+          "description": "Updated rustls to 0.23.46 for RUSTSEC-2026-0346, 0347, 0348 and 0349."
         }
       ]
     },
