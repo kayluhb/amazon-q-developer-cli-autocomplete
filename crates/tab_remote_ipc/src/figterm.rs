@@ -179,7 +179,6 @@ impl From<InterceptMode> for bool {
 #[derive(Debug, Serialize)]
 pub struct FigtermSession {
     pub id: Uuid,
-    pub secret: String,
     #[serde(skip)]
     pub sender: flume::Sender<FigtermCommand>,
     #[serde(skip)]

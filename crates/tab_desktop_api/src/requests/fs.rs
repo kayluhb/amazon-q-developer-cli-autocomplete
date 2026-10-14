@@ -52,7 +52,7 @@ pub async fn write_file(request: WriteFileRequest, env: &Env, fs: &Fs) -> Reques
     use tab_proto::fig::write_file_request::Data;
     let path = request.path.as_ref().ok_or_else(|| "No path provided".to_string())?;
     let resolved_path = resolve_filepath(path, env);
-    match request.data.unwrap() {
+    match request.data.ok_or("No data provided")? {
         Data::Binary(data) => fs
             .write(&*resolved_path, data)
             .await
@@ -76,7 +76,7 @@ pub async fn append_to_file(request: AppendToFileRequest, env: &Env) -> RequestR
         .await
         .map_err(|err| format!("Failed opening file at {resolved_path}: {err}"))?;
 
-    match request.data.unwrap() {
+    match request.data.ok_or("No data provided")? {
         Data::Binary(data) => file
             .write(&data)
             .await
@@ -229,5 +229,42 @@ mod tests {
 
         let read_content = fs.read(&path).await.unwrap();
         assert_eq!(content.as_bytes(), &read_content[..]);
+    }
+
+    #[tokio::test]
+    async fn test_write_file_without_data() {
+        let fs = Fs::new_fake();
+        let env = Env::new();
+
+        let request = WriteFileRequest {
+            path: Some(FilePath {
+                path: "/test.txt".into(),
+                relative_to: None,
+                expand_tilde_in_path: None,
+            }),
+            data: None,
+        };
+
+        let err = write_file(request, &env, &fs).await.unwrap_err();
+        assert_eq!(err.to_string(), "No data provided");
+    }
+
+    #[tokio::test]
+    async fn test_append_to_file_without_data() {
+        let path = std::env::temp_dir().join(format!("tab_desktop_api_append_{}", std::process::id()));
+        std::fs::write(&path, "").unwrap();
+
+        let request = AppendToFileRequest {
+            path: Some(FilePath {
+                path: path.to_str().unwrap().into(),
+                relative_to: None,
+                expand_tilde_in_path: None,
+            }),
+            data: None,
+        };
+
+        let result = append_to_file(request, &Env::new()).await;
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(result.unwrap_err().to_string(), "No data provided");
     }
 }

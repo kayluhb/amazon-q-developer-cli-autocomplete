@@ -94,9 +94,14 @@ pub enum FigMessageParseError {
     InvalidMessageType([u8; 8]),
     #[error("failed to convert int: {0}")]
     TryFromInt(#[from] TryFromIntError),
+    #[error("message body of {0} bytes is larger than the maximum of {MAX_MESSAGE_LEN} bytes")]
+    TooLarge(u64),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
+
+/// The maximum body length that [`FigMessage::parse`] accepts (16 MiB)
+pub const MAX_MESSAGE_LEN: u64 = 16 * 1024 * 1024;
 
 #[derive(Debug, Error)]
 pub enum FigMessageDecodeError {
@@ -200,7 +205,11 @@ impl FigMessage {
             ));
         }
 
-        let len: usize = src.get_u64().try_into()?;
+        let len = src.get_u64();
+        if len > MAX_MESSAGE_LEN {
+            return Err(FigMessageParseError::TooLarge(len));
+        }
+        let len: usize = len.try_into()?;
 
         if src.remaining() < len {
             return Err(FigMessageParseError::Incomplete(
@@ -291,6 +300,30 @@ mod tests {
     fn test_to_fig_pbuf() {
         let message = test_message();
         assert_eq!(&message.encode_fig_protobuf().unwrap()[..10], b"\x1b@fig-pbuf");
+    }
+
+    fn header_with_len(len: u64) -> Vec<u8> {
+        let mut buf = b"\x1b@fig-pbuf".to_vec();
+        buf.extend_from_slice(&len.to_be_bytes());
+        buf
+    }
+
+    #[test]
+    fn parse_rejects_too_large() {
+        let buf = header_with_len(MAX_MESSAGE_LEN + 1);
+        let err = FigMessage::parse(&mut buf.as_slice()).unwrap_err();
+        assert!(matches!(err, FigMessageParseError::TooLarge(len) if len == MAX_MESSAGE_LEN + 1));
+
+        let buf = header_with_len(u64::MAX);
+        let err = FigMessage::parse(&mut buf.as_slice()).unwrap_err();
+        assert!(matches!(err, FigMessageParseError::TooLarge(u64::MAX)));
+    }
+
+    #[test]
+    fn parse_accepts_max_len() {
+        let buf = header_with_len(MAX_MESSAGE_LEN);
+        let err = FigMessage::parse(&mut buf.as_slice()).unwrap_err();
+        assert!(matches!(err, FigMessageParseError::Incomplete(FigMessageComponent::Body, _)));
     }
 
     #[test]
