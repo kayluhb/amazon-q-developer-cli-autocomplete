@@ -127,19 +127,19 @@ export const getQueryTermForSuggestion = (
   return searchTerm;
 };
 
-export const getCommonSuggestionPrefix = (
-  selectedIndex: number,
-  suggestions: Suggestion[],
-): string | null => {
-  const selectedItem = suggestions[selectedIndex];
-  if (!selectedItem) {
-    return null;
-  }
-  let { type: itemType } = selectedItem;
+/** Auto-execute suggestions match other suggestions by their original type. */
+export const getPrefixMatchType = (item: Suggestion) =>
+  item.type === "auto-execute" ? item.originalType : item.type;
 
-  if (itemType === "auto-execute") {
-    itemType = selectedItem.originalType;
-  }
+/**
+ * The lowercased first names of the suggestions that have the same type as
+ * `selectedItem`, or null if that type cannot have a common prefix.
+ */
+export const getSameTypeSuggestionNames = (
+  selectedItem: Suggestion,
+  suggestions: Suggestion[],
+): string[] | null => {
+  const itemType = getPrefixMatchType(selectedItem);
 
   if (itemType && ["special", "auto-execute"].includes(itemType)) {
     return null;
@@ -155,13 +155,28 @@ export const getCommonSuggestionPrefix = (
         : selectedItem.name,
   };
 
-  const sameTypeSuggestionNames = suggestions
+  return suggestions
     .filter((suggestion) => isMatchingType(suggestion, typeFilterItem))
     .map((suggestion) =>
       (makeArray(suggestion.name || [])[0] ?? "").toLowerCase(),
     );
+};
 
-  if (sameTypeSuggestionNames.length < 2) {
+export const getCommonSuggestionPrefix = (
+  selectedIndex: number,
+  suggestions: Suggestion[],
+): string | null => {
+  const selectedItem = suggestions[selectedIndex];
+  if (!selectedItem) {
+    return null;
+  }
+
+  const sameTypeSuggestionNames = getSameTypeSuggestionNames(
+    selectedItem,
+    suggestions,
+  );
+
+  if (!sameTypeSuggestionNames || sameTypeSuggestionNames.length < 2) {
     return null;
   }
   return longestCommonPrefix(sameTypeSuggestionNames);

@@ -12,6 +12,7 @@ import {
   getExactNameMatch,
   getCommonSuggestionPrefix,
   getQueryTermForSuggestion,
+  getSameTypeSuggestionNames,
   bestScoreMatch,
 } from "../helpers";
 
@@ -180,6 +181,49 @@ describe("getCommonSuggestionPrefix", () => {
 
   it("works with suggestions without names", () => {
     expect(getCommonSuggestionPrefix(9, suggestions)).toBe("");
+  });
+});
+
+describe("getSameTypeSuggestionNames", () => {
+  const suggestions: Suggestion[] = [
+    { name: "Commit", type: "subcommand" },
+    { name: ["com", "c"], type: "subcommand" },
+    { name: "foo/", type: "folder" },
+    { name: "foo", type: "file" },
+    { name: "bar", type: "special" },
+  ];
+
+  it("returns the lowercased first names of the same type", () => {
+    expect(getSameTypeSuggestionNames(suggestions[1], suggestions)).toEqual([
+      "commit",
+      "com",
+    ]);
+  });
+
+  it("treats files and folders as the same type", () => {
+    expect(getSameTypeSuggestionNames(suggestions[3], suggestions)).toEqual([
+      "foo/",
+      "foo",
+    ]);
+  });
+
+  it("matches auto-execute suggestions by their original type", () => {
+    expect(
+      getSameTypeSuggestionNames(
+        { name: "com", type: "auto-execute", originalType: "subcommand" },
+        suggestions,
+      ),
+    ).toEqual(["commit", "com"]);
+  });
+
+  it("returns null for types without a common prefix", () => {
+    expect(getSameTypeSuggestionNames(suggestions[4], suggestions)).toBe(null);
+    expect(
+      getSameTypeSuggestionNames(
+        { name: "bar", type: "auto-execute", originalType: "special" },
+        suggestions,
+      ),
+    ).toBe(null);
   });
 });
 

@@ -3,18 +3,15 @@ import { StoreApi } from "zustand";
 import { Shell } from "@tab/api-bindings";
 import { SpecLocationSource } from "@fig/autocomplete-shared";
 import { SpecLocation, Suggestion } from "@tab/shared/internal";
-import {
-  makeArray,
-  longestCommonPrefix,
-  ensureTrailingSlash,
-} from "@tab/shared/utils";
+import { makeArray, longestCommonPrefix } from "@tab/shared/utils";
 import { SETTINGS } from "@tab/api-bindings-wrappers";
 import { trackEvent } from "../telemetry";
 import { NamedSetState, AutocompleteState, Visibility } from "./types";
 import {
-  isMatchingType,
   getNameMatch,
+  getPrefixMatchType,
   getQueryTermForSuggestion,
+  getSameTypeSuggestionNames,
 } from "../suggestions/helpers";
 import { updateAutocompleteIndexFromUserInsert } from "../suggestions/sorting";
 import { InsertPrefixError } from "./errors";
@@ -238,34 +235,19 @@ const makeInsertCommonPrefix =
       return insertTextForItem(selectedItem);
     }
 
-    let { type: itemType } = selectedItem;
-
-    if (itemType === "auto-execute") {
-      itemType = selectedItem.originalType;
-    }
-
-    if (itemType && ["special", "auto-execute"].includes(itemType)) {
+    const allSameTypeNames = getSameTypeSuggestionNames(
+      selectedItem,
+      suggestions,
+    );
+    if (!allSameTypeNames) {
       throw new InsertPrefixError(
-        `Cannot insert common prefix for type ${itemType}`,
+        `Cannot insert common prefix for type ${getPrefixMatchType(selectedItem)}`,
       );
     }
 
-    const typeFilterItem = {
-      ...selectedItem,
-      type: itemType,
-      name:
-        selectedItem.type === "auto-execute" &&
-        selectedItem.originalType === "folder"
-          ? makeArray(selectedItem.name ?? []).map(ensureTrailingSlash)
-          : selectedItem.name,
-    };
-
-    const sameTypeSuggestionNames = suggestions
-      .filter((suggestion) => isMatchingType(suggestion, typeFilterItem))
-      .map((suggestion) =>
-        (makeArray(suggestion.name || [])[0] ?? "").toLowerCase(),
-      )
-      .filter((name) => name.startsWith(queryTerm.toLowerCase()));
+    const sameTypeSuggestionNames = allSameTypeNames.filter((name) =>
+      name.startsWith(queryTerm.toLowerCase()),
+    );
 
     if (sameTypeSuggestionNames.length === 1) {
       if (selectedItem.type === "auto-execute") {
