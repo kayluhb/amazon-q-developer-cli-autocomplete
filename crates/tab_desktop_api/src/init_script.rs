@@ -16,6 +16,17 @@ use which::which;
 
 const DEFAULT_THEMES: &[&str] = &["light", "dark", "system"];
 
+/// The only environment variables that the init script exposes to the webviews. The full process
+/// environment can contain secrets, so do not expose it.
+const ENV_ALLOWLIST: &[&str] = &["SHELL", "LANG", "TERM"];
+
+fn allowed_env() -> HashMap<String, String> {
+    ENV_ALLOWLIST
+        .iter()
+        .filter_map(|key| var(key).ok().map(|value| ((*key).to_owned(), value)))
+        .collect()
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Constants {
@@ -84,7 +95,7 @@ impl Constants {
             themes,
             os: consts::OS,
             arch: consts::ARCH,
-            env: std::env::vars().collect(),
+            env: allowed_env(),
             new_uri_format: true,
             support_api_proto,
             api_proto_url: "api://localhost".to_string(),
@@ -107,4 +118,16 @@ pub fn javascript_init(support_api_proto: bool) -> String {
         Constants::new(support_api_proto).script(),
     ]
     .join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn constants_env_only_contains_allowlisted_keys() {
+        let env = Constants::new(true).env;
+        assert!(env.keys().all(|key| ENV_ALLOWLIST.contains(&key.as_str())));
+        assert!(!env.contains_key("PATH"));
+    }
 }
