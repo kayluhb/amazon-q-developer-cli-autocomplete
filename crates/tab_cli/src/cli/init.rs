@@ -11,7 +11,6 @@ use std::sync::LazyLock;
 use clap::Args;
 use crossterm::style::Stylize;
 use eyre::Result;
-use indoc::formatdoc;
 use tab_integrations::shell::{
     ShellExt,
     When,
@@ -64,13 +63,41 @@ enum GuardAssignment {
     AfterSourcing,
 }
 
+/// Quotes `value` as one literal string word for `shell`
+fn shell_quote(shell: &Shell, value: &str) -> String {
+    match shell {
+        // Nothing is special inside single quotes, so `'` is closed, escaped and reopened
+        Shell::Bash | Shell::Zsh => format!("'{}'", value.replace('\'', r"'\''")),
+        // Inside fish single quotes only `\\` and `\'` are escapes
+        Shell::Fish => format!("'{}'", value.replace('\\', r"\\").replace('\'', r"\'")),
+        // Nu double quotes take backslash escapes and do not interpolate
+        Shell::Nu => {
+            let mut quoted = String::with_capacity(value.len() + 2);
+            quoted.push('"');
+            for c in value.chars() {
+                match c {
+                    '\\' => quoted.push_str(r"\\"),
+                    '"' => quoted.push_str(r#"\""#),
+                    '\n' => quoted.push_str(r"\n"),
+                    '\r' => quoted.push_str(r"\r"),
+                    '\t' => quoted.push_str(r"\t"),
+                    c => quoted.push(c),
+                }
+            }
+            quoted.push('"');
+            quoted
+        },
+    }
+}
+
 fn assign_shell_variable(shell: &Shell, name: impl Display, value: impl Display, exported: bool) -> String {
+    let value = shell_quote(shell, &value.to_string());
     match (shell, exported) {
-        (Shell::Bash | Shell::Zsh, false) => format!("{name}=\"{value}\""),
-        (Shell::Bash | Shell::Zsh, true) => format!("export {name}=\"{value}\""),
-        (Shell::Fish, false) => format!("set -g {name} \"{value}\""),
-        (Shell::Fish, true) => format!("set -gx {name} \"{value}\""),
-        (Shell::Nu, _) => format!("let-env {name} = \"{value}\";"),
+        (Shell::Bash | Shell::Zsh, false) => format!("{name}={value}"),
+        (Shell::Bash | Shell::Zsh, true) => format!("export {name}={value}"),
+        (Shell::Fish, false) => format!("set -g {name} {value}"),
+        (Shell::Fish, true) => format!("set -gx {name} {value}"),
+        (Shell::Nu, _) => format!("let-env {name} = {value};"),
     }
 }
 
@@ -179,19 +206,20 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
                 // We source both the old and new location of these integrations.
                 // In theory, they shouldn't both exist since they come with the app bundle itself.
                 // As of writing, the bash path change isn't live, but we source it anyway.
+                let source_if_exists = |relative_paths: [&str; 2]| {
+                    relative_paths
+                        .iter()
+                        .map(|relative_path| {
+                            let path =
+                                shell_quote(shell, &format!("{bundle}/Contents/plugins/terminal/{relative_path}"));
+                            format!("[ -f {path} ] && source {path}\n")
+                        })
+                        .collect::<String>()
+                };
                 match shell {
-                    Shell::Bash => Some(formatdoc! {"
-                        [ -f '{bundle}/Contents/plugins/terminal/jediterm-bash.in' ] && source '{bundle}/Contents/plugins/terminal/jediterm-bash.in'
-                        [ -f '{bundle}/Contents/plugins/terminal/bash/jediterm-bash.in' ] && source '{bundle}/Contents/plugins/terminal/bash/jediterm-bash.in'
-                    "}),
-                    Shell::Zsh => Some(formatdoc! {"
-                        [ -f '{bundle}/Contents/plugins/terminal/.zshenv' ] && source '{bundle}/Contents/plugins/terminal/.zshenv'
-                        [ -f '{bundle}/Contents/plugins/terminal/zsh/.zshenv' ] && source '{bundle}/Contents/plugins/terminal/zsh/.zshenv'
-                    "}),
-                    Shell::Fish => Some(formatdoc! {"
-                        [ -f '{bundle}/Contents/plugins/terminal/fish/config.fish' ] && source '{bundle}/Contents/plugins/terminal/fish/config.fish'
-                        [ -f '{bundle}/Contents/plugins/terminal/fish/init.fish' ] && source '{bundle}/Contents/plugins/terminal/fish/init.fish'
-                    "}),
+                    Shell::Bash => Some(source_if_exists(["jediterm-bash.in", "bash/jediterm-bash.in"])),
+                    Shell::Zsh => Some(source_if_exists([".zshenv", "zsh/.zshenv"])),
+                    Shell::Fish => Some(source_if_exists(["fish/config.fish", "fish/init.fish"])),
                     Shell::Nu => None,
                 }
             } else {
@@ -321,6 +349,40 @@ mod tests {
 
         let output = child.wait_with_output().unwrap();
         String::from_utf8(output.stdout).unwrap()
+    }
+
+    #[test]
+    fn test_shell_quote() {
+        assert_eq!(shell_quote(&Shell::Zsh, "a b"), "'a b'");
+        assert_eq!(shell_quote(&Shell::Bash, "it's"), r"'it'\''s'");
+        assert_eq!(shell_quote(&Shell::Fish, r"it's \ x"), r"'it\'s \\ x'");
+        assert_eq!(shell_quote(&Shell::Nu, "a\"b\\c\nd"), r#""a\"b\\c\nd""#);
+    }
+
+    #[test]
+    fn test_assign_shell_variable_is_literal() {
+        let values = [
+            "plain",
+            "/path with spaces/bin",
+            "it's",
+            "$(echo pwned)",
+            "`echo pwned`",
+            "\"; echo pwned; \"",
+            "'; echo pwned; '",
+            r"back\slash\",
+            r"$HOME ${HOME} %s \' \\'",
+            "new\nline",
+        ];
+        for shell in Shell::all_test() {
+            for value in values {
+                let code = format!(
+                    "{}\nprintf '%s' \"$TAB_TEST_VAR\"\n",
+                    assign_shell_variable(&shell, "TAB_TEST_VAR", value, false)
+                );
+                let output = Command::new(shell.as_str()).arg("-c").arg(&code).output().unwrap();
+                assert_eq!(String::from_utf8(output.stdout).unwrap(), value, "{shell:?}: {code}");
+            }
+        }
     }
 
     #[test]

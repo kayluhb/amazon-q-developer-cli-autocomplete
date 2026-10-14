@@ -34,10 +34,6 @@ use eyre::{
     bail,
 };
 use multiplexer::MultiplexerArgs;
-use rand::distr::{
-    Alphanumeric,
-    SampleString,
-};
 use sysinfo::System;
 use tab_install::InstallComponents;
 use tab_integrations::input_method::InputMethod;
@@ -324,10 +320,9 @@ impl InternalSubcommand {
                         (filename, exit_code)
                     },
                     _ => {
-                        let file_id = Alphanumeric.sample_string(&mut rand::rng(), 9);
-                        let tmp_filename = format!("fig-callback-{file_id}");
-                        let tmp_path = PathBuf::from("/tmp").join(tmp_filename);
-                        let mut tmp_file = std::fs::File::create(&tmp_path)?;
+                        // A new 0600 file in $TMPDIR. It stays so the handler can read it.
+                        let (mut tmp_file, tmp_path) =
+                            tempfile::Builder::new().prefix("fig-callback-").tempfile()?.keep()?;
                         let mut buffer = [0u8; BUFFER_SIZE];
                         let mut stdin = std::io::stdin();
                         trace!("Created tmp file: {}", tmp_path.display());

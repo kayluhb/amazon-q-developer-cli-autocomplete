@@ -26,6 +26,7 @@ owo-colors = "4.2.0"
 regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tempfile.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
@@ -40,6 +41,3 @@ accessibility-sys = { path = "../macos-utils/accessibility-master/accessibility-
 core-foundation = "0.10.0"
 plist = "1.7.1"
 objc.workspace = true
-
-[dev-dependencies]
-tempfile.workspace = true

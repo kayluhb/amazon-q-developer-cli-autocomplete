@@ -2,7 +2,7 @@
 source: crates/tab_cli/tests/init.rs
 expression: init
 ---
-TAB_SHELL="/bin/zsh"
+TAB_SHELL='/bin/zsh'
 if [[ -n "${ZSH_NAME:-}" ]]; then
 
 # add ~/.local/bin to PATH

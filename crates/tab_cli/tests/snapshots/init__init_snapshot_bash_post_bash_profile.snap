@@ -2,7 +2,7 @@
 source: crates/tab_cli/tests/init.rs
 expression: init
 ---
-TAB_SHELL="/bin/zsh"
+TAB_SHELL='/bin/zsh'
 function __fig_source_bash_preexec() {
 # bash-preexec.sh -- Bash support for ZSH-like 'preexec' and 'precmd' functions.
 # https://github.com/rcaloras/bash-preexec

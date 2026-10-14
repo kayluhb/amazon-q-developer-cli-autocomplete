@@ -1,10 +1,6 @@
 pub mod inline_plugin;
 
-use std::fs::File;
-use std::io::{
-    ErrorKind,
-    Write,
-};
+use std::io::ErrorKind;
 use std::path::PathBuf;
 
 use async_trait::async_trait;
@@ -30,6 +26,7 @@ use crate::error::{
     ErrorExt,
     Result,
 };
+use crate::file::write_atomic;
 use crate::{
     Error,
     FileIntegration,
@@ -568,11 +565,30 @@ impl DotfileShellIntegration {
         }
 
         if contents.ne(&original_contents) {
-            let mut file = File::create(&dotfile).with_path(self.path())?;
-            file.write_all(contents.as_bytes())?;
+            write_atomic(&dotfile, contents.as_bytes(), None).with_path(self.path())?;
         }
         Ok(())
     }
+}
+
+/// Removes the marker comments that the legacy Fig installer wrote around its blocks:
+///
+/// ```text
+/// #### FIG ENV VARIABLES ####
+/// # Please make sure this block is at the start of this file.
+/// ...
+/// #### END FIG ENV VARIABLES ####
+/// ```
+///
+/// Only these exact lines match, so other user comments stay.
+fn remove_legacy_marker_comments(contents: &str) -> String {
+    static MARKER_REGEX: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
+        Regex::new(
+            r"(?m)^(?:#### (?:END )?FIG ENV VARIABLES ####|# Please make sure this block is at the (?:start|end) of this file\.)[ \t]*$\n?",
+        )
+        .unwrap()
+    });
+    MARKER_REGEX.replace_all(contents, "").into_owned()
 }
 
 #[async_trait]
@@ -600,14 +616,7 @@ impl Integration for DotfileShellIntegration {
         if dotfile.exists() {
             let mut contents = std::fs::read_to_string(&dotfile)?;
 
-            // Remove comment lines
-            contents = Regex::new(r"(?mi)^#.*fig.*var.*$\n?")?
-                .replace_all(&contents, "")
-                .into();
-
-            contents = Regex::new(r"(?mi)^#.*Please make sure this block is at the .* of this file.*$\n?")?
-                .replace_all(&contents, "")
-                .into();
+            contents = remove_legacy_marker_comments(&contents);
 
             if self.pre {
                 contents = self.remove_from_text(&contents, When::Pre)?;
@@ -620,7 +629,7 @@ impl Integration for DotfileShellIntegration {
             contents = contents.trim().to_string();
             contents.push('\n');
 
-            std::fs::write(&dotfile, contents.as_bytes()).with_path(self.path())?;
+            write_atomic(&dotfile, contents.as_bytes(), None).with_path(self.path())?;
         }
 
         if self.pre {
@@ -864,5 +873,32 @@ mod test {
             "split with shebang and no linefeed"
         );
         assert_eq!(("", contents), split_shebang(without_shebang), "split with no shebang");
+    }
+
+    #[test]
+    fn test_remove_legacy_marker_comments() {
+        let contents = "\
+#### FIG ENV VARIABLES ####
+# Please make sure this block is at the start of this file.
+[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
+#### END FIG ENV VARIABLES ####
+# configure my env vars
+# fig var
+# Figure out the PATH variable
+#### FIG ENV VARIABLES #### extra
+# Please make sure this block is at the end of this file.
+export A=1
+";
+        assert_eq!(
+            remove_legacy_marker_comments(contents),
+            "\
+[ -s ~/.fig/shell/pre.sh ] && source ~/.fig/shell/pre.sh
+# configure my env vars
+# fig var
+# Figure out the PATH variable
+#### FIG ENV VARIABLES #### extra
+export A=1
+"
+        );
     }
 }

@@ -460,7 +460,9 @@ impl DebugSubcommand {
                     .nth(1)
                     .context("Could not get desktop app pid")?
                     .trim();
-                let outfile = Path::new("/tmp").join("fig-sample");
+                // A new 0700 directory in $TMPDIR. It stays so the user can send the file.
+                let outdir = tempfile::Builder::new().prefix("fig-sample-").tempdir()?.keep();
+                let outfile = outdir.join("fig-sample");
 
                 println!(
                     "Sampling desktop app ({}). Writing output to {}",

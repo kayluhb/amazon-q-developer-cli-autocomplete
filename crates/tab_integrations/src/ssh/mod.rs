@@ -1,8 +1,4 @@
-use std::fs::{
-    DirBuilder,
-    File,
-};
-use std::io::Write;
+use std::fs::DirBuilder;
 use std::os::unix::fs::DirBuilderExt;
 use std::path::PathBuf;
 
@@ -20,6 +16,7 @@ use crate::error::{
     Error,
     Result,
 };
+use crate::file::write_atomic;
 use crate::{
     FileIntegration,
     Integration,
@@ -55,7 +52,7 @@ impl SshIntegration {
         Ok(FileIntegration {
             path: self.get_integration_path()?,
             contents: indoc::formatdoc! {"
-                Match exec \"command -v {bin_name} && {bin_name} internal generate-ssh --remote-host %h --remote-port %p --remote-username %r\"
+                Match exec \"command -v {bin_name} && {bin_name} internal generate-ssh --remote-host '%h' --remote-port '%p' --remote-username '%r' --remote-original-host '%n'\"
                     Include \"{include_path}\"
             "},
             mode: Some(0o600),
@@ -124,7 +121,7 @@ impl SshIntegration {
             contents = self.source_regex()?.replace_all(&contents, "").into();
             contents = contents.trim().to_string();
             contents.push('\n');
-            std::fs::write(&self.path, contents.as_bytes())?;
+            write_atomic(&self.path, contents.as_bytes(), None)?;
         }
         Ok(())
     }
@@ -169,8 +166,7 @@ impl Integration for SshIntegration {
         }
         contents.push_str(&source_text);
 
-        let mut file = File::create(&self.path)?;
-        file.write_all(contents.as_bytes())?;
+        write_atomic(&self.path, contents.as_bytes(), None)?;
 
         Ok(())
     }
@@ -225,6 +221,11 @@ mod tests {
         println!("=== file_integration ===");
         println!("{}", file_integration.contents);
         println!("========================");
+
+        // ssh expands these tokens into a shell command, so each one must be quoted
+        for token in ["%h", "%p", "%r", "%n"] {
+            assert!(file_integration.contents.contains(&format!("'{token}'")), "{token}");
+        }
     }
 
     #[test]

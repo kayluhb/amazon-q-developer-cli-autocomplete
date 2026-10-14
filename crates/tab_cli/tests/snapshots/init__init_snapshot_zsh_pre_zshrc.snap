@@ -2,8 +2,8 @@
 source: crates/tab_cli/tests/init.rs
 expression: init
 ---
-TAB_SHELL="/bin/zsh"
-SHOULD_TABTERM_LAUNCH="0"
+TAB_SHELL='/bin/zsh'
+SHOULD_TABTERM_LAUNCH='0'
 #!/usr/bin/env bash
 
 mkdir -p "${HOME}/.local/bin" > /dev/null 2>&1

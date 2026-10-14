@@ -27,13 +27,38 @@ pub struct GenerateSshArgs {
     /// The remote username
     #[arg(long)]
     remote_username: Option<String>,
+    /// The remote host as typed on the command line, before `HostName` is applied
+    #[arg(long)]
+    remote_original_host: Option<String>,
+}
+
+/// Accepts only a conservative host name or IP address charset
+fn is_valid_host(host: &str) -> bool {
+    !host.is_empty()
+        && !host.starts_with('-')
+        && host
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_' | b':'))
+}
+
+/// Accepts only a conservative user name charset
+fn is_valid_username(username: &str) -> bool {
+    !username.is_empty()
+        && !username.starts_with('-')
+        && username
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_'))
+}
+
+fn is_valid_port(port: &str) -> bool {
+    !port.is_empty() && port.len() <= 5 && port.bytes().all(|b| b.is_ascii_digit())
 }
 
 impl GenerateSshArgs {
     pub async fn execute(self) -> Result<ExitCode> {
         let GenerateSshArgs { remote_username, .. } = &self;
 
-        let mut should_generate_config = true;
+        let mut should_generate_config = self.remote_dest().is_some();
 
         if let Some(remote_username) = remote_username {
             for username in IGNORED_USERNAMES {
@@ -68,6 +93,17 @@ impl GenerateSshArgs {
         Ok(ExitCode::SUCCESS)
     }
 
+    /// The `user@host` for the local command, or `None` if any argument is missing or not valid
+    fn remote_dest(&self) -> Option<String> {
+        let host = self.remote_host.as_deref()?;
+        let username = self.remote_username.as_deref()?;
+        let original_host = self.remote_original_host.as_deref().unwrap_or(host);
+        let port_is_valid = self.remote_port.as_deref().is_none_or(is_valid_port);
+
+        (is_valid_host(host) && is_valid_host(original_host) && is_valid_username(username) && port_is_valid)
+            .then(|| format!("{username}@{original_host}"))
+    }
+
     fn ssh_config_header(&self) -> String {
         let remote_username = self.remote_username.as_deref().unwrap_or_default();
         let remote_host = self.remote_host.as_deref().unwrap_or_default();
@@ -90,8 +126,12 @@ impl GenerateSshArgs {
         "}
     }
 
+    /// Only call this when `remote_dest` is `Some`
     fn ssh_config(&self, uuid: &Uuid, exe_path: &str, remote_socket: &str) -> String {
         let header = self.ssh_config_header();
+        // The validated value goes in literally instead of the `%r@%n` tokens, so ssh does not
+        // expand unchecked text into a shell command
+        let remote_dest = self.remote_dest().unwrap_or_default();
         let uuid = uuid.simple();
         let set_parent_socket_path = format!("/tmp/{CLI_BINARY_NAME}-parent-{uuid}.socket");
 
@@ -104,7 +144,7 @@ impl GenerateSshArgs {
               StreamLocalBindMask 600
               StreamLocalBindUnlink yes
               PermitLocalCommand yes
-              LocalCommand {exe_path} _ ssh-local-command '%r@%n' '{uuid}' 1>&2
+              LocalCommand {exe_path} _ ssh-local-command '{remote_dest}' '{uuid}' 1>&2
         "}
     }
 }
@@ -125,6 +165,7 @@ mod tests {
             remote_username: Some("root".into()),
             remote_host: Some("127.0.0.1".into()),
             remote_port: Some("22".into()),
+            remote_original_host: Some("my-host".into()),
         };
 
         let uuid = Uuid::new_v4();
@@ -133,5 +174,66 @@ mod tests {
 
         let config = args.ssh_config(&uuid, exe_path.to_str().unwrap(), remote_socket);
         println!("{config}");
+        assert!(config.contains("ssh-local-command 'root@my-host'"));
+        assert!(!config.contains('%'));
+    }
+
+    fn args(host: &str, username: &str, port: &str, original_host: Option<&str>) -> GenerateSshArgs {
+        GenerateSshArgs {
+            remote_host: Some(host.into()),
+            remote_port: Some(port.into()),
+            remote_username: Some(username.into()),
+            remote_original_host: original_host.map(Into::into),
+        }
+    }
+
+    #[test]
+    fn test_remote_dest() {
+        assert_eq!(
+            args("example.com", "user", "22", None).remote_dest().as_deref(),
+            Some("user@example.com")
+        );
+        assert_eq!(
+            args("10.0.0.1", "a.b-c_d", "2222", Some("alias_1"))
+                .remote_dest()
+                .as_deref(),
+            Some("a.b-c_d@alias_1")
+        );
+        assert_eq!(
+            args("fe80::1", "user", "22", None).remote_dest().as_deref(),
+            Some("user@fe80::1")
+        );
+
+        // Missing arguments
+        let missing = GenerateSshArgs {
+            remote_host: None,
+            remote_port: None,
+            remote_username: Some("user".into()),
+            remote_original_host: None,
+        };
+        assert_eq!(missing.remote_dest(), None);
+
+        for (host, username, port, original_host) in [
+            ("", "user", "22", None),
+            ("host", "", "22", None),
+            ("-oProxyCommand=x", "user", "22", None),
+            ("host", "-l", "22", None),
+            ("host;id", "user", "22", None),
+            ("host", "us'er", "22", None),
+            ("host", "user", "22a", None),
+            ("host", "user", "123456", None),
+            ("host$(id)", "user", "22", None),
+            ("host", "user`id`", "22", None),
+            ("host name", "user", "22", None),
+            ("host\nMatch", "user", "22", None),
+            ("host", "user", "22", Some("alias'; id; '")),
+            ("host", "user", "22", Some("%h")),
+        ] {
+            assert_eq!(
+                args(host, username, port, original_host).remote_dest(),
+                None,
+                "{host:?} {username:?} {port:?} {original_host:?}"
+            );
+        }
     }
 }

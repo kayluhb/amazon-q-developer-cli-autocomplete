@@ -2,7 +2,7 @@
 source: crates/tab_cli/tests/init.rs
 expression: init
 ---
-set -g TAB_SHELL "/bin/zsh"
+set -g TAB_SHELL '/bin/zsh'
 builtin contains $HOME/.local/bin $PATH
 or set --append PATH $HOME/.local/bin
 

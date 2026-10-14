@@ -1,8 +1,10 @@
-use std::fs::Metadata;
+use std::fs::OpenOptions;
 use std::io::ErrorKind;
 use std::os::unix::fs::{
     MetadataExt as _,
+    OpenOptionsExt as _,
     PermissionsExt,
+    fchown,
 };
 use std::path::Path;
 
@@ -55,21 +57,13 @@ pub fn fix_permissions(env: &Env) -> Result<()> {
         if shell_dir.is_dir() && shell_dir != home_dir {
             for entry in walkdir::WalkDir::new(shell_dir) {
                 let entry = entry?;
-                let metadata = entry.metadata()?;
-                updated |= fix_permissions_for_path(entry.path(), &metadata, &user_uid, &user_gid)?;
+                updated |= fix_permissions_for_path(entry.path(), &user_uid, &user_gid)?;
             }
         }
 
         if let Ok(integrations) = shell.get_shell_integrations(env) {
             for integration in integrations {
-                let path = integration.path();
-                match std::fs::metadata(&path) {
-                    Ok(metadata) => {
-                        updated |= fix_permissions_for_path(&path, &metadata, &user_uid, &user_gid)?;
-                    },
-                    Err(err) if err.kind() == ErrorKind::NotFound => {},
-                    Err(err) => return Err(err.into()),
-                }
+                updated |= fix_permissions_for_path(&integration.path(), &user_uid, &user_gid)?;
             }
         }
     }
@@ -88,7 +82,36 @@ pub fn fix_permissions(env: &Env) -> Result<()> {
     Ok(())
 }
 
-fn fix_permissions_for_path(path: &Path, metadata: &Metadata, user_uid: &Uid, user_gid: &Gid) -> Result<bool> {
+/// Fixes the owner and mode of `path`. Never follows a symlink at `path`.
+///
+/// The owner and mode change through the open file descriptor, so a swap of `path` to a symlink
+/// after the check has no effect.
+fn fix_permissions_for_path(path: &Path, user_uid: &Uid, user_gid: &Gid) -> Result<bool> {
+    // `symlink_metadata` describes the link itself, not its target.
+    let link_metadata = match std::fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(err.into()),
+    };
+
+    // Skip symlinks, sockets, fifos and devices
+    if !link_metadata.is_file() && !link_metadata.is_dir() {
+        return Ok(false);
+    }
+
+    let file = match OpenOptions::new()
+        .read(true)
+        .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK)
+        .open(path)
+    {
+        Ok(file) => file,
+        // `O_NOFOLLOW` gives `ELOOP` when `path` is now a symlink
+        Err(err) if err.raw_os_error() == Some(nix::libc::ELOOP) => return Ok(false),
+        Err(err) if err.kind() == ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(err.into()),
+    };
+    let metadata = file.metadata()?;
+
     info!(
         "{}: permission {:o}, uid: {}, gid: {}",
         path.display(),
@@ -97,17 +120,12 @@ fn fix_permissions_for_path(path: &Path, metadata: &Metadata, user_uid: &Uid, us
         metadata.gid()
     );
 
-    // Skip symlinks
-    if metadata.is_symlink() {
-        return Ok(false);
-    }
-
     let mut updated = false;
 
     // ensure owner is correct
     if metadata.uid() != user_uid.as_raw() || metadata.gid() != user_gid.as_raw() {
         println!("Fixing owner for {}", path.display().bold());
-        nix::unistd::chown(path, Some(*user_uid), Some(*user_gid))?;
+        fchown(&file, Some(user_uid.as_raw()), Some(user_gid.as_raw()))?;
         updated = true;
     }
 
@@ -115,7 +133,7 @@ fn fix_permissions_for_path(path: &Path, metadata: &Metadata, user_uid: &Uid, us
         println!("Fixing permissions for {}", path.display().bold());
         let mut permissions = metadata.permissions();
         permissions.set_mode(permissions.mode() | 0o700);
-        std::fs::set_permissions(path, permissions)?;
+        file.set_permissions(permissions)?;
         updated = true;
     }
 
@@ -123,9 +141,40 @@ fn fix_permissions_for_path(path: &Path, metadata: &Metadata, user_uid: &Uid, us
         println!("Fixing permissions for {}", path.display().bold());
         let mut permissions = metadata.permissions();
         permissions.set_mode(permissions.mode() | 0o600);
-        std::fs::set_permissions(path, permissions)?;
+        file.set_permissions(permissions)?;
         updated = true;
     }
 
     Ok(updated)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_skips_symlinks() {
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("target");
+        std::fs::write(&target, "").unwrap();
+        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o400)).unwrap();
+        let link = dir.path().join("link");
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+
+        let uid = Uid::current();
+        let gid = Gid::current();
+        assert!(!fix_permissions_for_path(&link, &uid, &gid).unwrap());
+        assert_eq!(std::fs::metadata(&target).unwrap().mode() & 0o777, 0o400);
+
+        // A regular file is fixed
+        assert!(fix_permissions_for_path(&target, &uid, &gid).unwrap());
+        assert_eq!(std::fs::metadata(&target).unwrap().mode() & 0o777, 0o600);
+    }
+
+    #[test]
+    fn test_missing_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("missing");
+        assert!(!fix_permissions_for_path(&path, &Uid::current(), &Gid::current()).unwrap());
+    }
 }

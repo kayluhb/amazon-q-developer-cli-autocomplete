@@ -77,6 +77,13 @@ use tokio::sync::mpsc::{
 };
 use tokio::task::JoinHandle;
 use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::tungstenite::handshake::server::{
+    ErrorResponse,
+    Request,
+    Response,
+};
+use tokio_tungstenite::tungstenite::http::StatusCode;
+use tokio_tungstenite::tungstenite::http::header::ORIGIN;
 use tokio_util::codec::{
     FramedRead,
     FramedWrite,
@@ -94,25 +101,81 @@ use crate::util::pid_file::PidLock;
 
 #[derive(Debug, PartialEq, Eq, Args)]
 pub struct MultiplexerArgs {
+    /// Listen for a WebSocket client on 127.0.0.1 instead of using stdio.
+    ///
+    /// A random token is generated on each launch and printed to stderr. The client must connect to
+    /// `ws://127.0.0.1:<port>/?token=<token>`. Requests that send an `Origin` header (browsers) are
+    /// rejected.
     #[arg(long, default_value_t = false)]
     websocket: bool,
     #[arg(long)]
     port: Option<u16>,
 }
 
+/// A random hex token for one multiplexer launch
+fn generate_websocket_token() -> String {
+    let bytes: [u8; 32] = rand::random();
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Compares two byte strings in constant time for equal lengths
+fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
+}
+
+/// Accepts a WebSocket handshake only if it has no `Origin` header and has the correct `token`
+/// query parameter
+fn check_websocket_handshake(request: &Request, token: &str) -> Result<(), &'static str> {
+    // Browsers always send `Origin`, other local clients do not need it
+    if request.headers().contains_key(ORIGIN) {
+        return Err("requests with an Origin header are not allowed");
+    }
+
+    let request_token = request
+        .uri()
+        .query()
+        .unwrap_or_default()
+        .split('&')
+        .find_map(|pair| pair.strip_prefix("token="));
+
+    match request_token {
+        Some(request_token) if constant_time_eq(request_token.as_bytes(), token.as_bytes()) => Ok(()),
+        _ => Err("missing or invalid token"),
+    }
+}
+
 async fn accept_connection(
     tcp_stream: TcpStream,
+    token: Arc<str>,
     hostbound_tx: mpsc::Sender<Bytes>,
     mut clientbound_rx: broadcast::Receiver<Bytes>,
 ) {
-    let addr = tcp_stream
-        .peer_addr()
-        .expect("connected streams should have a peer address");
+    let addr = match tcp_stream.peer_addr() {
+        Ok(addr) => addr,
+        Err(err) => {
+            error!(%err, "failed to get peer address");
+            return;
+        },
+    };
     info!("Peer address: {addr}");
 
-    let ws_stream = tokio_tungstenite::accept_async(tcp_stream)
-        .await
-        .expect("Error during the websocket handshake occurred");
+    let callback = |request: &Request, response: Response| match check_websocket_handshake(request, &token) {
+        Ok(()) => Ok(response),
+        Err(reason) => {
+            warn!(%addr, reason, "rejected websocket handshake");
+            let mut response = ErrorResponse::new(Some(reason.to_owned()));
+            *response.status_mut() = StatusCode::FORBIDDEN;
+            Err(response)
+        },
+    };
+
+    let ws_stream = match tokio_tungstenite::accept_hdr_async(tcp_stream, callback).await {
+        Ok(ws_stream) => ws_stream,
+        Err(err) => {
+            error!(%err, %addr, "websocket handshake failed");
+            return;
+        },
+    };
 
     info!("New WebSocket connection: {addr}");
 
@@ -198,6 +261,7 @@ pub async fn execute(args: MultiplexerArgs) -> Result<()> {
         let (clientbound_tx, _) = broadcast::channel::<Bytes>(10);
         let (hostbound_tx, mut clientbound_rx) = mpsc::channel::<Bytes>(10);
         let clientbound_tx_clone = clientbound_tx.clone();
+        let token: Arc<str> = generate_websocket_token().into();
 
         let (mut external_read, mut external_write) = tokio::io::split(external_stream);
 
@@ -235,11 +299,17 @@ pub async fn execute(args: MultiplexerArgs) -> Result<()> {
                     },
                 };
                 info!("Listening on: {addr}");
+                eprintln!("Listening on ws://{addr}/?token={token}");
 
                 while let Ok((tcp_stream, stream_addr)) = listener.accept().await {
                     info!(%stream_addr, "Accepted stream");
                     let clientbound_rx = clientbound_tx_clone.subscribe();
-                    tokio::spawn(accept_connection(tcp_stream, hostbound_tx.clone(), clientbound_rx));
+                    tokio::spawn(accept_connection(
+                        tcp_stream,
+                        Arc::clone(&token),
+                        hostbound_tx.clone(),
+                        clientbound_rx,
+                    ));
                 }
             }
         });
@@ -647,6 +717,51 @@ mod tests {
             let result = handle_clientbound(message, &state, &sender).await.unwrap();
             println!("{result:?}");
         }
+    }
+
+    fn handshake_request(uri: &str, origin: Option<&str>) -> Request {
+        let mut builder = Request::builder().uri(uri);
+        if let Some(origin) = origin {
+            builder = builder.header(ORIGIN, origin);
+        }
+        builder.body(()).unwrap()
+    }
+
+    #[test]
+    fn test_check_websocket_handshake() {
+        let token = generate_websocket_token();
+        assert_eq!(token.len(), 64);
+        assert_ne!(token, generate_websocket_token());
+
+        let good = format!("ws://127.0.0.1:8080/?token={token}");
+        assert!(check_websocket_handshake(&handshake_request(&good, None), &token).is_ok());
+        let with_other_params = format!("ws://127.0.0.1:8080/?a=b&token={token}&c=d");
+        assert!(check_websocket_handshake(&handshake_request(&with_other_params, None), &token).is_ok());
+
+        // Any Origin header is rejected, even with the right token
+        assert!(check_websocket_handshake(&handshake_request(&good, Some("https://example.com")), &token).is_err());
+        assert!(check_websocket_handshake(&handshake_request(&good, Some("null")), &token).is_err());
+
+        for uri in [
+            "ws://127.0.0.1:8080/".to_owned(),
+            "ws://127.0.0.1:8080/?token=".to_owned(),
+            "ws://127.0.0.1:8080/?token=abc".to_owned(),
+            format!("ws://127.0.0.1:8080/?token={token}0"),
+            format!("ws://127.0.0.1:8080/?xtoken={token}"),
+        ] {
+            assert!(
+                check_websocket_handshake(&handshake_request(&uri, None), &token).is_err(),
+                "{uri}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_constant_time_eq() {
+        assert!(constant_time_eq(b"abc", b"abc"));
+        assert!(!constant_time_eq(b"abc", b"abd"));
+        assert!(!constant_time_eq(b"abc", b"ab"));
+        assert!(constant_time_eq(b"", b""));
     }
 
     #[tokio::test]
