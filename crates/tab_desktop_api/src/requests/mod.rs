@@ -11,6 +11,7 @@ pub mod settings;
 pub mod state;
 pub mod telemetry;
 pub mod update;
+mod value_store;
 
 pub type ServerOriginatedSubMessage = tab_proto::fig::server_originated_message::Submessage;
 pub type RequestResult = Result<Box<ServerOriginatedSubMessage>, Error>;

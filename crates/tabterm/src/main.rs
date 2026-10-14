@@ -69,14 +69,16 @@ use tab_proto::remote_hooks::{
 use tab_settings::state;
 use tab_util::consts::CLI_BINARY_NAME;
 use tab_util::env_var::{
+    TAB_DISABLE_AUTOCOMPLETE,
+    TAB_EXECUTION_STRING,
+    TAB_IS_LOGIN_SHELL,
     TAB_LOG_LEVEL,
     TAB_SHELL,
+    TAB_SHELL_EXTRA_ARGS,
+    TAB_START_TEXT,
     TAB_TERM,
+    TAB_TERM_TMUX,
     TABTERM_SESSION_ID,
-};
-use tab_util::process_info::{
-    Pid,
-    PidExt,
 };
 use tab_util::{
     PRODUCT_NAME,
@@ -218,7 +220,7 @@ async fn _should_install_remote_ssh_integration(
 ) -> Option<bool> {
     use tab_proto::remote::clientbound;
 
-    let remote_install_setting = tab_settings::settings::get_string_or("ssh.remote-prompt", "ask".into());
+    let remote_install_setting = tab_settings::settings::get_string_or("ssh.remote-prompt", "ask");
     if remote_install_setting == "never" {
         return Some(false);
     }
@@ -321,8 +323,6 @@ where
     shell_enabled && !insertion_locked && !preexec
 }
 
-const TAB_DISABLE_AUTOCOMPLETE: &str = "TAB_DISABLE_AUTOCOMPLETE";
-
 fn autocomplete_enabled(env: &Env) -> bool {
     env.get_os(TAB_DISABLE_AUTOCOMPLETE).is_none_or(|s| s.is_empty())
 }
@@ -391,15 +391,15 @@ fn build_shell_command(command: Option<&[String]>) -> Result<CommandBuilder> {
             let parent_shell = get_parent_shell()?;
             let mut builder = CommandBuilder::new(parent_shell);
 
-            if env::var("TAB_IS_LOGIN_SHELL").ok().as_deref() == Some("1") {
+            if env::var(TAB_IS_LOGIN_SHELL).ok().as_deref() == Some("1") {
                 builder.arg("--login");
             }
 
-            if let Some(execution_string) = env::var("TAB_EXECUTION_STRING").ok().filter(|s| !s.is_empty()) {
+            if let Some(execution_string) = env::var(TAB_EXECUTION_STRING).ok().filter(|s| !s.is_empty()) {
                 builder.args(["-c", &execution_string]);
             }
 
-            if let Some(extra_args) = env::var("TAB_SHELL_EXTRA_ARGS").ok().filter(|s| !s.is_empty()) {
+            if let Some(extra_args) = env::var(TAB_SHELL_EXTRA_ARGS).ok().filter(|s| !s.is_empty()) {
                 builder.args(extra_args.split_whitespace().filter(|arg| arg != &"--login"));
             }
 
@@ -409,15 +409,15 @@ fn build_shell_command(command: Option<&[String]>) -> Result<CommandBuilder> {
 
     builder.env(TAB_TERM, env!("CARGO_PKG_VERSION"));
     if env::var_os("TMUX").is_some() {
-        builder.env("TAB_TERM_TMUX", env!("CARGO_PKG_VERSION"));
+        builder.env(TAB_TERM_TMUX, env!("CARGO_PKG_VERSION"));
     }
 
     // Clean up environment and launch shell.
     builder.env_remove(TAB_SHELL);
-    builder.env_remove("TAB_IS_LOGIN_SHELL");
-    builder.env_remove("TAB_START_TEXT");
-    builder.env_remove("TAB_SHELL_EXTRA_ARGS");
-    builder.env_remove("TAB_EXECUTION_STRING");
+    builder.env_remove(TAB_IS_LOGIN_SHELL);
+    builder.env_remove(TAB_START_TEXT);
+    builder.env_remove(TAB_SHELL_EXTRA_ARGS);
+    builder.env_remove(TAB_EXECUTION_STRING);
 
     if let Ok(dir) = std::env::current_dir() {
         builder.cwd(dir);
@@ -512,7 +512,7 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
     let (child_tx, mut child_rx) = oneshot::channel();
     std::thread::spawn(move || child_tx.send(child.wait()));
 
-    info!("Pid: {}", Pid::current());
+    info!("Pid: {}", std::process::id());
     info!("Pty name: {pty_name}");
 
     let runtime = runtime::Builder::new_multi_thread()
@@ -582,7 +582,7 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
         let result: Result<()> = 'select_loop: loop {
             if first_time && term.shell_state().has_seen_prompt {
                 trace!("Has seen prompt and first time");
-                let initial_command = env::var("TAB_START_TEXT").ok().filter(|s| !s.is_empty());
+                let initial_command = env::var(TAB_START_TEXT).ok().filter(|s| !s.is_empty());
                 if let Some(mut initial_command) = initial_command {
                     debug!("Sending initial text: {initial_command}");
                     initial_command.push('\n');

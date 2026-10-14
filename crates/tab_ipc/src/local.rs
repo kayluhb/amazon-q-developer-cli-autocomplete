@@ -201,16 +201,20 @@ where
     }
 }
 
+/// Connects to the desktop app socket.
+async fn connect_desktop_socket() -> Result<BufferedUnixStream> {
+    let path = directories::desktop_socket_path()?;
+    Ok(BufferedUnixStream::connect_timeout(&path, Duration::from_secs(3)).await?)
+}
+
 /// Send a hook directly to the Fig socket
 pub async fn send_hook_to_socket(hook: local::Hook) -> Result<()> {
-    let path = directories::desktop_socket_path()?;
-    let mut conn = BufferedUnixStream::connect_timeout(&path, Duration::from_secs(3)).await?;
+    let mut conn = connect_desktop_socket().await?;
     conn.send_hook(hook).await
 }
 
 pub async fn send_command_to_socket(command: local::command::Command) -> Result<()> {
-    let path = directories::desktop_socket_path()?;
-    let mut conn = BufferedUnixStream::connect_timeout(&path, Duration::from_secs(3)).await?;
+    let mut conn = connect_desktop_socket().await?;
     conn.send_command(command, false).await
 }
 
@@ -222,7 +226,6 @@ pub async fn send_recv_command_to_socket_with_timeout(
     command: local::command::Command,
     timeout: Duration,
 ) -> Result<Option<local::CommandResponse>> {
-    let path = directories::desktop_socket_path()?;
-    let mut conn = BufferedUnixStream::connect_timeout(&path, Duration::from_secs(3)).await?;
+    let mut conn = connect_desktop_socket().await?;
     conn.send_recv_command(command, timeout).await
 }

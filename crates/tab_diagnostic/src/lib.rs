@@ -198,15 +198,13 @@ pub struct CurrentEnvironment {
 
 impl CurrentEnvironment {
     async fn new() -> CurrentEnvironment {
-        use tab_util::process_info::{
-            Pid,
-            PidExt,
-        };
         let ctx = Context::new();
 
         let username = format!("/{}", whoami::username());
 
-        let shell_path = Pid::current()
+        let shell_path = ctx
+            .process_info()
+            .current_pid()
             .parent()
             .and_then(|pid| pid.exe())
             .map(|p| p.to_string_lossy().replace(&username, "/USER"));

@@ -1,6 +1,9 @@
 use std::env::temp_dir;
 use std::io::BufRead;
-use std::path::PathBuf;
+use std::path::{
+    Path,
+    PathBuf,
+};
 
 use async_trait::async_trait;
 use macos_utils::url::path_for_application;
@@ -14,8 +17,10 @@ use crate::{
     Integration,
 };
 
-const OLD_EXTENSION_PREFIX: &str = "withfig.fig-";
-const EXTENSION_PREFIX: &str = "amazonwebservices.codewhisperer-for-command-line-companion";
+/// The folder name prefix of the legacy Fig extension.
+pub const OLD_EXTENSION_PREFIX: &str = "withfig.fig-";
+/// The folder name prefix of the current extension.
+pub const EXTENSION_PREFIX: &str = "amazonwebservices.codewhisperer-for-command-line-companion";
 
 const EXTENSION_VERSION: &str = env!("CARGO_PKG_VERSION");
 const EXTENSION: &[u8] = include_bytes!("vscode-plugin.vsix");
@@ -102,6 +107,21 @@ pub static VARIANTS: &[VSCodeVariant] = &[
     },
 ];
 
+impl VSCodeVariant {
+    /// The extensions folder of this variant inside `home`.
+    pub fn extensions_dir(&self, home: &Path) -> PathBuf {
+        home.join(self.config_folder_name).join("extensions")
+    }
+}
+
+/// The extensions folder of every variant in [`VARIANTS`] inside `home`, without duplicates.
+pub fn all_extensions_dirs(home: &Path) -> Vec<PathBuf> {
+    let mut dirs: Vec<PathBuf> = VARIANTS.iter().map(|variant| variant.extensions_dir(home)).collect();
+    dirs.sort();
+    dirs.dedup();
+    dirs
+}
+
 pub fn variants_installed() -> Vec<VSCodeVariant> {
     VARIANTS
         .iter()
@@ -155,9 +175,7 @@ impl VSCodeIntegration {
     }
 
     fn extensions_dir(&self) -> Result<PathBuf> {
-        Ok(tab_util::directories::home_dir()?
-            .join(self.variant.config_folder_name)
-            .join("extensions"))
+        Ok(self.variant.extensions_dir(&tab_util::directories::home_dir()?))
     }
 
     fn cli_path(&self) -> Result<PathBuf> {
@@ -240,6 +258,27 @@ impl Integration for VSCodeIntegration {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_extensions_dirs_covers_every_variant() {
+        let home = Path::new("/home");
+        let dirs = all_extensions_dirs(home);
+        for variant in VARIANTS {
+            assert!(
+                dirs.contains(&variant.extensions_dir(home)),
+                "{}",
+                variant.application_name
+            );
+        }
+        for folder in [".windsurf", ".windsurf-next", ".positron", ".trae"] {
+            assert!(dirs.contains(&home.join(folder).join("extensions")), "{folder}");
+        }
+        // VSCodium has two variants with one folder.
+        assert_eq!(
+            dirs.iter().filter(|dir| dir.starts_with("/home/.vscode-oss")).count(),
+            1
+        );
+    }
 
     #[test]
     fn test_extension_is_installed_from_stdout() {

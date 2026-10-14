@@ -36,10 +36,7 @@ use tab_proto::remote::{
 };
 use tab_util::PTY_BINARY_NAME;
 use time::OffsetDateTime;
-use tokio::net::{
-    UnixListener,
-    UnixStream,
-};
+use tokio::net::UnixStream;
 use tokio::select;
 use tokio::sync::Notify;
 use tokio::time::{
@@ -70,21 +67,9 @@ pub async fn start_remote_ipc(
     figterm_state: Arc<FigtermState>,
     hook: impl RemoteHookHandler + Send + Clone + 'static,
 ) -> Result<()> {
-    if let Some(parent) = socket_path.parent() {
-        if !parent.exists() {
-            std::fs::create_dir_all(parent).context("Failed creating socket path")?;
-        }
-
-        {
-            use std::fs::Permissions;
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(parent, Permissions::from_mode(0o700))?;
-        }
-    }
-
-    tokio::fs::remove_file(&socket_path).await.ok();
-
-    let listener = UnixListener::bind(socket_path)?;
+    let listener = tab_ipc::socket_bind(&socket_path)
+        .await
+        .context("Failed binding remote socket")?;
 
     while let Ok((stream, _)) = listener.accept().await {
         tokio::spawn(handle_remote_ipc(stream, figterm_state.clone(), hook.clone()));
@@ -187,7 +172,7 @@ pub async fn handle_remote_ipc(
 
                             result
                         },
-                        Some(hostbound::Packet::Request(hostbound::Request { request: Some(request), nonce })) => {
+                        Some(hostbound::Packet::Request(hostbound::Request { request: Some(mut request), nonce })) => {
                             if matches!(
                                 request,
                                 hostbound::request::Request::EditBuffer(_)
@@ -200,52 +185,27 @@ pub async fn handle_remote_ipc(
                                     success: false,
                                 }))
                             } else {
-                                /*
-                                    WARNING, when adding new remote requests you must sanitize the context,
-                                    otherwise the client can forge a message from another session
-                                */
+                                if let Some(shell_context) = sanitize_request(&mut request, session_id) {
+                                    hook.shell_context(shell_context, session_id).await;
+                                }
+
                                 let res = match request {
-                                    hostbound::request::Request::EditBuffer(mut edit_buffer) => {
-                                        sanitize_fn(&mut edit_buffer.context, session_id);
-                                        if let Some(shell_context) = &edit_buffer.context {
-                                            hook.shell_context(shell_context, session_id).await;
-                                        }
-                                        hook.edit_buffer(
-                                            &edit_buffer,
-                                            session_id,
-                                            &figterm_state,
-                                        )
-                                        .await
+                                    hostbound::request::Request::EditBuffer(edit_buffer) => {
+                                        hook.edit_buffer(&edit_buffer, session_id, &figterm_state).await
                                     },
-                                    hostbound::request::Request::Prompt(mut prompt) => {
-                                        sanitize_fn(&mut prompt.context, session_id);
-                                        if let Some(shell_context) = &prompt.context {
-                                            hook.shell_context(shell_context, session_id).await;
-                                        }
+                                    hostbound::request::Request::Prompt(prompt) => {
                                         hook.prompt(&prompt, session_id, &figterm_state).await
                                     },
-                                    hostbound::request::Request::PreExec(mut pre_exec) => {
-                                        sanitize_fn(&mut pre_exec.context, session_id);
-                                        if let Some(shell_context) = &pre_exec.context {
-                                            hook.shell_context(shell_context, session_id).await;
-                                        }
+                                    hostbound::request::Request::PreExec(pre_exec) => {
                                         hook.pre_exec(&pre_exec, session_id, &figterm_state).await
                                     },
-                                    hostbound::request::Request::PostExec(mut post_exec) => {
-                                        sanitize_fn(&mut post_exec.context, session_id);
-                                        if let Some(shell_context) = &post_exec.context {
-                                            hook.shell_context(shell_context, session_id).await;
-                                        }
+                                    hostbound::request::Request::PostExec(post_exec) => {
                                         hook.post_exec(&post_exec, session_id, &figterm_state).await
                                     },
-                                    hostbound::request::Request::InterceptedKey(mut intercepted_key) => {
-                                        sanitize_fn(&mut intercepted_key.context, session_id);
-                                        if let Some(shell_context) = &intercepted_key.context {
-                                            hook.shell_context(shell_context, session_id).await;
-                                        }
+                                    hostbound::request::Request::InterceptedKey(intercepted_key) => {
                                         hook.intercepted_key(intercepted_key, session_id).await
                                     },
-                                } ;
+                                };
 
                                 match res {
                                     Ok(inner) => inner.map(|inner| clientbound::Packet::Response(clientbound::Response { nonce, response: Some(inner) })),
@@ -481,10 +441,84 @@ async fn send_pings(outgoing: flume::Sender<Clientbound>, mut on_close_rx: tokio
     }
 }
 
-// This has to be used to sanitize as a hook can contain an invalid session_id and it must
-// be sanitized before being sent to any consumers
-fn sanitize_fn(context: &mut Option<ShellContext>, session_id: Uuid) {
-    if let Some(context) = context {
-        context.session_id = Some(session_id.to_string());
+/// Overwrites the session id in the shell context of `request` with the id of the connection.
+///
+/// A client can put any session id in a hook. Every request must go through this function
+/// before dispatch, so that a client cannot forge a message from another session. The match
+/// has no wildcard arm, so a new request type does not compile until it is handled here.
+///
+/// Returns the sanitized shell context, if the request has one.
+fn sanitize_request(request: &mut hostbound::request::Request, session_id: Uuid) -> Option<&ShellContext> {
+    use hostbound::request::Request;
+
+    let context = match request {
+        Request::EditBuffer(hook) => &mut hook.context,
+        Request::Prompt(hook) => &mut hook.context,
+        Request::PreExec(hook) => &mut hook.context,
+        Request::PostExec(hook) => &mut hook.context,
+        Request::InterceptedKey(hook) => &mut hook.context,
+    };
+
+    let context = context.as_mut()?;
+    context.session_id = Some(session_id.to_string());
+    Some(context)
+}
+
+#[cfg(test)]
+mod tests {
+    use tab_proto::local::{
+        EditBufferHook,
+        InterceptedKeyHook,
+        PostExecHook,
+        PreExecHook,
+        PromptHook,
+    };
+
+    use super::*;
+
+    fn forged_context() -> Option<ShellContext> {
+        Some(ShellContext {
+            session_id: Some("forged".into()),
+            ..Default::default()
+        })
+    }
+
+    #[test]
+    fn sanitize_request_overwrites_session_id_for_every_request() {
+        use hostbound::request::Request;
+
+        let session_id = Uuid::new_v4();
+        let requests = [
+            Request::EditBuffer(EditBufferHook {
+                context: forged_context(),
+                ..Default::default()
+            }),
+            Request::Prompt(PromptHook {
+                context: forged_context(),
+            }),
+            Request::PreExec(PreExecHook {
+                context: forged_context(),
+                ..Default::default()
+            }),
+            Request::PostExec(PostExecHook {
+                context: forged_context(),
+                ..Default::default()
+            }),
+            Request::InterceptedKey(InterceptedKeyHook {
+                context: forged_context(),
+                ..Default::default()
+            }),
+        ];
+
+        for mut request in requests {
+            let sanitized = sanitize_request(&mut request, session_id).and_then(|context| context.session_id.clone());
+            assert_eq!(sanitized, Some(session_id.to_string()), "{request:?}");
+        }
+    }
+
+    #[test]
+    fn sanitize_request_without_context_returns_none() {
+        let mut request = hostbound::request::Request::Prompt(PromptHook { context: None });
+        assert!(sanitize_request(&mut request, Uuid::new_v4()).is_none());
     }
 }

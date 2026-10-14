@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use tab_integrations::Integration;
-use tab_integrations::shell::ShellExt;
+use tab_integrations::shell::all_shell_integrations;
 use tab_integrations::ssh::SshIntegration;
 use tab_os_shim::{
     Context,
@@ -41,13 +41,15 @@ pub async fn uninstall(components: InstallComponents, ctx: Arc<Context>) -> Resu
         Ok(())
     };
 
-    let shell_integration_result = {
-        for shell in [Shell::Bash, Shell::Zsh, Shell::Fish] {
-            for integration in shell.get_shell_integrations(ctx.env())? {
-                integration.uninstall().await?;
-            }
+    let shell_integration_result: Result<(), Error> = {
+        let (integrations, errors) = all_shell_integrations(ctx.env());
+        for integration in integrations {
+            integration.uninstall().await?;
         }
-        Ok(())
+        match errors.into_iter().next() {
+            Some((_, err)) => Err(err.into()),
+            None => Ok(()),
+        }
     };
 
     if components.contains(InstallComponents::BINARY) {
@@ -112,19 +114,11 @@ pub async fn uninstall(components: InstallComponents, ctx: Arc<Context>) -> Resu
 
 pub async fn install(components: InstallComponents, env: &Env) -> Result<(), Error> {
     if components.contains(InstallComponents::SHELL_INTEGRATIONS) {
-        let mut errs: Vec<Error> = vec![];
-        for shell in Shell::all() {
-            match shell.get_shell_integrations(env) {
-                Ok(integrations) => {
-                    for integration in integrations {
-                        if let Err(e) = integration.install().await {
-                            errs.push(e.into());
-                        }
-                    }
-                },
-                Err(e) => {
-                    errs.push(e.into());
-                },
+        let (integrations, errors) = all_shell_integrations(env);
+        let mut errs: Vec<Error> = errors.into_iter().map(|(_, e)| e.into()).collect();
+        for integration in integrations {
+            if let Err(e) = integration.install().await {
+                errs.push(e.into());
             }
         }
 

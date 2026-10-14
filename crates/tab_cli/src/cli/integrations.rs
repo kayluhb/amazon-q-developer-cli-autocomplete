@@ -6,7 +6,10 @@ use crossterm::style::Stylize;
 use eyre::Result;
 use serde_json::json;
 use tab_integrations::Integration as _;
-use tab_integrations::shell::ShellExt;
+use tab_integrations::shell::{
+    all_shell_integrations,
+    shell_integrations,
+};
 use tab_integrations::ssh::SshIntegration;
 use tab_os_shim::Env;
 use tab_util::Shell;
@@ -107,6 +110,49 @@ impl IntegrationsSubcommands {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DotfileAction {
+    Install,
+    Uninstall,
+}
+
+/// Installs or uninstalls the dotfile integrations for `shell`, or for every shell if `shell` is
+/// `None`. Returns `true` if it tried to install or uninstall any integration, even if that
+/// attempt failed.
+async fn apply_dotfiles(shell: Option<Shell>, action: DotfileAction) -> (bool, Result<()>) {
+    let env = Env::new();
+    let (integrations, shell_errors) = match shell {
+        Some(shell) => shell_integrations(&[shell], &env),
+        None => all_shell_integrations(&env),
+    };
+
+    let mut changed = false;
+    let mut errs: Vec<String> = vec![];
+    for integration in integrations {
+        let is_installed = integration.is_installed().await.is_ok();
+        let result = match (action, is_installed) {
+            (DotfileAction::Install, false) => integration.install().await,
+            (DotfileAction::Uninstall, true) => integration.uninstall().await,
+            _ => {
+                debug!("Skipping {}", integration.describe());
+                continue;
+            },
+        };
+        changed = true;
+        if let Err(e) = result {
+            errs.push(format!("{}: {}", integration.describe().bold(), e.verbose_message()));
+        }
+    }
+    errs.extend(shell_errors.into_iter().map(|(shell, e)| format!("{shell}: {e}")));
+
+    let result = if errs.is_empty() {
+        Ok(())
+    } else {
+        Err(eyre::eyre!("\n\n{}", errs.join("\n\n")))
+    };
+    (changed, result)
+}
+
 #[allow(unused_mut)]
 async fn install(integration: Integration, silent: bool) -> Result<()> {
     let mut installed = false;
@@ -116,44 +162,9 @@ async fn install(integration: Integration, silent: bool) -> Result<()> {
     let result = match integration {
         Integration::All => Ok(()),
         Integration::Dotfiles { shell } => {
-            let shells = match shell {
-                Some(shell) => vec![shell],
-                None => vec![Shell::Bash, Shell::Zsh, Shell::Fish],
-            };
-
-            let mut errs: Vec<String> = vec![];
-            for shell in &shells {
-                match shell.get_shell_integrations(&Env::new()) {
-                    Ok(integrations) => {
-                        for integration in integrations {
-                            match integration.is_installed().await {
-                                Ok(_) => {
-                                    debug!("Skipping {}", integration.describe());
-                                },
-                                Err(_) => {
-                                    installed = true;
-                                    if let Err(e) = integration.install().await {
-                                        errs.push(format!(
-                                            "{}: {}",
-                                            integration.describe().bold(),
-                                            e.verbose_message()
-                                        ));
-                                    }
-                                },
-                            }
-                        }
-                    },
-                    Err(e) => {
-                        errs.push(format!("{shell}: {e}"));
-                    },
-                }
-            }
-
-            if errs.is_empty() {
-                Ok(())
-            } else {
-                Err(eyre::eyre!("\n\n{}", errs.join("\n\n")))
-            }
+            let (changed, result) = apply_dotfiles(shell, DotfileAction::Install).await;
+            installed = changed;
+            result
         },
         Integration::Ssh => {
             let ssh_integration = SshIntegration::new()?;
@@ -204,44 +215,9 @@ async fn uninstall(integration: Integration, silent: bool) -> Result<()> {
     let result = match integration {
         Integration::All => Ok(()),
         Integration::Dotfiles { shell } => {
-            let shells = match shell {
-                Some(shell) => vec![shell],
-                None => vec![Shell::Bash, Shell::Zsh, Shell::Fish],
-            };
-
-            let mut errs: Vec<String> = vec![];
-            for shell in &shells {
-                match shell.get_shell_integrations(&Env::new()) {
-                    Ok(integrations) => {
-                        for integration in integrations {
-                            match integration.is_installed().await {
-                                Ok(_) => {
-                                    uninstalled = true;
-                                    if let Err(e) = integration.uninstall().await {
-                                        errs.push(format!(
-                                            "{}: {}",
-                                            integration.describe().bold(),
-                                            e.verbose_message()
-                                        ));
-                                    }
-                                },
-                                Err(_) => {
-                                    debug!("Skipping {}", integration.describe());
-                                },
-                            }
-                        }
-                    },
-                    Err(e) => {
-                        errs.push(format!("{shell}: {e}"));
-                    },
-                }
-            }
-
-            if errs.is_empty() {
-                Ok(())
-            } else {
-                Err(eyre::eyre!("\n\n{}", errs.join("\n\n")))
-            }
+            let (changed, result) = apply_dotfiles(shell, DotfileAction::Uninstall).await;
+            uninstalled = changed;
+            result
         },
         Integration::Ssh => {
             let ssh_integration = SshIntegration::new()?;
@@ -305,22 +281,17 @@ async fn status(integration: Integration, format: OutputFormat) -> Result<ExitCo
             let mut all_integrations = vec![];
             let mut errors = vec![];
 
-            for shell in &[Shell::Bash, Shell::Zsh, Shell::Fish] {
-                match shell.get_shell_integrations(&Env::new()) {
-                    Ok(integrations) => {
-                        for integration in integrations {
-                            all_integrations.push((
-                                integration.is_installed().await.is_ok(),
-                                integration.describe(),
-                                integration.get_shell(),
-                                integration.file_name().to_owned(),
-                            ));
-                        }
-                    },
-                    Err(e) => {
-                        errors.push((shell.to_string(), e.verbose_message()));
-                    },
-                }
+            let (integrations, shell_errors) = all_shell_integrations(&Env::new());
+            for integration in integrations {
+                all_integrations.push((
+                    integration.is_installed().await.is_ok(),
+                    integration.describe(),
+                    integration.get_shell(),
+                    integration.file_name().to_owned(),
+                ));
+            }
+            for (shell, e) in shell_errors {
+                errors.push((shell.to_string(), e.verbose_message()));
             }
 
             format.print(

@@ -11,26 +11,7 @@ pub use notification_center::{
 };
 pub use nsarray::NSArrayRef;
 pub use nsstring::NSStringRef;
-use objc::rc::StrongPtr;
 use objc::runtime::Object;
-
-#[repr(transparent)]
-#[derive(Clone)]
-pub struct Id(objc::rc::StrongPtr);
-
-impl Id {
-    pub unsafe fn new(ptr: *mut Object) -> Self {
-        Self(StrongPtr::new(ptr))
-    }
-}
-
-impl std::ops::Deref for Id {
-    type Target = StrongPtr;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 /// A non-owning reference to an Objective-C object.
 #[repr(transparent)]

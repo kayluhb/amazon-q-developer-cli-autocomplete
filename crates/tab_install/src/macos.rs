@@ -1,6 +1,7 @@
 use std::ffi::CStr;
 use std::path::Path;
 
+use tab_integrations::vscode;
 use tab_util::consts::APP_BUNDLE_ID;
 use tab_util::directories;
 use tokio::fs;
@@ -37,7 +38,7 @@ pub(crate) async fn uninstall_desktop(ctx: &tab_os_shim::Context) -> Result<(), 
     // Remove launch agents
     if let Ok(home) = directories::home_dir() {
         let launch_agents = home.join("Library").join("LaunchAgents");
-        remove_in_dir_with_prefix_unless(&launch_agents, "com.kayluhb.tab.", |p| p.contains("daemon")).await;
+        remove_in_dir_with_prefix_unless(&launch_agents, &format!("{APP_BUNDLE_ID}."), |p| p.contains("daemon")).await;
     } else {
         warn!("Could not find home directory");
     }
@@ -51,7 +52,7 @@ pub(crate) async fn uninstall_desktop(ctx: &tab_os_shim::Context) -> Result<(), 
         .ok();
 
     tokio::process::Command::new("defaults")
-        .args(["delete", "com.kayluhb.tab.shared"])
+        .args(["delete", &format!("{APP_BUNDLE_ID}.shared")])
         .output()
         .await
         .map_err(|err| warn!("Failed to delete defaults: {err}"))
@@ -94,18 +95,8 @@ pub async fn uninstall_terminal_integrations() {
         }
 
         // Delete VSCode integration
-        for folder in &[
-            ".vscode/extensions",
-            ".vscode-insiders/extensions",
-            ".vscode-oss/extensions",
-            ".cursor/extensions",
-            ".cursor-nightly/extensions",
-        ] {
-            let folder = home.join(folder);
-            for prefix in &[
-                "withfig.fig-",
-                "amazonwebservices.codewhisperer-for-command-line-companion-",
-            ] {
+        for folder in vscode::all_extensions_dirs(&home) {
+            for prefix in [vscode::OLD_EXTENSION_PREFIX, vscode::EXTENSION_PREFIX] {
                 remove_in_dir_with_prefix_unless(&folder, prefix, |_| false).await;
             }
         }

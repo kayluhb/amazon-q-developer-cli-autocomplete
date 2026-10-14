@@ -16,10 +16,10 @@ use tokio::process::Command;
 
 use crate::consts::build::SKIP_FISH_TESTS;
 use crate::env_var::TAB_ZDOTDIR;
-use crate::process_info::get_parent_process_exe;
 use crate::{
     Error,
     directories,
+    get_parent_process_exe,
 };
 
 /// All supported shells

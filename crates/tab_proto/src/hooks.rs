@@ -42,6 +42,50 @@ pub fn generate_shell_context(
     })
 }
 
+// Builders for the hook payloads that both the local and the remote protocols send.
+// `remote_hooks` uses these too, so the two protocols build the same structs.
+
+pub(crate) fn edit_buffer_hook(
+    context: impl Into<Option<ShellContext>>,
+    text: impl Into<String>,
+    cursor: i64,
+    histno: i64,
+    coords: impl Into<Option<TerminalCursorCoordinates>>,
+) -> EditBufferHook {
+    EditBufferHook {
+        context: context.into(),
+        terminal_cursor_coordinates: coords.into(),
+        text: text.into(),
+        cursor,
+        histno,
+    }
+}
+
+pub(crate) fn prompt_hook(context: impl Into<Option<ShellContext>>) -> PromptHook {
+    PromptHook {
+        context: context.into(),
+    }
+}
+
+pub(crate) fn preexec_hook(context: impl Into<Option<ShellContext>>) -> PreExecHook {
+    PreExecHook {
+        context: context.into(),
+        command: None,
+    }
+}
+
+pub(crate) fn intercepted_key_hook(
+    context: impl Into<Option<ShellContext>>,
+    action: impl Into<String>,
+    key: impl Into<String>,
+) -> InterceptedKeyHook {
+    InterceptedKeyHook {
+        context: context.into(),
+        action: action.into(),
+        key: key.into(),
+    }
+}
+
 /// Construct a edit buffer hook
 pub fn new_edit_buffer_hook(
     context: impl Into<Option<ShellContext>>,
@@ -50,13 +94,9 @@ pub fn new_edit_buffer_hook(
     histno: i64,
     coords: impl Into<Option<TerminalCursorCoordinates>>,
 ) -> Hook {
-    hook_enum_to_hook(hook::Hook::EditBuffer(EditBufferHook {
-        context: context.into(),
-        terminal_cursor_coordinates: coords.into(),
-        text: text.into(),
-        cursor,
-        histno,
-    }))
+    hook_enum_to_hook(hook::Hook::EditBuffer(edit_buffer_hook(
+        context, text, cursor, histno, coords,
+    )))
 }
 
 /// Construct a new hook
@@ -73,16 +113,11 @@ pub fn new_init_hook(context: impl Into<Option<ShellContext>>) -> Result<Hook> {
 
 /// Construct a new prompt hook
 pub fn new_prompt_hook(context: impl Into<Option<ShellContext>>) -> Hook {
-    hook_enum_to_hook(hook::Hook::Prompt(PromptHook {
-        context: context.into(),
-    }))
+    hook_enum_to_hook(hook::Hook::Prompt(prompt_hook(context)))
 }
 
 pub fn new_preexec_hook(context: impl Into<Option<ShellContext>>) -> Hook {
-    hook_enum_to_hook(hook::Hook::PreExec(PreExecHook {
-        context: context.into(),
-        command: None,
-    }))
+    hook_enum_to_hook(hook::Hook::PreExec(preexec_hook(context)))
 }
 
 pub fn new_keyboard_focus_changed_hook(
@@ -154,11 +189,7 @@ pub fn new_intercepted_key_hook(
     action: impl Into<String>,
     key: impl Into<String>,
 ) -> Hook {
-    hook_enum_to_hook(hook::Hook::InterceptedKey(InterceptedKeyHook {
-        context: context.into(),
-        action: action.into(),
-        key: key.into(),
-    }))
+    hook_enum_to_hook(hook::Hook::InterceptedKey(intercepted_key_hook(context, action, key)))
 }
 
 pub fn new_caret_position_hook(x: f64, y: f64, width: f64, height: f64, origin: caret_position_hook::Origin) -> Hook {
@@ -178,6 +209,24 @@ pub fn new_clear_autocomplete_cache(clis: Vec<String>) -> Hook {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn shared_hook_builders_set_fields() {
+        let context = generate_shell_context(1, "tty", Some("session_id")).unwrap();
+
+        let intercepted_key = intercepted_key_hook(context.clone(), "action", "key");
+        assert_eq!(intercepted_key.action, "action");
+        assert_eq!(intercepted_key.key, "key");
+        assert_eq!(intercepted_key.context, Some(context.clone()));
+
+        let edit_buffer = edit_buffer_hook(context.clone(), "text", 2, 3, None);
+        assert_eq!(edit_buffer.text, "text");
+        assert_eq!(edit_buffer.cursor, 2);
+        assert_eq!(edit_buffer.histno, 3);
+
+        assert_eq!(preexec_hook(context.clone()).command, None);
+        assert_eq!(prompt_hook(context.clone()).context, Some(context));
+    }
 
     #[test]
     fn new_hooks() {

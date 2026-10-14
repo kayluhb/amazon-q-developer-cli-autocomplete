@@ -5,17 +5,17 @@ use std::sync::Arc;
 
 use tab_os_shim::Context;
 use tracing::info;
-use wry::http::header::CONTENT_TYPE;
 use wry::http::{
     Request,
     Response,
-    StatusCode,
 };
 
 use super::util::{
+    mime_for_extension,
     res_400,
     res_404,
     res_500,
+    res_ok,
 };
 use crate::webview::WindowId;
 
@@ -99,26 +99,14 @@ pub async fn handle<S: Scope>(
     };
 
     let ext = path.extension().and_then(|ext| ext.to_str());
-    let mime = match ext {
-        Some("html") => mime::TEXT_HTML_UTF_8.as_ref(),
-        Some("css") => mime::TEXT_CSS_UTF_8.as_ref(),
-        Some("js") => mime::APPLICATION_JAVASCRIPT_UTF_8.as_ref(),
-        Some("json") => mime::APPLICATION_JSON.as_ref(),
-        Some("svg") => mime::IMAGE_SVG.as_ref(),
-        Some("png") => mime::IMAGE_PNG.as_ref(),
-        Some("jpg" | "jpeg") => mime::IMAGE_JPEG.as_ref(),
-        Some("woff2") => mime::FONT_WOFF2.as_ref(),
-        Some("woff") => mime::FONT_WOFF.as_ref(),
-        Some("txt" | "text") => mime::TEXT_PLAIN.as_ref(),
-        _ => match infer::get(&content) {
+    let mime = match mime_for_extension(ext) {
+        Some(mime) => mime,
+        None => match infer::get(&content) {
             Some(mime) => mime.mime_type(),
             // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
             None => mime::APPLICATION_OCTET_STREAM.as_ref(),
         },
     };
 
-    Ok(Response::builder()
-        .status(StatusCode::OK)
-        .header(CONTENT_TYPE, mime)
-        .body(content.into())?)
+    res_ok(content, mime)
 }

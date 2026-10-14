@@ -33,7 +33,6 @@ use tab_proto::remote::{
     hostbound,
 };
 use tab_util::{
-    PTY_BINARY_NAME,
     directories,
     gen_hex_string,
 };
@@ -129,20 +128,7 @@ pub async fn spawn_figterm_ipc(
     let (incoming_tx, incoming_rx) = unbounded();
 
     let socket_path = directories::figterm_socket_path(session_id)?;
-    if let Some(parent) = socket_path.parent() {
-        if let Err(err) = std::fs::create_dir_all(parent) {
-            error!(%err, "Failed to create {PTY_BINARY_NAME} socket directory");
-        }
-
-        {
-            use std::fs::Permissions;
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(parent, Permissions::from_mode(0o700))?;
-        }
-    }
-
-    tokio::fs::remove_file(&socket_path).await.ok();
-    let socket_listener = tokio::net::UnixListener::bind(&socket_path)?;
+    let socket_listener = tab_ipc::socket_bind(&socket_path).await?;
 
     tokio::spawn(async move {
         loop {

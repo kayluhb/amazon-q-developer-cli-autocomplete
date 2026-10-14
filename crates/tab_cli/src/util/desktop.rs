@@ -24,6 +24,19 @@ pub struct LaunchArgs {
     pub verbose: bool,
 }
 
+impl Default for LaunchArgs {
+    /// Wait for the socket, do the first update check, and print output. Do not open the
+    /// dashboard.
+    fn default() -> Self {
+        Self {
+            wait_for_socket: true,
+            open_dashboard: false,
+            immediate_update: true,
+            verbose: true,
+        }
+    }
+}
+
 pub fn desktop_app_running() -> bool {
     use std::ffi::OsString;
 
@@ -120,6 +133,15 @@ pub fn launch_fig_desktop(args: LaunchArgs) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn launch_args_default() {
+        let args = LaunchArgs::default();
+        assert!(args.wait_for_socket);
+        assert!(!args.open_dashboard);
+        assert!(args.immediate_update);
+        assert!(args.verbose);
+    }
 
     #[test]
     #[ignore = "not in ci"]
