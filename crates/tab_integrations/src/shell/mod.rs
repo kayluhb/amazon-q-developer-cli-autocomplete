@@ -1,7 +1,10 @@
 pub mod inline_plugin;
 
 use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::path::{
+    Path,
+    PathBuf,
+};
 
 use async_trait::async_trait;
 use clap::ValueEnum;
@@ -59,8 +62,13 @@ impl std::fmt::Display for When {
 fn integration_file_name(dotfile_name: &str, when: &When, shell: &Shell) -> String {
     format!(
         "{}.{when}.{shell}",
-        Regex::new(r"^\.").unwrap().replace_all(dotfile_name, ""),
+        dotfile_name.strip_prefix('.').unwrap_or(dotfile_name)
     )
+}
+
+/// The part of `path` after the home directory.
+fn path_from_home(path: &Path) -> Result<String> {
+    Ok(path.strip_prefix(directories::home_dir()?)?.display().to_string())
 }
 
 pub trait ShellExt {
@@ -353,34 +361,37 @@ impl DotfileShellIntegration {
         self.dotfile_directory.join(self.dotfile_name)
     }
 
-    fn legacy_script_integration(&self, when: When) -> Result<ShellScriptShellIntegration> {
-        let integration_file_name = format!(
-            "{}.{}.{}",
-            Regex::new(r"^\.").unwrap().replace_all(self.dotfile_name, ""),
-            when,
-            self.shell
-        );
-        Ok(ShellScriptShellIntegration {
+    fn script_integration_in(&self, data_dir: PathBuf, when: When) -> ShellScriptShellIntegration {
+        ShellScriptShellIntegration {
             shell: self.shell,
             when,
-            path: directories::old_fig_data_dir()?
+            path: data_dir
                 .join("shell")
-                .join(integration_file_name),
-        })
+                .join(integration_file_name(self.dotfile_name, &when, &self.shell)),
+        }
+    }
+
+    fn legacy_script_integration(&self, when: When) -> Result<ShellScriptShellIntegration> {
+        Ok(self.script_integration_in(directories::old_fig_data_dir()?, when))
     }
 
     fn script_integration(&self, when: When) -> Result<ShellScriptShellIntegration> {
-        let integration_file_name = format!(
-            "{}.{}.{}",
-            Regex::new(r"^\.").unwrap().replace_all(self.dotfile_name, ""),
-            when,
-            self.shell
-        );
-        Ok(ShellScriptShellIntegration {
-            shell: self.shell,
-            when,
-            path: directories::fig_data_dir()?.join("shell").join(integration_file_name),
-        })
+        Ok(self.script_integration_in(directories::fig_data_dir()?, when))
+    }
+
+    /// The path of the script integration after the home directory.
+    fn script_path_from_home(&self, when: When) -> Result<String> {
+        path_from_home(&self.script_integration(when)?.path)
+    }
+
+    /// A regex for a legacy block: an optional legacy description line, then `source` at the
+    /// start of a line.
+    fn legacy_block_regex(when: When, source: &str) -> String {
+        format!(
+            r#"(?m)(?:{}\n)?^{}\n{{0,2}}"#,
+            regex::escape(&DotfileShellIntegration::legacy_description(when)),
+            regex::escape(source),
+        )
     }
 
     #[allow(clippy::unused_self)]
@@ -419,21 +430,9 @@ impl DotfileShellIntegration {
             When::Pre => r"\[ -s ~/\.fig/shell/pre\.sh \] && source ~/\.fig/shell/pre\.sh\n?",
             When::Post => r"\[ -s ~/\.fig/fig\.sh \] && source ~/\.fig/fig\.sh\n?",
         };
-        let old_eval_regex = format!(
-            r#"(?m)(?:{}\n)?^{}\n{{0,2}}"#,
-            regex::escape(&DotfileShellIntegration::legacy_description(when)),
-            regex::escape(&old_eval_source),
-        );
-        let old_source_regex_1 = format!(
-            r#"(?m)(?:{}\n)?^{}\n{{0,2}}"#,
-            regex::escape(&DotfileShellIntegration::legacy_description(when)),
-            regex::escape(&self.legacy_source_text_1(when)?),
-        );
-        let old_source_regex_2 = format!(
-            r#"(?m)(?:{}\n)?^{}\n{{0,2}}"#,
-            regex::escape(&DotfileShellIntegration::legacy_description(when)),
-            regex::escape(&self.legacy_source_text_2(when)?),
-        );
+        let old_eval_regex = Self::legacy_block_regex(when, &old_eval_source);
+        let old_source_regex_1 = Self::legacy_block_regex(when, &self.legacy_source_text_1(when)?);
+        let old_source_regex_2 = Self::legacy_block_regex(when, &self.legacy_source_text_2(when)?);
 
         let old_brand_regex = self.old_brand_regex(when)?;
 
@@ -447,16 +446,11 @@ impl DotfileShellIntegration {
     }
 
     fn legacy_source_text_1(&self, when: When) -> Result<String> {
-        let home = directories::home_dir()?;
-        let integration_path = self.script_integration(when)?.path;
-        let path = integration_path.strip_prefix(home)?;
-        Ok(format!(". \"$HOME/{}\"", path.display()))
+        Ok(format!(". \"$HOME/{}\"", self.script_path_from_home(when)?))
     }
 
     fn legacy_source_text_2(&self, when: When) -> Result<String> {
-        let home = directories::home_dir()?;
-        let integration_path = self.script_integration(when)?.path;
-        let path = format!("\"$HOME/{}\"", integration_path.strip_prefix(home)?.display());
+        let path = format!("\"$HOME/{}\"", self.script_path_from_home(when)?);
 
         match self.shell {
             Shell::Fish => Ok(format!("if test -f {path}; . {path}; end")),
@@ -465,11 +459,9 @@ impl DotfileShellIntegration {
     }
 
     fn legacy_source_text_3(&self, when: When) -> Result<String> {
-        let home = directories::home_dir()?;
-        let integration_path = self.legacy_script_integration(when)?.path;
         let path = regex::escape(&format!(
             "\"${{HOME}}/{}\"",
-            integration_path.strip_prefix(home)?.display()
+            path_from_home(&self.legacy_script_integration(when)?.path)?
         ));
 
         match self.shell {
@@ -479,9 +471,7 @@ impl DotfileShellIntegration {
     }
 
     fn source_text(&self, when: When) -> Result<String> {
-        let home = directories::home_dir()?;
-        let integration_path = self.script_integration(when)?.path;
-        let path = format!("\"${{HOME}}/{}\"", integration_path.strip_prefix(home)?.display());
+        let path = format!("\"${{HOME}}/{}\"", self.script_path_from_home(when)?);
 
         match self.shell {
             Shell::Fish => Ok(format!("test -f {path}; and builtin source {path}")),
