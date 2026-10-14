@@ -61,7 +61,10 @@ use tab_settings::state;
 use tab_util::Terminal;
 use tab_util::consts::CLI_BINARY_NAME;
 use tab_util::directories::home_dir;
-use tab_util::macos::BUNDLE_CONTENTS_HELPERS_PATH;
+use tab_util::macos::{
+    BUNDLE_CONTENTS_HELPERS_PATH,
+    BUNDLE_CONTENTS_MACOS_PATH,
+};
 use tokio::fs;
 use tracing::{
     debug,
@@ -484,8 +487,7 @@ impl Integration for InputMethod {
 
         // todo: pull this into a function in fig_directories
         let cli_path = tab_util::app_bundle_path()
-            .join("Contents")
-            .join("MacOS")
+            .join(BUNDLE_CONTENTS_MACOS_PATH)
             .join(CLI_BINARY_NAME);
 
         let out = tokio::process::Command::new(cli_path)
@@ -550,8 +552,7 @@ impl Integration for InputMethod {
 
         // todo: pull this into a function in fig_directories
         let q_cli_path = tab_util::app_bundle_path()
-            .join("Contents")
-            .join("MacOS")
+            .join(BUNDLE_CONTENTS_MACOS_PATH)
             .join(CLI_BINARY_NAME);
 
         loop {

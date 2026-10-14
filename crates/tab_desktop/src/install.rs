@@ -127,6 +127,7 @@ pub async fn initialize_fig_dir(env: &tab_os_shim::Env) -> anyhow::Result<()> {
         LaunchdPlist,
         create_launch_agent,
     };
+    use tab_util::macos::BUNDLE_CONTENTS_MACOS_PATH;
 
     let local_bin = tab_util::directories::home_local_bin()?;
     if let Err(err) = fs::create_dir_all(&local_bin) {
@@ -195,8 +196,8 @@ pub async fn initialize_fig_dir(env: &tab_os_shim::Env) -> anyhow::Result<()> {
     }
 
     if let Some(bundle_path) = get_bundle_path() {
-        let exe = bundle_path.join("Contents").join("MacOS").join(APP_PROCESS_NAME);
-        let startup_launch_agent = LaunchdPlist::new("com.kayluhb.tab.launcher")
+        let exe = bundle_path.join(BUNDLE_CONTENTS_MACOS_PATH).join(APP_PROCESS_NAME);
+        let startup_launch_agent = LaunchdPlist::new(format!("{APP_BUNDLE_ID}.launcher"))
             .program_arguments([&exe.to_string_lossy(), "--is-startup", "--no-dashboard"])
             .associated_bundle_identifiers([APP_BUNDLE_ID])
             .run_at_load(true);

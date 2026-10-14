@@ -1148,11 +1148,7 @@ impl DoctorCheck<DiagnosticsResponse> for CliPathCheck {
     async fn check(&self, _: &DiagnosticsResponse) -> Result<(), DoctorError> {
         let path = std::env::current_exe().context("Could not get executable path.")?;
 
-        let local_bin_path = directories::home_dir()
-            .unwrap()
-            .join(".local")
-            .join("bin")
-            .join(CLI_BINARY_NAME);
+        let local_bin_path = directories::home_local_bin().unwrap().join(CLI_BINARY_NAME);
 
         if path == local_bin_path
             || path == Path::new(system_paths::USR_LOCAL_BIN).join(CLI_BINARY_NAME)

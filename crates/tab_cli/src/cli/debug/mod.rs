@@ -24,7 +24,6 @@ use crossterm::terminal::{
 };
 use eyre::{
     Context,
-    ContextCompat,
     Result,
     bail,
 };
@@ -451,15 +450,8 @@ impl DebugSubcommand {
                     bail!("sample is only supported on macOS");
                 }
 
-                let output = Command::new("lsappinfo")
-                    .args(["info", "-only", "-pid", "-app", APP_BUNDLE_ID])
-                    .output()?;
-                let pid_str = String::from_utf8(output.stdout)?;
-                let pid = pid_str
-                    .split('=')
-                    .nth(1)
-                    .context("Could not get desktop app pid")?
-                    .trim();
+                let pid =
+                    crate::util::get_running_app_info(APP_BUNDLE_ID, "pid").context("Could not get desktop app pid")?;
                 // A new 0700 directory in $TMPDIR. It stays so the user can send the file.
                 let outdir = tempfile::Builder::new().prefix("fig-sample-").tempdir()?.keep();
                 let outfile = outdir.join("fig-sample");
