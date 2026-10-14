@@ -95,10 +95,10 @@ const autocompleteSettings: PrefSection[] = [
         id: "autocomplete.loadRepoLocalSpecs",
         title: "Load completion specs from project folders",
         description:
-          "Load completion specs from `.fig/autocomplete/build` in the current folder and its parent folders. These specs can run commands. Turn this on only if you trust the projects you open.",
+          "Load completion specs from `.fig/autocomplete/build` in the current folder and its parent folders. These specs can run commands. Turn this off if you open projects that you do not trust.",
         example: "e.g. `./configure` or `?`",
         type: "boolean",
-        default: false,
+        default: true,
         popular: false,
       },
       {

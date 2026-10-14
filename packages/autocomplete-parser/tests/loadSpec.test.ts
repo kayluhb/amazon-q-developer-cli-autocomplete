@@ -110,16 +110,20 @@ describe("getSpecPath", () => {
 
   it("does not search parent folders for ? when repo-local specs are off", async () => {
     (executeCommand as Mock).mockClear();
-    expect(await getSpecPath("?", cwd)).toEqual({
-      type: SpecLocationSource.LOCAL,
-      path: "~/",
-      name: "_shortcuts",
-    });
-    expect(executeCommand).not.toHaveBeenCalled();
+    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: false });
+    try {
+      expect(await getSpecPath("?", cwd)).toEqual({
+        type: SpecLocationSource.LOCAL,
+        path: "~/",
+        name: "_shortcuts",
+      });
+      expect(executeCommand).not.toHaveBeenCalled();
+    } finally {
+      updateSettings({});
+    }
   });
 
-  it("searches parent folders for ? when repo-local specs are on", async () => {
-    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: true });
+  it("searches parent folders for ? by default", async () => {
     try {
       expect(await getSpecPath("?", cwd)).toEqual({
         type: SpecLocationSource.LOCAL,
@@ -227,15 +231,15 @@ describe("importSpecFromLocation", () => {
     updateSettings({});
   });
 
-  it("does not load repo-local specs by default", async () => {
+  it("does not load repo-local specs when the setting is off", async () => {
+    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: false });
     await expect(importSpecFromLocation(repoLocal)).rejects.toThrow(
       /Repo-local specs are off/,
     );
     expect(importSpecFromFile).not.toHaveBeenCalled();
   });
 
-  it("loads repo-local specs when the setting is on", async () => {
-    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: true });
+  it("loads repo-local specs by default", async () => {
     await importSpecFromLocation(repoLocal);
     expect(importSpecFromFile).toHaveBeenLastCalledWith(
       "configure",
@@ -245,6 +249,7 @@ describe("importSpecFromLocation", () => {
   });
 
   it("loads absolute-path specs when the setting is off", async () => {
+    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: false });
     const location = await getSpecPath("/opt/tool/run", "/repo");
     await importSpecFromLocation(location);
     expect(importSpecFromFile).toHaveBeenLastCalledWith(
@@ -266,7 +271,7 @@ describe("loadSubcommandCached", () => {
     updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: true });
     try {
       await loadSubcommandCached(location);
-      updateSettings({});
+      updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: false });
       await expect(loadSubcommandCached(location)).rejects.toThrow(
         /Repo-local specs are off/,
       );

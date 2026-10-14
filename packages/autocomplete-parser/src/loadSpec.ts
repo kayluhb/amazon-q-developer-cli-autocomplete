@@ -49,7 +49,7 @@ const searchFigFolder = async (currentDirectory: string) => {
 };
 
 const loadRepoLocalSpecs = () =>
-  Boolean(getSetting(SETTINGS.LOAD_REPO_LOCAL_SPECS, false));
+  Boolean(getSetting(SETTINGS.LOAD_REPO_LOCAL_SPECS, true));
 
 const assertRepoLocalAllowed = (specLocation: SpecLocation) => {
   if (specLocation.repoLocal && !loadRepoLocalSpecs()) {
