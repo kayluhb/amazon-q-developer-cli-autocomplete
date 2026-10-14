@@ -28,7 +28,7 @@ completion specs.
  zsh keystroke ──▶ plugin (vendored zsh-autosuggestions, async mode)
                     strategies, from inline.source:
                       history  → pure zsh
-                      specs    → `tab _ inline-suggestion --buffer "$BUFFER"`
+                      specs    → `print -rn -- "$1" | tab _ inline-suggestion`
                                     │  local socket (TABTERM_SESSION_ID)
                                     ▼
                                  tabterm: cache {buffer, suffix}
@@ -55,10 +55,14 @@ desktop app would need a new CLI → desktop message type instead.
 - Keep the `history` and `match_prev_cmd` strategies. Add a `specs` strategy:
   ```zsh
   _tab_autosuggest_strategy_specs() {
-  	typeset -g suggestion="$(command -v tab >/dev/null 2>&1 && tab _ inline-suggestion --buffer "${BUFFER}" 2>/dev/null)"
+  	[[ -n "${TABTERM_SESSION_ID}" ]] || return
+  	typeset -g suggestion="$(command -v tab >/dev/null 2>&1 && print -rn -- "$1" | tab _ inline-suggestion 2>/dev/null)"
   }
   ```
   (The actual script uses the binary-name placeholders.)
+  - The buffer goes over stdin, not argv. Other local users can read argv with `ps`, so a password typed on the
+    command line would leak one prefix at a time.
+  - The strategy uses `$1`, as the other strategies do. It does not start a process when `tabterm` is not running.
 - Remove `strategies/inline.zsh` (AI) and `strategies/completion.zsh` (zpty), and the
   `COMPLETIONS_PTY_NAME` config that only the zpty strategy used.
 - Remove the `{{CLI_BINARY_NAME}} _ inline-shell-completion-accept` calls from the `accept` and `execute` widgets.
@@ -114,24 +118,27 @@ The build ships `packages/autocomplete-app` (`build-scripts/build.py:146`). Mirr
 (`parserResult`, `figState`, `visibleState`, `fuzzySearchEnabled`, `settings`). It returns `""` when any of these holds:
 - `cursorIndex !== buffer.length`
 - `visibleState === HIDDEN_UNTIL_KEYPRESS` (the suggestions are stale)
-- `item` is missing, or its type is `history`, `auto-execute` or `special` (suggestions have no `execute` field;
-  these types are the ones that run or don't insert text)
+- `item` is missing, or its type is `history`, `auto-execute`, `special` or `shortcut` (suggestions have no
+  `execute` field; these types run, don't insert text, or delete more than the query term)
 - the full insertion (from `getFullInsertion`, so escaping matches the popup's) contains `{cursor}` anywhere but the
-  end, or contains `\n` (it would execute)
+  end, or contains a control character (`\n` would execute)
 - the full insertion does not start with the query term (from `getQueryTermForSuggestion`). This rules out fuzzy
   matches and case-insensitive matches.
 - the buffer does not end with the query term. This rules out escaping or quoting differences between what was
   typed and what the parser saw (for example `cat "my fi`).
 
 Otherwise it returns `insertion.slice(queryTerm.length)`, plus `" "` when `item.shouldAddSpace` and
-`autocomplete.insertSpaceAutomatically` are both true. It strips a trailing `{cursor}`.
+`autocomplete.insertSpaceAutomatically` are both true. It strips a trailing `{cursor}`, and then it adds no space,
+because the popup leaves the cursor before that space.
 
 `sendInlineSuggestion(state)` does the sending. It does nothing unless the session id is known and the
 `inline.source` setting (`SETTINGS.INLINE_SOURCE`) is `specs` or `history-specs`, so the popup adds no IPC traffic
 when spec ghost text is off.
 
 Call site: in the `updateSuggestions` middleware, after every `set` (both the early-return path and the
-recompute path). The popup computes the suffix from `suggestions[0]` of the new state (the top suggestion, not the
+recompute path). It sends nothing while `parsedCommand` (the command that `parserResult` came from, recorded by
+`setParserResult`) is not the current `command`. The buffer and command change before the async parse finishes,
+so without this check the popup would send suggestions from the old parse with the new buffer. The popup computes the suffix from `suggestions[0]` of the new state (the top suggestion, not the
 selected one) and calls `Shell.setInlineSuggestion`
 with `{sessionId, buffer, suffix}`, but only when the triple has changed since the last send. It sends an empty
 suffix when nothing qualifies, so `tabterm` never keeps serving an outdated suggestion. Send errors (for example
@@ -157,8 +164,10 @@ no `tabterm` session) are caught and logged at debug level.
   state in `main.rs`:
   - holds `Option<{buffer, suffix}>` and a `tokio::sync::watch` (or `Notify`) to wake any waiting lookups
   - `set(buffer, suffix)` overwrites the entry
-  - `lookup(buffer, timeout) -> Option<String>` returns the suffix right away if the cached buffer matches. Otherwise
-    it waits until either a matching `set` arrives or the timeout (150 ms) runs out.
+  - `lookup(buffer, timeout) -> Option<String>` returns the suffix right away if the cached buffer matches and the
+    suffix is not empty. Otherwise it waits until such a `set` arrives or the timeout (150 ms) runs out. An empty
+    suffix does not end the wait, because the popup sends an empty suffix first and a real one when its
+    generators finish.
 - `message.rs`:
   - handle `SetInlineSuggestion` in `process_figterm_request` (shared by the local and remote paths), and route it
     from `process_remote_message`
@@ -169,7 +178,7 @@ no `tabterm` session) are caught and logged at debug level.
 
 ### 7. CLI (`crates/tab_cli/src/cli/internal/`)
 
-New hidden subcommand `tab _ inline-suggestion --buffer <BUFFER>`, based on
+New hidden subcommand `tab _ inline-suggestion`, which reads the buffer from stdin. It is based on
 `b654a1be:crates/q_cli/src/cli/internal/inline_shell_completion.rs`:
 1. Read `TABTERM_SESSION_ID`. If it's missing, exit 0 with no output.
 2. Connect to `figterm_socket_path(session_id)`. If that fails, exit 0 with no output.
