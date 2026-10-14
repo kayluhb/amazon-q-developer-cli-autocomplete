@@ -10,6 +10,8 @@
   },
   "files": [
     "base.json",
-    "dom.json"
+    "dom.json",
+    "vite-app.json",
+    "vite-node.json"
   ]
 }

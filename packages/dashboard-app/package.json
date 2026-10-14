@@ -41,6 +41,7 @@
   "devDependencies": {
     "@tab/autocomplete-app": "workspace:^",
     "@tab/eslint-config": "workspace:^",
+    "@tab/tsconfig": "workspace:^",
     "@tab/types": "workspace:^",
     "@tab/vite-config": "workspace:^",
     "@types/react": "^18.3.18",

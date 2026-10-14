@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@tab/eslint-config": "workspace:^",
+    "@tab/tsconfig": "workspace:^",
     "@tab/types": "workspace:^",
     "@tab/fuzzysort": "workspace:^",
     "@tab/shared": "workspace:^",
