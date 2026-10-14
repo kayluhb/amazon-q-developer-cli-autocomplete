@@ -1,7 +1,7 @@
 # Offline inline suggestions (ghost text)
 
 Date: 2026-10-14
-Status: approved design, pending implementation plan
+Status: approved design, revised after code review against the tree (2026-10-14), implementing
 
 ## Goal
 
@@ -49,7 +49,9 @@ desktop app would need a new CLI → desktop message type instead.
 ### 1. zsh plugin (`crates/tab_integrations/src/shell/inline/`)
 
 - Restore the zsh-autosuggestions fork from `b654a1be:crates/fig_integrations/src/shell/inline_shell_completion/`.
-  Keep its MIT licence header. Rename `{{CLI_BINARY_NAME}}` placeholders the same way as the other Tab shell scripts.
+  Keep its MIT licence header. Write the function and variable prefixes out as `_tab_autosuggest_` and
+  `TAB_AUTOSUGGEST_` (as `post.zsh` already does for `TAB_AUTOSUGGEST_HIGHLIGHT_STYLE`). Keep only the
+  `{{CLI_BINARY_NAME}}` placeholder, which `get_fig_integration_source` already substitutes for the other scripts.
 - Keep the `history` and `match_prev_cmd` strategies. Add a `specs` strategy:
   ```zsh
   _tab_autosuggest_strategy_specs() {
@@ -57,15 +59,21 @@ desktop app would need a new CLI → desktop message type instead.
   }
   ```
   (The actual script uses the binary-name placeholders.)
-- Remove `strategies/inline.zsh` (AI) and `strategies/completion.zsh` (zpty).
-- Concatenate the files at build time in `crates/tab_integrations/build.rs`, as upstream did. Expose the result as
-  `tab_integrations::shell::inline_plugin::ZSH_SCRIPT`.
+- Remove `strategies/inline.zsh` (AI) and `strategies/completion.zsh` (zpty), and the
+  `COMPLETIONS_PTY_NAME` config that only the zpty strategy used.
+- Remove the `{{CLI_BINARY_NAME}} _ inline-shell-completion-accept` calls from the `accept` and `execute` widgets.
+  That subcommand was AI telemetry and no longer exists, so each accept would spawn a failing process.
+- Default `TAB_AUTOSUGGEST_STRATEGY` to `(match_prev_cmd history)` instead of the AI strategy.
+- Concatenate the files with `concat!(include_str!(…))` in `tab_integrations::shell::inline_plugin`, in upstream's
+  order, and substitute `{{CLI_BINARY_NAME}}` at runtime. No `build.rs`: the crate has none, and the other shell
+  scripts are already handled this way. Expose `tab_integrations::shell::inline_plugin::zsh_script() -> String`.
 - Keep upstream's default highlight style `fg=8`. `post.zsh` already reports
-  `TAB_AUTOSUGGEST_HIGHLIGHT_STYLE` to `tabterm` via `TabAutosuggestionColor`, and `tabterm` leaves cells with
-  that colour out of the edit buffer (`crates/alacritty_terminal/src/term/mod.rs:1467`). The popup therefore
-  never treats ghost text as typed input.
-- Check for a conflict when the plugin starts. If `_zsh_autosuggest_start` is already defined (the user loads
-  zsh-autosuggestions), Tab's plugin does not bind its widgets.
+  `TAB_AUTOSUGGEST_HIGHLIGHT_STYLE` to `tabterm` on each prompt via `FigAutosuggestionColor`, and `tabterm` leaves cells
+  with that colour out of the edit buffer (`crates/alacritty_terminal/src/term/mod.rs:1467`, which prefers this colour
+  over `ZshAutosuggestionColor`). The popup therefore never treats ghost text as typed input.
+- Keep upstream's conflict guard (`guard_start.zsh`/`guard_end.zsh`). If `_zsh_autosuggest_accept` is already defined
+  (the user loads zsh-autosuggestions earlier in `.zshrc`), the guard exports `TAB_USING_ZSH_AUTOSUGGESTIONS=1` and
+  skips the whole plugin. `tab doctor` reads that variable (§8).
 - Keys are the plugin defaults:
   - accept the whole suggestion: `forward-char` (→) and `end-of-line` (End)
   - accept a word: `forward-word` (Option+→)
@@ -79,16 +87,23 @@ desktop app would need a new CLI → desktop message type instead.
     - `history` → `(match_prev_cmd history)`
     - `specs` → `(specs)`
     - `history-specs` → `(match_prev_cmd history specs)`
-  - then load `ZSH_SCRIPT` with a source guard, so a second `tab init` in the same shell doesn't load it twice.
+  - then load `zsh_script()` with a source guard (`TAB_INLINE_PLUGIN_SOURCED`), so a second `tab init` in the
+    same shell doesn't load it twice.
 - If the setting is missing or invalid, treat it as `off`.
+- Put the mapping in a pure function, `inline_plugin_source(source: Option<&str>) -> Option<String>`, so it can be
+  unit tested without a settings file.
+- Skip the plugin when `TAB_INIT_SNAPSHOT_TEST` is set, as upstream did. The `tab init zsh post` snapshot is linted
+  with `shellcheck -s bash`, and the plugin is zsh-only syntax.
 
 ### 3. Dashboard (`packages/dashboard-app/src/data/autocomplete.ts`)
 
 - New section "Inline suggestions" with one `select` property:
   - `id`: `inline.source`
   - default: `off`
-  - options: Off, History, Specs, History then specs
-- Description: "Grey suggestions on the command line. zsh only. Applies to new terminal windows. → accepts."
+  - options: `off`, `history`, `specs`, `history-specs` (the dashboard `select` shows option values as they are;
+    it has no separate labels)
+- Description: "Grey suggestions on the command line from history and/or completion specs. zsh only. Applies to
+  new terminal windows. Press → to accept."
 
 ### 4. Spec suffix in the popup (`packages/autocomplete-app/src/state/inlineSuggestion.ts`)
 
@@ -101,15 +116,20 @@ returns `""` when any of these holds:
 - `visibleState === HIDDEN_UNTIL_KEYPRESS` (the suggestions are stale)
 - `item` is missing, is a history suggestion, or has `execute` set
 - the full insertion (from `getFullInsertion`, so escaping matches the popup's) contains `{cursor}` anywhere but the end
-- the full insertion does not start with the query term (from `getQueryTermForSuggestion`). This rules out fuzzy matches.
+- the full insertion does not start with the query term (from `getQueryTermForSuggestion`). This rules out fuzzy
+  matches and case-insensitive matches.
+- the buffer does not end with the query term. This rules out escaping or quoting differences between what was
+  typed and what the parser saw (for example `cat "my fi`).
 
 Otherwise it returns `insertion.slice(queryTerm.length)`, plus `" "` when `item.shouldAddSpace` and
 `autocomplete.insertSpaceAutomatically` are both true. It strips a trailing `{cursor}`.
 
-Call site: after the `updateSuggestions` middleware stores new suggestions. The popup computes the suffix
-from `suggestions[0]` (the top suggestion, not the selected one) and calls `Shell.setInlineSuggestion`
+Call site: in the `updateSuggestions` middleware, after every `set` (both the early-return path and the
+recompute path). The popup computes the suffix from `suggestions[0]` of the new state (the top suggestion, not the
+selected one) and calls `Shell.setInlineSuggestion`
 with `{sessionId, buffer, suffix}`, but only when the triple has changed since the last send. It sends an empty
-suffix when nothing qualifies, so `tabterm` never keeps serving an outdated suggestion.
+suffix when nothing qualifies, so `tabterm` never keeps serving an outdated suggestion. Send errors (for example
+no `tabterm` session) are caught and logged at debug level.
 
 ### 5. Message path: popup → desktop → tabterm
 
@@ -122,18 +142,20 @@ suffix when nothing qualifies, so `tabterm` never keeps serving an outdated sugg
 - `crates/tab_remote_ipc/src/remote.rs`: a `handle_commands` arm that needs no response.
 - `proto/figterm.proto`: `SetInlineSuggestionRequest { string buffer; string suffix; }`, added to the
   `FigtermRequestMessage` oneof (this is the `tabterm`-side message; the fig.proto one carries the session id).
-- `proto/remote.proto`: a `Clientbound.Request` oneof entry carrying the `figterm.proto` message.
+- `proto/remote.proto`: a `Clientbound.Request` oneof entry carrying the `figterm.proto` message (field 108).
 - The multiplexer (`proto/mux.proto`) is not supported. Over a remote or mux connection, inline specs simply return nothing.
 
 ### 6. tabterm cache and lookup (`crates/tabterm/src/`)
 
-- New `inline_suggestion.rs` with `InlineSuggestionCache`:
+- New `inline_suggestion.rs` with `InlineSuggestionCache`, held in a process-wide static like the other `tabterm`
+  state in `main.rs`:
   - holds `Option<{buffer, suffix}>` and a `tokio::sync::watch` (or `Notify`) to wake any waiting lookups
   - `set(buffer, suffix)` overwrites the entry
   - `lookup(buffer, timeout) -> Option<String>` returns the suffix right away if the cached buffer matches. Otherwise
     it waits until either a matching `set` arrives or the timeout (150 ms) runs out.
 - `message.rs`:
-  - handle `SetInlineSuggestion` in `process_remote_message`/`process_figterm_request`
+  - handle `SetInlineSuggestion` in `process_figterm_request` (shared by the local and remote paths), and route it
+    from `process_remote_message`
   - replace the current silent drop of `InlineShellCompletion` (`message.rs:295`) with a spawned lookup task
     that always replies with `InlineShellCompletionResponse { insert_text }`, which may be `None`
   - keep `InlineShellCompletionAccept`, `InlineShellCompletionSetEnabled` and `Telemtety` dropped
@@ -152,12 +174,15 @@ New hidden subcommand `tab _ inline-suggestion --buffer <BUFFER>`, based on
 
 stdout carries only the suggestion. Errors go to the log only.
 
-### 8. Doctor (`crates/tab_cli/src/cli/doctor/`)
+### 8. Doctor (`crates/tab_cli/src/cli/doctor/mod.rs`)
 
-When `inline.source` is not `off` and the shell is zsh, add a check that warns if zsh-autosuggestions is
-also loaded. Detect it with `functions _zsh_autosuggest_start` in an interactive `zsh -i -c` (or the closest
-pattern the existing doctor checks use). Warning text: "zsh-autosuggestions is loaded; Tab inline
-suggestions are inactive."
+An `InlineCheck` is already there, left over from upstream. It reads `inline.enabled` (default `true`) and
+suggests `tab inline enable`/`disable`, which no longer exist. Rewrite it:
+- Run it only when the shell is zsh and `inline.source` is not `off`. Otherwise `NoCheck`.
+- Keep detection through `Env::q_using_zsh_autosuggestions()` (`TAB_USING_ZSH_AUTOSUGGESTIONS`, exported by the
+  plugin guard). This needs no extra `zsh -i` process.
+- Return a warning, not an error: "zsh-autosuggestions is loaded; Tab inline suggestions are inactive." with the
+  fixes "remove zsh-autosuggestions from ~/.zshrc" or "set Inline suggestions to off in the dashboard".
 
 ## Error handling
 
@@ -184,9 +209,11 @@ Ghost text must never break typing or show an error. Every failure ends the same
   - a mismatch then a timeout
   - a wait resolved by a later `set`
   - a newer `set` for a different buffer
-- **insta snapshots** of `tab init zsh post` for each `inline.source` value, including missing and invalid values.
-- **Script checks**: the joined plugin keeps its licence text, defines `_tab_autosuggest_strategy_specs`,
-  adds the precmd hook, and contains no `inline_shell_completion` strategy. `zsh -n` passes on it.
+- **Rust unit tests** for `inline_plugin_source`: each `inline.source` value, plus missing and invalid values.
+  The existing `tab init` snapshots stay unchanged (§2).
+- **Script checks** (unit tests in `tab_integrations`): the joined plugin keeps its licence text, defines
+  `_tab_autosuggest_strategy_specs`, adds the precmd hook, has no `{{` placeholders left, and contains no
+  `inline_shell_completion` or `inline-shell-completion` text. `zsh -n` passes on it.
 - **Manual checklist**:
   - Terminal.app, iTerm2, Ghostty and tmux, each with all four modes
   - zsh-autosuggestions loaded: Tab's plugin stays inactive and `tab doctor` warns
@@ -199,5 +226,8 @@ Ghost text must never break typing or show an error. Every failure ends the same
   measure it. If it hurts, a follow-up could have zsh talk to the socket directly (`zsocket`) instead.
 - **Ghost text colour detection:** this depends on the suggestion colour being distinct. A prompt or theme that
   also uses `fg=8` in the command line region could confuse `tabterm`. zsh-autosuggestions users have the same issue today.
+- **Buffer equality:** `tabterm` matches the zsh `$BUFFER` sent by the CLI against the edit buffer the popup saw,
+  which `tabterm` parses from the screen. Anything that makes the two differ (multi-line buffers, right prompts,
+  unusual themes) gives no spec ghost text. That is safe, but measure how often it happens.
 - **Duplicate TS packages:** changes have to be mirrored between `autocomplete` and `autocomplete-app`. A
   separate task should merge them.
