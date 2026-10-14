@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "repository": "https://github.com/aws/amazon-q-developer-cli",
   "type": "module",
+  "exports": {
+    "./fig.json": "./src/fig.json"
+  },
   "scripts": {
     "set-host": "fig settings developer.autocomplete.host http://localhost:3124",
     "remove-host": "fig settings developer.autocomplete.host --delete",

@@ -1,174 +1,63 @@
-const keybindings = [
-  {
-    title: "General",
-    actions: [
-      {
-        id: "autocomplete.toggleHistoryMode",
-        title: "Toggle history mode",
-        description: `Toggle between history suggestions and autocomplete spec suggestions`,
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: ["control+r"],
-      },
-      {
-        id: "autocomplete.toggleFuzzySearch",
-        title: "Toggle fuzzy search",
-        description: "Toggle between normal prefix search and fuzzy search",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
-    ],
-  },
+import app from "@tab/autocomplete-app/fig.json";
+import type { PrefSection } from "@/components/preference/list";
+import type { Action } from "@/types/preferences";
+
+// The autocomplete actions the dashboard shows, by group. The title,
+// description, availability and default keys come from fig.json. The other
+// fig.json actions (show/hide variants, selectSuggestionN) stay hidden.
+const groups: { title: string; actions: string[] }[] = [
+  { title: "General", actions: ["toggleHistoryMode", "toggleFuzzySearch"] },
   {
     title: "Appearance",
     actions: [
-      {
-        id: "autocomplete.increaseSize",
-        title: "Increase window size",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
-      {
-        id: "autocomplete.decreaseSize",
-        title: "Decrease window size",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
-      {
-        id: "autocomplete.toggleAutocomplete",
-        title: "Toggle autocomplete",
-        description: "Toggle the visibility of the autocomplete window",
-        availability: "ALWAYS",
-        type: "keystrokes",
-        default: [],
-      },
-      // {
-      //   id: "autocomplete.hideAutocomplete",
-      //   title: "Hide autocomplete",
-      //   "category": "General",
-      //   description: "Hide the autocomplete window",
-      //   availability: "ALWAYS",
-      // type: 'keystrokes',
-      //   default: ["esc"]
-      // },
-      // {
-      //   id: "autocomplete.showAutocomplete",
-      //   title: "Show autocomplete",
-      //   "category": "General",
-      //   description: "Show the autocomplete window",
-      //   availability: "ALWAYS",
-      // type: 'keystrokes',
-      //   default: []
-      // },
-      {
-        id: "autocomplete.toggleDescription",
-        title: "Toggle description popout",
-        description: "Toggle visibility of autocomplete description popout",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: ["control+k"],
-      },
-      // {
-      //   id: "autocomplete.hideDescription",
-      //   title: "Hide description popout",
-      //   category: "Appearance",
-      //   description: "Hide autocomplete description popout",
-      //   availability: "WHEN_FOCUSED",
-      //   type: 'keystrokes',
-      //   default: []
-      // },
-      // {
-      //   id: "autocomplete.showDescription",
-      //   title: "Show description popout",
-      //   category: "Appearance",
-      //   description: "Show autocomplete description popout",
-      //   availability: "WHEN_FOCUSED",
-      //   type: 'keystrokes',
-      //   default: []
-      // },
+      "increaseSize",
+      "decreaseSize",
+      "toggleAutocomplete",
+      "toggleDescription",
     ],
   },
   {
     title: "Insertion",
     actions: [
-      {
-        id: "autocomplete.insertSelected",
-        title: "Insert selected",
-        description: "Insert selected suggestion",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: ["enter"],
-      },
-      {
-        id: "autocomplete.insertCommonPrefix",
-        title: "Insert common prefix or shake",
-        description:
-          "Insert shared prefix of available suggestions. Shake if there's no common prefix.",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: ["tab"],
-      },
-      {
-        id: "autocomplete.insertCommonPrefixOrNavigateDown",
-        title: "Insert common prefix or navigate",
-        description:
-          "Insert shared prefix of available suggestions. Navigate if there's no common prefix.",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
-      {
-        id: "autocomplete.insertCommonPrefixOrInsertSelected",
-        title: "Insert common prefix or insert selected",
-        description:
-          "Insert shared prefix of available suggestions. Insert currently selected suggestion if there's not common prefix.",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
-      {
-        id: "autocomplete.insertSelectedAndExecute",
-        title: "Insert selected and execute",
-        description:
-          "Insert selected suggestion and then execute the current command.",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
-      {
-        id: "autocomplete.execute",
-        title: "Execute",
-        description: "Execute the current command.",
-        availability: "WHEN_FOCUSED",
-        type: "keystrokes",
-        default: [],
-      },
+      "insertSelected",
+      "insertCommonPrefix",
+      "insertCommonPrefixOrNavigateDown",
+      "insertCommonPrefixOrInsertSelected",
+      "insertSelectedAndExecute",
+      "execute",
     ],
   },
-  {
-    title: "Navigation",
-    actions: [
-      {
-        id: "autocomplete.navigateUp",
-        title: "Navigate up",
-        type: "keystrokes",
-        description: "Scroll up one entry in the list of suggestions",
-        availability: "WHEN_FOCUSED",
-        default: ["shift+tab", "up", "control+p"],
-      },
-      {
-        id: "autocomplete.navigateDown",
-        title: "Navigate down",
-        type: "keystrokes",
-        description: "Scroll down one entry in the list of suggestions",
-        availability: "WHEN_FOCUSED",
-        default: ["down", "control+n"],
-      },
-    ],
-  },
+  { title: "Navigation", actions: ["navigateUp", "navigateDown"] },
 ];
+
+// Fields that the dashboard shows differently from fig.json.
+const overrides: Record<string, Partial<Action>> = {
+  insertCommonPrefix: { title: "Insert common prefix or shake" },
+  increaseSize: { description: undefined },
+  decreaseSize: { description: undefined },
+};
+
+function action(identifier: string): Action {
+  const contributed = app.contributes.actions.find(
+    (a) => a.identifier === identifier,
+  );
+  if (!contributed) {
+    throw new Error(`No autocomplete action "${identifier}" in fig.json`);
+  }
+  return {
+    id: `${app.name}.${identifier}`,
+    title: contributed.name,
+    description: contributed.description,
+    availability: contributed.availability,
+    type: "keystrokes",
+    default: contributed.defaultBindings,
+    ...overrides[identifier],
+  };
+}
+
+const keybindings: PrefSection[] = groups.map(({ title, actions }) => ({
+  title,
+  actions: actions.map(action),
+}));
 
 export default keybindings;
