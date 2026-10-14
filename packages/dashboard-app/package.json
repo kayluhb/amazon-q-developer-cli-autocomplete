@@ -42,6 +42,7 @@
     "@tab/autocomplete-app": "workspace:^",
     "@tab/eslint-config": "workspace:^",
     "@tab/types": "workspace:^",
+    "@tab/vite-config": "workspace:^",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",

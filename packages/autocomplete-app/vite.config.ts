@@ -1,10 +1,6 @@
-import {
-  defineConfig,
-  loadEnv,
-  type Plugin,
-  type HtmlTagDescriptor,
-} from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { htmlCspPlugin } from "@tab/vite-config/csp";
 // import legacy from "@vitejs/plugin-legacy";
 
 const csp: Record<string, string> = {
@@ -18,33 +14,6 @@ const csp: Record<string, string> = {
   "frame-src": "'none'",
 };
 
-const cspContent = Object.entries(csp)
-  .map(([k, v]) => `${k} ${v}`)
-  .join("; ");
-
-const htmlCspPlugin: Plugin = {
-  name: "html-csp",
-  transformIndexHtml: {
-    order: "post",
-    handler: (_html, ctx): HtmlTagDescriptor[] => {
-      if (ctx.server?.config?.mode === "development") {
-        return [];
-      }
-
-      return [
-        {
-          injectTo: "head",
-          tag: "meta",
-          attrs: {
-            "http-equiv": "Content-Security-Policy",
-            content: cspContent,
-          },
-        },
-      ];
-    },
-  },
-};
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
   process.env = { ...process.env, ...loadEnv(mode, process.cwd(), "") };
@@ -52,7 +21,7 @@ export default defineConfig(({ mode, command }) => {
   return {
     plugins: [
       react(),
-      htmlCspPlugin,
+      htmlCspPlugin(csp),
       // legacy({
       //   targets: [
       //     "safari >= 11",

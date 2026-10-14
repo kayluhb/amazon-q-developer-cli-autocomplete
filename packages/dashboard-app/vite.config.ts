@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { htmlCspPlugin } from "@tab/vite-config/csp";
 
 const csp: Record<string, string> = {
   "default-src": "'self'",
@@ -12,36 +13,9 @@ const csp: Record<string, string> = {
   "frame-src": "'none'",
 };
 
-const cspContent = Object.entries(csp)
-  .map(([k, v]) => `${k} ${v}`)
-  .join("; ");
-
-const htmlCspPlugin: Plugin = {
-  name: "html-csp",
-  transformIndexHtml: {
-    order: "post",
-    handler: (_html, ctx): HtmlTagDescriptor[] => {
-      if (ctx.server?.config?.mode === "development") {
-        return [];
-      }
-
-      return [
-        {
-          injectTo: "head",
-          tag: "meta",
-          attrs: {
-            "http-equiv": "Content-Security-Policy",
-            content: cspContent,
-          },
-        },
-      ];
-    },
-  },
-};
-
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
-  plugins: [react(), htmlCspPlugin],
+  plugins: [react(), htmlCspPlugin(csp)],
   server: {
     port: 3433,
   },

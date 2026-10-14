@@ -221,6 +221,9 @@ importers:
       '@tab/types':
         specifier: workspace:^
         version: link:../types
+      '@tab/vite-config':
+        specifier: workspace:^
+        version: link:../vite-config
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -406,6 +409,9 @@ importers:
       '@tab/types':
         specifier: workspace:^
         version: link:../types
+      '@tab/vite-config':
+        specifier: workspace:^
+        version: link:../vite-config
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.18
@@ -556,6 +562,12 @@ importers:
         version: 5.7.3
 
   packages/types: {}
+
+  packages/vite-config:
+    dependencies:
+      vite:
+        specifier: ^6.3.4
+        version: 6.3.4(@types/node@22.15.20)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1)
 
   proto:
     dependencies:
