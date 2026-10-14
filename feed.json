@@ -12,6 +12,32 @@
     },
     {
       "type": "release",
+      "date": "2026-10-14",
+      "version": "2.1.0",
+      "title": "Version 2.1.0",
+      "description": "Up-to-date completion specs for the CLIs you use most. withfig/autocomplete stopped updating in May 2025, so Tab now ships its own specs.",
+      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "changes": [
+        {
+          "type": "added",
+          "description": "Specs in `specs/` add to or replace withfig's when building, including nested and versioned specs. Some are generated from a tool's help output by scripts in `build-scripts/specs/`."
+        },
+        {
+          "type": "added",
+          "description": "New specs for `claude` (Claude Code) and `bq` (BigQuery)."
+        },
+        {
+          "type": "changed",
+          "description": "Regenerated specs for `gh`, `kubectl`, `docker`, `wrangler`, `terraform`, `npm`, `pnpm`, `uv`, `poetry`, `pytest`, `pre-commit`, `dbt`, `sanity`, `shopify`, `turbo` and `playwright` against their current releases, adding missing commands and flags and removing ones that no longer exist."
+        },
+        {
+          "type": "fixed",
+          "description": "Editing or removing a repo spec now always rebuilds the bundled specs, and a removed spec no longer lingers in the build."
+        }
+      ]
+    },
+    {
+      "type": "release",
       "date": "2026-10-13",
       "version": "2.0.0",
       "title": "Version 2.0.0",
