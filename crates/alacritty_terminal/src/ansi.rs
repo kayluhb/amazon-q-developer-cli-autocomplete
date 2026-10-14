@@ -1175,7 +1175,6 @@ where
             b"697" => {
                 if let Some(fig_osc) = params.get(1) {
                     match *fig_osc {
-                        b"NewCmd" => self.handler.new_cmd(""),
                         b"StartPrompt" => self.handler.start_prompt(),
                         b"EndPrompt" => self.handler.end_prompt(),
                         b"PreExec" => self.handler.pre_exec(),

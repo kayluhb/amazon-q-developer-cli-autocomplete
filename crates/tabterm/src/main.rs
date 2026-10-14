@@ -688,7 +688,7 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
                                         // Do not do most stuff during not preexec since that means a command is running
                                         let preexec = term.shell_state().preexec;
 
-                                        debug!(?event, ?raw, %preexec,  "Got key event");
+                                        trace!(%preexec, "Got key event");
 
                                         if !preexec && ai_enabled && event.key == KeyCode::Enter && event.modifiers == input::Modifiers::NONE {
                                             if let Some(TextBuffer { buffer, cursor_idx }) = term.get_current_buffer() {

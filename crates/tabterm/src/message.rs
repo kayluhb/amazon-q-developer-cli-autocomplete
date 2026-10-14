@@ -85,6 +85,13 @@ fn working_directory(path: Option<&str>, shell_state: &ShellState) -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("/"))
 }
 
+/// Keep only absolute `PATH` entries. The working directory can come from terminal
+/// output, so relative entries must not resolve against it.
+fn absolute_path_entries(path: &str) -> std::ffi::OsString {
+    let entries = std::env::split_paths(path).filter(|entry| entry.is_absolute());
+    std::env::join_paths(entries).unwrap_or_default()
+}
+
 fn create_command(executable: impl AsRef<Path>, working_directory: impl AsRef<Path>) -> Command {
     let env = (*SHELL_ENVIRONMENT_VARIABLES.lock().unwrap())
         .clone()
@@ -97,7 +104,8 @@ fn create_command(executable: impl AsRef<Path>, working_directory: impl AsRef<Pa
     } else {
         let path = env
             .iter()
-            .find_map(|(key, value)| if key == "PATH" { Some(value.as_str()) } else { None });
+            .find_map(|(key, value)| if key == "PATH" { Some(value.as_str()) } else { None })
+            .map(absolute_path_entries);
 
         which::which_in(executable.as_ref(), path, working_directory.as_ref())
             .map_or_else(|_| Command::new(executable.as_ref()), Command::new)
@@ -546,6 +554,13 @@ pub async fn process_remote_message(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn absolute_path_entries_drops_relative_entries() {
+        let path = absolute_path_entries("/usr/bin:bin:./tools::/opt/bin");
+        let entries: Vec<_> = std::env::split_paths(&path).collect();
+        assert_eq!(entries, vec![PathBuf::from("/usr/bin"), PathBuf::from("/opt/bin")]);
+    }
 
     #[tokio::test]
     async fn test_create_command() {

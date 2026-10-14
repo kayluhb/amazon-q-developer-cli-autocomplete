@@ -16,6 +16,7 @@ use tracing::level_filters::LevelFilter;
 use tracing::{
     debug,
     error,
+    warn,
 };
 
 use crate::history::{
@@ -136,8 +137,40 @@ impl EventListener for EventHandler {
     }
 
     fn log_level_event(&self, level: Option<String>) {
-        if let Err(err) = tab_log::set_log_level(level.unwrap_or_else(|| LevelFilter::INFO.to_string())) {
+        let Some(level) = allowed_log_level(level) else {
+            warn!("Ignoring log level from terminal output that is not a level at or below info");
+            return;
+        };
+        if let Err(err) = tab_log::set_log_level(level) {
             error!(%err, "Failed to set log level");
+        }
+    }
+}
+
+/// The terminal stream can carry output from any program, so it must not enable
+/// logs more verbose than `info`. Returns `None` when the level must be ignored.
+fn allowed_log_level(level: Option<String>) -> Option<String> {
+    let Some(level) = level else {
+        return Some(LevelFilter::INFO.to_string());
+    };
+    match level.parse::<LevelFilter>() {
+        Ok(filter) if filter <= LevelFilter::INFO => Some(level),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn allowed_log_level_limits_verbosity() {
+        assert_eq!(allowed_log_level(None).as_deref(), Some("info"));
+        for level in ["info", "warn", "error", "off", "INFO"] {
+            assert_eq!(allowed_log_level(Some(level.into())).as_deref(), Some(level));
+        }
+        for level in ["debug", "trace", "tabterm=debug", "garbage"] {
+            assert_eq!(allowed_log_level(Some(level.into())), None, "{level}");
         }
     }
 }
