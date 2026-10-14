@@ -92,6 +92,16 @@ const autocompleteSettings: PrefSection[] = [
         popular: false,
       },
       {
+        id: "autocomplete.loadRepoLocalSpecs",
+        title: "Load completion specs from project folders",
+        description:
+          "Load completion specs from `.fig/autocomplete/build` in the current folder and its parent folders. These specs can run commands. Turn this on only if you trust the projects you open.",
+        example: "e.g. `./configure` or `?`",
+        type: "boolean",
+        default: false,
+        popular: false,
+      },
+      {
         id: "autocomplete.sortMethod",
         title: "Sort suggestions",
         description: `Specifies how ${PRODUCT_NAME} should sort suggestions.`,

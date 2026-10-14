@@ -209,6 +209,12 @@ describe("findOption", () => {
   it("throws with invalid options", () => {
     expect(() => findOption(specWithOptions, "--notAnOption")).toThrow();
   });
+
+  it("ignores Object.prototype keys", () => {
+    for (const token of ["__proto__", "constructor", "toString"]) {
+      expect(() => findOption(specWithOptions, token)).toThrow();
+    }
+  });
 });
 
 describe("findSubcommand", () => {
@@ -233,6 +239,12 @@ describe("findSubcommand", () => {
     expect(() =>
       findSubcommand(specWithSubcommands, "notASubcommand"),
     ).toThrow();
+  });
+
+  it("ignores Object.prototype keys", () => {
+    for (const token of ["__proto__", "constructor", "hasOwnProperty"]) {
+      expect(() => findSubcommand(specWithSubcommands, token)).toThrow();
+    }
   });
 });
 

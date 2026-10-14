@@ -48,6 +48,9 @@ const searchFigFolder = async (currentDirectory: string) => {
   }
 };
 
+const loadRepoLocalSpecs = () =>
+  Boolean(getSetting(SETTINGS.LOAD_REPO_LOCAL_SPECS, false));
+
 export const serializeSpecLocation = (location: SpecLocation): string => {
   if (location.type === SpecLocationSource.GLOBAL) {
     return `global://name=${location.name}`;
@@ -62,8 +65,16 @@ export const getSpecPath = async (
 ): Promise<SpecLocation> => {
   if (name === "?") {
     // If the user is searching for _shortcuts.js by using "?"
+    if (!loadRepoLocalSpecs()) {
+      return { name: "_shortcuts", type: SpecLocationSource.LOCAL, path: "~/" };
+    }
     const path = await searchFigFolder(cwd);
-    return { name: "_shortcuts", type: SpecLocationSource.LOCAL, path };
+    return {
+      name: "_shortcuts",
+      type: SpecLocationSource.LOCAL,
+      path,
+      repoLocal: true,
+    };
   }
 
   const personalShortcutsToken =
@@ -99,7 +110,12 @@ export const getSpecPath = async (
   }
 
   const relative = path.startsWith("./") ? path.slice(2) : path;
-  return { name: basename, type, path: `${cwd}/${relative}` };
+  return {
+    name: basename,
+    type,
+    path: `${cwd}/${relative}`,
+    repoLocal: true,
+  };
 };
 
 type ResolvedSpecLocation =
@@ -149,7 +165,12 @@ export const importSpecFromLocation = async (
 
   if (!specFile && specLocation.type === SpecLocationSource.LOCAL) {
     // If we couldn't successfully load a dev spec try loading from specPath.
-    const { name, path } = specLocation;
+    const { name, path, repoLocal } = specLocation;
+    if (repoLocal && !loadRepoLocalSpecs()) {
+      throw new DisabledSpecError(
+        `Repo-local specs are off (${SETTINGS.LOAD_REPO_LOCAL_SPECS})`,
+      );
+    }
     const [dirname, basename] = splitPath(`${path || "~/"}${name}`);
 
     specFile = await importSpecFromFile(

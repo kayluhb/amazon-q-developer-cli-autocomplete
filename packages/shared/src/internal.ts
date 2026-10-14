@@ -3,6 +3,10 @@ import type { Result } from "@tab/fuzzysort";
 
 export type SpecLocation = Fig.SpecLocation & {
   diffVersionedFile?: string;
+  // True when the path comes from the current working directory (a relative
+  // path or a `.fig` folder search). These specs load only when the
+  // `autocomplete.loadRepoLocalSpecs` setting is on.
+  repoLocal?: boolean;
 };
 
 type Override<T, S> = Omit<T, keyof S> & S;

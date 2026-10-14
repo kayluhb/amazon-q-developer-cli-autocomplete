@@ -1,8 +1,13 @@
 import logger from "loglevel";
-import { SETTINGS, updateSettings } from "@tab/api-bindings-wrappers";
 import { SpecLocationSource } from "@tab/shared/utils";
 import {
+  executeCommand,
+  SETTINGS,
+  updateSettings,
+} from "@tab/api-bindings-wrappers";
+import {
   getSpecPath,
+  importSpecFromLocation,
   loadFigSubcommand,
   loadSubcommandCached,
 } from "../src/loadSpec";
@@ -64,6 +69,7 @@ describe("getSpecPath", () => {
       type: SpecLocationSource.LOCAL,
       name: "autocomplete-tools",
       path: `${cwd}/@withfig/`,
+      repoLocal: true,
     });
   });
 
@@ -72,6 +78,7 @@ describe("getSpecPath", () => {
       type: SpecLocationSource.LOCAL,
       name: "test",
       path: `${cwd}/`,
+      repoLocal: true,
     });
     expect(await getSpecPath("~/test", cwd)).toEqual({
       type: SpecLocationSource.LOCAL,
@@ -97,15 +104,33 @@ describe("getSpecPath", () => {
       type: SpecLocationSource.LOCAL,
       path: `${cwd}/dir/`,
       name: "test",
+      repoLocal: true,
     });
   });
 
-  it("works properly with ? commands", async () => {
+  it("does not search parent folders for ? when repo-local specs are off", async () => {
+    (executeCommand as Mock).mockClear();
     expect(await getSpecPath("?", cwd)).toEqual({
       type: SpecLocationSource.LOCAL,
-      path: `${cwd}/`,
+      path: "~/",
       name: "_shortcuts",
     });
+    expect(executeCommand).not.toHaveBeenCalled();
+  });
+
+  it("searches parent folders for ? when repo-local specs are on", async () => {
+    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: true });
+    try {
+      expect(await getSpecPath("?", cwd)).toEqual({
+        type: SpecLocationSource.LOCAL,
+        path: `${cwd}/`,
+        name: "_shortcuts",
+        repoLocal: true,
+      });
+      expect(executeCommand).toHaveBeenCalled();
+    } finally {
+      updateSettings({});
+    }
   });
 
   it("works properly with + commands", async () => {
@@ -182,6 +207,51 @@ describe("loadFigSubcommand", () => {
     expect(importSpecFromFile).toHaveBeenLastCalledWith("git", devPath, logger);
 
     expect(loadHelpers.isDiffVersionedSpec).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("importSpecFromLocation", () => {
+  const repoLocal = {
+    name: "configure",
+    type: SpecLocationSource.LOCAL,
+    path: "/repo/",
+    repoLocal: true,
+  } as const;
+
+  beforeEach(() => {
+    updateSettings({});
+    (importSpecFromFile as Mock).mockClear();
+  });
+
+  afterEach(() => {
+    updateSettings({});
+  });
+
+  it("does not load repo-local specs by default", async () => {
+    await expect(importSpecFromLocation(repoLocal)).rejects.toThrow(
+      /Repo-local specs are off/,
+    );
+    expect(importSpecFromFile).not.toHaveBeenCalled();
+  });
+
+  it("loads repo-local specs when the setting is on", async () => {
+    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: true });
+    await importSpecFromLocation(repoLocal);
+    expect(importSpecFromFile).toHaveBeenLastCalledWith(
+      "configure",
+      "/repo/.fig/autocomplete/build/",
+      logger,
+    );
+  });
+
+  it("loads absolute-path specs when the setting is off", async () => {
+    const location = await getSpecPath("/opt/tool/run", "/repo");
+    await importSpecFromLocation(location);
+    expect(importSpecFromFile).toHaveBeenLastCalledWith(
+      "run",
+      "/opt/tool/.fig/autocomplete/build/",
+      logger,
+    );
   });
 });
 

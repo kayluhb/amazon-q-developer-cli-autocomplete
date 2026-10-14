@@ -1,6 +1,7 @@
 import React from "react";
 import { Suggestion, SuggestionType } from "@tab/shared/internal";
 import { localProtocol } from "@tab/shared/utils";
+import { cssUrl } from "./cssUrl";
 
 type SuggestionIconProps = {
   suggestion: Suggestion;
@@ -55,8 +56,8 @@ function renderIcon(icon: URL, height: string | number) {
         minHeight: height,
         fontSize: typeof height === "number" ? height * 0.6 : height,
         backgroundImage: isTemplate
-          ? `url(${transformIconUri(new URL(`fig://template?color=${color}`))})`
-          : `url(${icon})`,
+          ? cssUrl(transformIconUri(new URL(`fig://template?color=${color}`)))
+          : cssUrl(icon),
       }}
     >
       {badge &&
@@ -73,9 +74,9 @@ function renderIcon(icon: URL, height: string | number) {
           <span
             className="flex h-2.5 w-2.5 place-content-center place-self-end bg-contain bg-no-repeat text-[80%] text-white"
             style={{
-              backgroundImage: `url(${transformIconUri(
-                new URL(`fig://template?color=${color}`),
-              )})`,
+              backgroundImage: cssUrl(
+                transformIconUri(new URL(`fig://template?color=${color}`)),
+              ),
             }}
           >
             {badge}

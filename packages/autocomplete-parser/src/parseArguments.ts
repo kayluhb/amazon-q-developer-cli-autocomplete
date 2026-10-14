@@ -234,11 +234,17 @@ const canConsumeOptions = (state: ArgumentParserState): boolean => {
   return true;
 };
 
+// Only match own keys, so tokens such as `__proto__` or `constructor` never
+// resolve to Object.prototype members.
+const getOwn = <T>(record: Record<string, T>, key: string): T | undefined =>
+  Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined;
+
 export const findOption = (
   spec: Internal.Subcommand,
   token: string,
 ): Internal.Option => {
-  const option = spec.options[token] || spec.persistentOptions[token];
+  const option =
+    getOwn(spec.options, token) || getOwn(spec.persistentOptions, token);
   if (!option) {
     throw new UpdateStateError(`Option not found: ${token}`);
   }
@@ -249,7 +255,7 @@ export const findSubcommand = (
   spec: Internal.Subcommand,
   token: string,
 ): Internal.Subcommand => {
-  const subcommand = spec.subcommands[token];
+  const subcommand = getOwn(spec.subcommands, token);
   if (!subcommand) {
     throw new UpdateStateError("Subcommand not found");
   }

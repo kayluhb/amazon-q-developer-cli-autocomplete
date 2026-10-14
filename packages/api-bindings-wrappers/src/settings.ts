@@ -36,6 +36,8 @@ export enum SETTINGS {
   FUZZY_SEARCH = "autocomplete.fuzzySearch",
 
   PERSONAL_SHORTCUTS_TOKEN = "autocomplete.personalShortcutsToken",
+  // Load specs from `.fig/autocomplete/build` in the current or parent folders.
+  LOAD_REPO_LOCAL_SPECS = "autocomplete.loadRepoLocalSpecs",
 
   DISABLE_HISTORY_LOADING = "autocomplete.history.disableLoading",
   // History settings
