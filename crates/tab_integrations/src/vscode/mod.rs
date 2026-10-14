@@ -23,7 +23,8 @@ pub const OLD_EXTENSION_PREFIX: &str = "withfig.fig-";
 pub const EXTENSION_PREFIX: &str = "amazonwebservices.codewhisperer-for-command-line-companion";
 
 const EXTENSION_VERSION: &str = env!("CARGO_PKG_VERSION");
-const EXTENSION: &[u8] = include_bytes!("vscode-plugin.vsix");
+/// Empty when the crate was built without `build-scripts/build.py`, which packs the extension.
+const EXTENSION: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/vscode-plugin.vsix"));
 
 #[derive(Clone)]
 pub struct VSCodeVariant {
@@ -208,6 +209,16 @@ impl Integration for VSCodeIntegration {
     async fn install(&self) -> Result<()> {
         if self.is_installed().await.is_ok() {
             return Ok(());
+        }
+
+        #[allow(
+            clippy::const_is_empty,
+            reason = "build.rs embeds an empty file when there is no vsix"
+        )]
+        if EXTENSION.is_empty() {
+            return Err(Error::Custom(
+                "this build has no VS Code extension, build with build-scripts/main.py".into(),
+            ));
         }
 
         self.remove_ext_by_prefix(OLD_EXTENSION_PREFIX).await.ok();
