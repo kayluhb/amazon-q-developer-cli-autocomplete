@@ -61,56 +61,7 @@ pub mod macos {
     pub const BUNDLE_CONTENTS_INFO_PLIST_PATH: &str = "Contents/Info.plist";
 }
 
-pub mod env_var {
-    macro_rules! define_env_vars {
-        ($($(#[$meta:meta])* $ident:ident = $name:expr),*) => {
-            $(
-                $(#[$meta])*
-                pub const $ident: &str = $name;
-            )*
-
-            pub const ALL: &[&str] = &[$($ident),*];
-        }
-    }
-
-    define_env_vars! {
-        /// The UUID of the current parent qterm instance
-        TABTERM_SESSION_ID = "TABTERM_SESSION_ID",
-
-        /// The current parent socket to connect to
-        TAB_PARENT = "TAB_PARENT",
-
-        /// Set the [`TAB_PARENT`] parent socket to connect to
-        TAB_SET_PARENT = "TAB_SET_PARENT",
-
-        /// Guard for the [`TAB_SET_PARENT`] check
-        TAB_SET_PARENT_CHECK = "TAB_SET_PARENT_CHECK",
-
-        /// Set if qterm is running, contains the version
-        TAB_TERM = "TAB_TERM",
-
-        /// Sets the current log level
-        TAB_LOG_LEVEL = "TAB_LOG_LEVEL",
-
-        /// Overrides the ZDOTDIR environment variable
-        TAB_ZDOTDIR = "TAB_ZDOTDIR",
-
-        /// Indicates a process was launched by Tab
-        PROCESS_LAUNCHED_BY_TAB = "PROCESS_LAUNCHED_BY_TAB",
-
-        /// The shell to use in qterm
-        TAB_SHELL = "TAB_SHELL",
-
-        /// Indicates the user is debugging the shell
-        TAB_DEBUG_SHELL = "TAB_DEBUG_SHELL",
-
-        /// Indicates the user is using zsh autosuggestions which disables Inline
-        TAB_USING_ZSH_AUTOSUGGESTIONS = "TAB_USING_ZSH_AUTOSUGGESTIONS",
-
-        /// Overrides the path to the bundle metadata released with certain desktop builds.
-        TAB_BUNDLE_METADATA_PATH = "TAB_BUNDLE_METADATA_PATH"
-    }
-}
+pub use tab_os_shim::env_var;
 
 pub mod system_paths {
     /// System installation paths

@@ -1,4 +1,5 @@
 mod env;
+pub mod env_var;
 mod fs;
 mod platform;
 pub mod process_info;
