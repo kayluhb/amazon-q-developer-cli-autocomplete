@@ -84,7 +84,15 @@ Cwd = str | os.PathLike
 
 
 class Secret(str):
-    """An argv value that run_cmd prints as *** instead of its value."""
+    """An argv value that run_cmd prints as *** instead of its value.
+
+    repr() is also redacted, so a CalledProcessError traceback (which shows
+    repr(args)) does not leak the value. str() still returns the real value,
+    so subprocess passes it through to argv.
+    """
+
+    def __repr__(self) -> str:
+        return "'***'"
 
 
 def format_cmd(args: Args) -> str:
