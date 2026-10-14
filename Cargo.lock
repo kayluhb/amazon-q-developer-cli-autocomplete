@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "alacritty_terminal"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "bitflags 2.13.2",
  "camino",
@@ -195,7 +195,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "appkit-nsworkspace-bindings"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "bindgen 0.71.1",
  "objc",
@@ -3322,7 +3322,7 @@ dependencies = [
 
 [[package]]
 name = "macos-utils"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "accessibility",
  "accessibility-sys",
@@ -6454,7 +6454,7 @@ dependencies = [
 
 [[package]]
 name = "tab-api-mock"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "async-trait",
  "clap",
@@ -6467,7 +6467,7 @@ dependencies = [
 
 [[package]]
 name = "tab_cli"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "anstream 0.6.21",
  "appkit-nsworkspace-bindings",
@@ -6537,7 +6537,7 @@ dependencies = [
 
 [[package]]
 name = "tab_desktop"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "accessibility-sys",
  "anyhow",
@@ -6615,7 +6615,7 @@ dependencies = [
 
 [[package]]
 name = "tab_desktop_api"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "anstream 0.6.21",
  "async-trait",
@@ -6644,7 +6644,7 @@ dependencies = [
 
 [[package]]
 name = "tab_diagnostic"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "cfg-if",
  "clap",
@@ -6663,7 +6663,7 @@ dependencies = [
 
 [[package]]
 name = "tab_input_method"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "apple-bundle",
  "macos-utils",
@@ -6684,7 +6684,7 @@ dependencies = [
 
 [[package]]
 name = "tab_install"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "bitflags 2.13.2",
  "camino",
@@ -6705,7 +6705,7 @@ dependencies = [
 
 [[package]]
 name = "tab_integrations"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "accessibility-sys",
  "async-trait",
@@ -6734,7 +6734,7 @@ dependencies = [
 
 [[package]]
 name = "tab_ipc"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -6756,7 +6756,7 @@ dependencies = [
 
 [[package]]
 name = "tab_log"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "parking_lot",
  "tab_os_shim",
@@ -6770,7 +6770,7 @@ dependencies = [
 
 [[package]]
 name = "tab_os_shim"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "dirs 5.0.1",
  "nix 0.29.0",
@@ -6782,7 +6782,7 @@ dependencies = [
 
 [[package]]
 name = "tab_proto"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "arbitrary",
  "bytes",
@@ -6805,7 +6805,7 @@ dependencies = [
 
 [[package]]
 name = "tab_remote_ipc"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6823,7 +6823,7 @@ dependencies = [
 
 [[package]]
 name = "tab_settings"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "fd-lock",
  "parking_lot",
@@ -6843,7 +6843,7 @@ dependencies = [
 
 [[package]]
 name = "tab_test_macro"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "quote",
  "syn 2.0.119",
@@ -6851,7 +6851,7 @@ dependencies = [
 
 [[package]]
 name = "tab_test_utils"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "bytes",
  "hex",
@@ -6869,7 +6869,7 @@ dependencies = [
 
 [[package]]
 name = "tab_util"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "appkit-nsworkspace-bindings",
  "camino",
@@ -6903,7 +6903,7 @@ dependencies = [
 
 [[package]]
 name = "tabterm"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "alacritty_terminal",
  "anyhow",
@@ -6949,7 +6949,7 @@ dependencies = [
 
 [[package]]
 name = "tabterm2"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "anyhow",
  "async-trait",

@@ -8,6 +8,15 @@
       "version": "0.0.0",
       "title": "Version 0.0.0",
       "hidden": true,
+      "changes": []
+    },
+    {
+      "type": "release",
+      "date": "2026-10-14",
+      "version": "2.4.0",
+      "title": "Version 2.4.0",
+      "description": "Inline suggestions and specs from project folders are on by default. A value that you set before does not change.",
+      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
       "changes": [
         {
           "type": "changed",
