@@ -410,82 +410,12 @@ pub async fn process_remote_message(
                 }
             };
 
-            match request.request {
-                Some(Request::InsertText(request)) => {
-                    send_figterm_response_hostbound(
-                        process_figterm_request(
-                            FigtermRequest::InsertText(request),
-                            main_loop_tx,
-                            term,
-                            pty_master,
-                            key_interceptor,
-                        )
-                        .await?,
-                        nonce,
-                        &response_tx,
-                    )
-                    .await;
-                },
-                Some(Request::Intercept(request)) => {
-                    send_figterm_response_hostbound(
-                        process_figterm_request(
-                            FigtermRequest::Intercept(request),
-                            main_loop_tx,
-                            term,
-                            pty_master,
-                            key_interceptor,
-                        )
-                        .await?,
-                        nonce,
-                        &response_tx,
-                    )
-                    .await;
-                },
-                Some(Request::Diagnostics(request)) => {
-                    send_figterm_response_hostbound(
-                        process_figterm_request(
-                            FigtermRequest::Diagnostics(request),
-                            main_loop_tx,
-                            term,
-                            pty_master,
-                            key_interceptor,
-                        )
-                        .await?,
-                        nonce,
-                        &response_tx,
-                    )
-                    .await;
-                },
-                Some(Request::InsertOnNewCmd(request)) => {
-                    send_figterm_response_hostbound(
-                        process_figterm_request(
-                            FigtermRequest::InsertOnNewCmd(request),
-                            main_loop_tx,
-                            term,
-                            pty_master,
-                            key_interceptor,
-                        )
-                        .await?,
-                        nonce,
-                        &response_tx,
-                    )
-                    .await;
-                },
-                Some(Request::SetInlineSuggestion(request)) => {
-                    send_figterm_response_hostbound(
-                        process_figterm_request(
-                            FigtermRequest::SetInlineSuggestion(request),
-                            main_loop_tx,
-                            term,
-                            pty_master,
-                            key_interceptor,
-                        )
-                        .await?,
-                        nonce,
-                        &response_tx,
-                    )
-                    .await;
-                },
+            let figterm_request = match request.request {
+                Some(Request::InsertText(request)) => Some(FigtermRequest::InsertText(request)),
+                Some(Request::Intercept(request)) => Some(FigtermRequest::Intercept(request)),
+                Some(Request::Diagnostics(request)) => Some(FigtermRequest::Diagnostics(request)),
+                Some(Request::InsertOnNewCmd(request)) => Some(FigtermRequest::InsertOnNewCmd(request)),
+                Some(Request::SetInlineSuggestion(request)) => Some(FigtermRequest::SetInlineSuggestion(request)),
                 Some(Request::RunProcess(request)) => {
                     // TODO: we can infer shell as above for execute if no executable is provided.
                     let mut cmd = create_command(
@@ -501,6 +431,7 @@ pub async fn process_remote_message(
                         };
                     }
 
+                    let response_tx = response_tx.clone();
                     tokio::spawn(async move {
                         debug!("running command");
 
@@ -542,8 +473,18 @@ pub async fn process_remote_message(
                             error!(%err, "Failed sending request response");
                         }
                     });
+                    None
                 },
-                _ => warn!("unhandled request {request:?}"),
+                _ => {
+                    warn!("unhandled request {request:?}");
+                    None
+                },
+            };
+
+            if let Some(figterm_request) = figterm_request {
+                let response =
+                    process_figterm_request(figterm_request, main_loop_tx, term, pty_master, key_interceptor).await?;
+                send_figterm_response_hostbound(response, nonce, &response_tx).await;
             }
         },
         Some(clientbound::Packet::Ping(())) => {
