@@ -259,11 +259,9 @@ pub enum InternalSubcommand {
     GenerateSsh(generate_ssh::GenerateSshArgs),
     #[command(alias = "mux")]
     Multiplexer(MultiplexerArgs),
-    /// Prints the inline suggestion for the buffer, used by the zsh inline suggestions plugin
-    InlineSuggestion {
-        #[arg(long, allow_hyphen_values = true)]
-        buffer: String,
-    },
+    /// Prints the inline suggestion for the buffer read from stdin, used by the zsh inline
+    /// suggestions plugin
+    InlineSuggestion,
 }
 
 const BUFFER_SIZE: usize = 1024;
@@ -586,8 +584,8 @@ impl InternalSubcommand {
                 }
                 Ok(ExitCode::SUCCESS)
             },
-            InternalSubcommand::InlineSuggestion { buffer } => {
-                inline_suggestion::inline_suggestion(buffer).await;
+            InternalSubcommand::InlineSuggestion => {
+                inline_suggestion::inline_suggestion().await;
                 Ok(ExitCode::SUCCESS)
             },
             InternalSubcommand::Uuidgen => {

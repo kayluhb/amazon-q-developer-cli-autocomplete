@@ -36,6 +36,7 @@ const initialState: Partial<AutocompleteState> = {
   parserResult: initialParserState,
   generatorStates: [] as GeneratorState[],
   command: null,
+  parsedCommand: null,
 
   visibleState: Visibility.HIDDEN_UNTIL_KEYPRESS,
   lastInsertedSuggestion: null,
@@ -378,6 +379,7 @@ export const useAutocompleteStore = createWithEqualityFn<AutocompleteState>(
 
             return {
               parserResult,
+              parsedCommand: state.command,
               visibleState,
               fuzzySearchEnabled: isFuzzySearchEnabled(),
               userFuzzySearchEnabled,

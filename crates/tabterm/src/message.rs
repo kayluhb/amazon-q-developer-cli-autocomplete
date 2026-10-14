@@ -303,14 +303,10 @@ pub async fn process_figterm_message(
         // Answered from the popup's cached suggestion. Spawned so waiting for the popup never blocks the main loop.
         Some(FigtermRequest::InlineShellCompletion(request)) => {
             tokio::spawn(async move {
-                let insert_text = INLINE_SUGGESTION.lookup(&request.buffer, LOOKUP_TIMEOUT).await;
-                let response_message = FigtermResponseMessage {
-                    response: Some(FigtermResponse::InlineShellCompletion(
-                        figterm::InlineShellCompletionResponse { insert_text },
-                    )),
-                };
+                let response_message = inline_shell_completion_response(&request.buffer).await;
+                // zsh kills the previous request on each keystroke, so a closed connection is expected
                 if let Err(err) = response_tx.send_async(response_message).await {
-                    error!(%err, "Failed sending inline shell completion response");
+                    debug!(%err, "Failed sending inline shell completion response");
                 }
             });
         },
@@ -337,6 +333,15 @@ pub async fn process_figterm_message(
         None => warn!("Qterm message with no request"),
     }
     Ok(())
+}
+
+async fn inline_shell_completion_response(buffer: &str) -> FigtermResponseMessage {
+    let insert_text = INLINE_SUGGESTION.lookup(buffer, LOOKUP_TIMEOUT).await;
+    FigtermResponseMessage {
+        response: Some(FigtermResponse::InlineShellCompletion(
+            figterm::InlineShellCompletionResponse { insert_text },
+        )),
+    }
 }
 
 async fn send_figterm_response_hostbound(
@@ -560,5 +565,19 @@ mod tests {
         assert_eq!(output.status.code(), Some(25));
         assert_eq!(output.stdout, b"hello world 2\n");
         assert_eq!(output.stderr, b"hello world 1\n");
+    }
+
+    #[tokio::test]
+    async fn test_inline_shell_completion_response() {
+        INLINE_SUGGESTION.set("message test buffer".into(), "suffix".into());
+        let response = inline_shell_completion_response("message test buffer").await;
+        assert_eq!(
+            response.response,
+            Some(FigtermResponse::InlineShellCompletion(
+                figterm::InlineShellCompletionResponse {
+                    insert_text: Some("suffix".into())
+                }
+            ))
+        );
     }
 }

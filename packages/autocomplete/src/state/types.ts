@@ -49,6 +49,8 @@ export type AutocompleteState = {
   parserResult: ArgumentParserResult;
   generatorStates: GeneratorState[];
   command: Command | null;
+  // The command that parserResult was parsed from
+  parsedCommand: Command | null;
 
   visibleState: Visibility;
   lastInsertedSuggestion: Suggestion | null;

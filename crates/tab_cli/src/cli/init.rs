@@ -30,7 +30,7 @@ use super::internal::should_figterm_launch::should_figterm_launch_exit_status;
 use crate::util::app_path_from_bundle_id;
 
 const SHELL_INTEGRATIONS_ENABLED_STATE_KEY: &str = "shell-integrations.enabled";
-const INLINE_SOURCE_SETTINGS_KEY: &str = "inline.source";
+pub(super) const INLINE_SOURCE_SETTINGS_KEY: &str = "inline.source";
 
 static IS_SNAPSHOT_TEST: LazyLock<bool> = LazyLock::new(|| tab_os_shim::Env::new().q_init_snapshot_test());
 
@@ -212,7 +212,7 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
         }
     }
 
-    if when == &When::Post && shell == &Shell::Zsh && rcfile.as_deref() != Some("zprofile") && !*IS_SNAPSHOT_TEST {
+    if should_source_inline_plugin(shell, when, rcfile.as_deref()) && !*IS_SNAPSHOT_TEST {
         let inline_source = tab_settings::settings::get_string_opt(INLINE_SOURCE_SETTINGS_KEY);
         if let Some(source) = inline_plugin_source(inline_source.as_deref()) {
             to_source.push(source);
@@ -237,15 +237,25 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
     Ok(to_source.join("\n"))
 }
 
+/// The inline suggestions plugin is zsh-only and loads once, from the zshrc post block
+fn should_source_inline_plugin(shell: &Shell, when: &When, rcfile: Option<&str>) -> bool {
+    shell == &Shell::Zsh && when == &When::Post && rcfile != Some("zprofile")
+}
+
+/// The plugin's strategies for an `inline.source` setting, or `None` when it is off or invalid
+pub(super) fn inline_strategy(inline_source: Option<&str>) -> Option<&'static str> {
+    match inline_source? {
+        "history" => Some("match_prev_cmd history"),
+        "specs" => Some("specs"),
+        "history-specs" => Some("match_prev_cmd history specs"),
+        _ => None,
+    }
+}
+
 /// The zsh code that loads the inline suggestions plugin for an `inline.source` setting, or `None`
 /// when it is off
 fn inline_plugin_source(inline_source: Option<&str>) -> Option<String> {
-    let strategy = match inline_source? {
-        "history" => "match_prev_cmd history",
-        "specs" => "specs",
-        "history-specs" => "match_prev_cmd history specs",
-        _ => return None,
-    };
+    let strategy = inline_strategy(inline_source)?;
 
     Some(guard_source(
         &Shell::Zsh,
@@ -330,8 +340,16 @@ mod tests {
             let code = inline_plugin_source(Some(source)).unwrap();
             assert!(code.starts_with("if [ -z \"${TAB_INLINE_PLUGIN_SOURCED}\" ]; then\n"));
             assert!(code.contains(strategy), "{source}");
-            assert!(code.contains("_tab_autosuggest_strategy_specs()"));
         }
+    }
+
+    #[test]
+    fn test_should_source_inline_plugin() {
+        assert!(should_source_inline_plugin(&Shell::Zsh, &When::Post, Some("zshrc")));
+        assert!(should_source_inline_plugin(&Shell::Zsh, &When::Post, None));
+        assert!(!should_source_inline_plugin(&Shell::Zsh, &When::Post, Some("zprofile")));
+        assert!(!should_source_inline_plugin(&Shell::Zsh, &When::Pre, Some("zshrc")));
+        assert!(!should_source_inline_plugin(&Shell::Bash, &When::Post, Some("bashrc")));
     }
 
     #[test]

@@ -1,8 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Shell } from "@tab/api-bindings";
 import { SETTINGS } from "@tab/api-bindings-wrappers";
 import { Suggestion } from "@tab/shared/internal";
-import { inlineSuffix } from "../inlineSuggestion";
+import { inlineSuffix, sendInlineSuggestion } from "../inlineSuggestion";
 import { Visibility } from "../types";
+
+vi.mock("@tab/api-bindings", () => ({
+  Shell: { setInlineSuggestion: vi.fn(() => Promise.resolve()) },
+}));
 
 const makeState = (
   buffer: string,
@@ -95,9 +100,33 @@ describe("inlineSuffix", () => {
 
   it("returns nothing when the buffer does not end with the query term", () => {
     expect(
+      inlineSuffix(subcommand("checkout"), makeState("git che ", "che")),
+    ).toBe("");
+  });
+
+  it("does not add a space after a trailing {cursor}", () => {
+    expect(
       inlineSuffix(
-        { name: "my file.txt", type: "file" },
-        makeState('cat "my fi', "my fi"),
+        subcommand("--message", { separatorToAdd: "=", shouldAddSpace: true }),
+        makeState("git commit --mes", "--mes"),
+      ),
+    ).toBe("sage=");
+  });
+
+  it("returns nothing for control characters", () => {
+    expect(
+      inlineSuffix(
+        subcommand("status", { insertValue: "status\r" }),
+        makeState("git sta", "sta"),
+      ),
+    ).toBe("");
+  });
+
+  it("returns nothing for a shortcut", () => {
+    expect(
+      inlineSuffix(
+        subcommand("deploy", { type: "shortcut" }),
+        makeState("dep", "dep"),
       ),
     ).toBe("");
   });
@@ -133,5 +162,72 @@ describe("inlineSuffix", () => {
 
   it("returns nothing without an item", () => {
     expect(inlineSuffix(undefined, makeState("git che", "che"))).toBe("");
+  });
+});
+
+describe("sendInlineSuggestion", () => {
+  const command = { tokens: [] };
+  let sessionCount = 0;
+
+  const makeSendState = (
+    sessionId: string,
+    buffer: string,
+    { source = "specs", parsedCommand = command as object | null } = {},
+  ) =>
+    ({
+      ...makeState(buffer, "che"),
+      figState: {
+        buffer,
+        cursorLocation: buffer.length,
+        shellContext: { sessionId },
+      },
+      settings: { [SETTINGS.INLINE_SOURCE]: source },
+      suggestions: [subcommand("checkout")],
+      command,
+      parsedCommand,
+    }) as unknown as Parameters<typeof sendInlineSuggestion>[0];
+
+  let sessionId = "";
+  beforeEach(() => {
+    vi.mocked(Shell.setInlineSuggestion).mockClear();
+    // The last-sent cache is module-level, so give each test its own session
+    sessionCount += 1;
+    sessionId = `session-${sessionCount}`;
+  });
+
+  it("sends the suffix once per change", () => {
+    sendInlineSuggestion(makeSendState(sessionId, "git che"));
+    sendInlineSuggestion(makeSendState(sessionId, "git che"));
+    expect(Shell.setInlineSuggestion).toHaveBeenCalledTimes(1);
+    expect(Shell.setInlineSuggestion).toHaveBeenCalledWith(
+      "git che",
+      "ckout",
+      sessionId,
+    );
+
+    sendInlineSuggestion(makeSendState(sessionId, "git chec"));
+    expect(Shell.setInlineSuggestion).toHaveBeenCalledTimes(2);
+  });
+
+  it("does nothing when spec suggestions are off", () => {
+    sendInlineSuggestion(
+      makeSendState(sessionId, "git che", { source: "off" }),
+    );
+    sendInlineSuggestion(
+      makeSendState(sessionId, "git che", { source: "history" }),
+    );
+    expect(Shell.setInlineSuggestion).not.toHaveBeenCalled();
+  });
+
+  it("does nothing without a session", () => {
+    sendInlineSuggestion(makeSendState("", "git che"));
+    expect(Shell.setInlineSuggestion).not.toHaveBeenCalled();
+  });
+
+  it("does nothing while the parse is for an older command", () => {
+    sendInlineSuggestion(
+      makeSendState(sessionId, "git che", { parsedCommand: { tokens: [] } }),
+    );
+    expect(Shell.setInlineSuggestion).not.toHaveBeenCalled();
   });
 });

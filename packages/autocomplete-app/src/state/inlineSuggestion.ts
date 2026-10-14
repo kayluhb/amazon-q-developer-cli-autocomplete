@@ -15,7 +15,11 @@ type InlineSuffixState = Pick<
   | "settings"
 >;
 
-const NON_INSERTING_TYPES = ["history", "auto-execute", "special"];
+// Types that run, don't insert text, or delete more than the query term
+const NO_INLINE_TYPES = ["history", "auto-execute", "special", "shortcut"];
+const CURSOR_PLACEHOLDER = "{cursor}";
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS = /[\x00-\x1f\x7f]/;
 
 // The text the popup would add after the buffer if `item` were inserted, or
 // "" when that can't be shown as ghost text after the cursor.
@@ -35,7 +39,7 @@ export const inlineSuffix = (
     !item ||
     cursorLocation !== buffer.length ||
     visibleState === Visibility.HIDDEN_UNTIL_KEYPRESS ||
-    NON_INSERTING_TYPES.includes(item.type ?? "")
+    NO_INLINE_TYPES.includes(item.type ?? "")
   ) {
     return "";
   }
@@ -46,10 +50,12 @@ export const inlineSuffix = (
     fuzzySearchEnabled,
     settings[SETTINGS.PREFER_VERBOSE_SUGGESTIONS] as boolean,
   );
-  if (insertion.endsWith("{cursor}")) {
-    insertion = insertion.slice(0, -"{cursor}".length);
+  // The popup leaves the cursor at a trailing {cursor}, before any added space
+  const endsAtCursor = insertion.endsWith(CURSOR_PLACEHOLDER);
+  if (endsAtCursor) {
+    insertion = insertion.slice(0, -CURSOR_PLACEHOLDER.length);
   }
-  if (insertion.includes("{cursor}") || insertion.includes("\n")) {
+  if (insertion.includes(CURSOR_PLACEHOLDER) || CONTROL_CHARS.test(insertion)) {
     return "";
   }
 
@@ -60,6 +66,7 @@ export const inlineSuffix = (
 
   let suffix = insertion.slice(queryTerm.length);
   if (
+    !endsAtCursor &&
     item.shouldAddSpace &&
     (settings[SETTINGS.INSERT_SPACE_AUTOMATICALLY] ?? true)
   ) {
@@ -68,30 +75,33 @@ export const inlineSuffix = (
   return suffix;
 };
 
+const SPEC_SOURCES = ["specs", "history-specs"];
+
 let lastSent: { sessionId: string; buffer: string; suffix: string } | null =
   null;
 
-const SPEC_SOURCES = ["specs", "history-specs"];
-
 // Tells tabterm the ghost text for the current buffer, computed from the top
-// suggestion. Only sends when inline spec suggestions are on and something
-// changed.
+// suggestion. Only sends when inline spec suggestions are on, the parse is for
+// the current command, and something changed.
 export const sendInlineSuggestion = (
-  state: InlineSuffixState & Pick<AutocompleteState, "suggestions">,
+  state: InlineSuffixState &
+    Pick<AutocompleteState, "suggestions" | "command" | "parsedCommand">,
 ) => {
-  const sessionId = state.figState.shellContext?.sessionId;
+  const { figState, settings, suggestions, command, parsedCommand } = state;
+  const { buffer, shellContext } = figState;
+  const sessionId = shellContext?.sessionId;
   if (
     !sessionId ||
-    !SPEC_SOURCES.includes(state.settings[SETTINGS.INLINE_SOURCE] as string)
+    !SPEC_SOURCES.includes(settings[SETTINGS.INLINE_SOURCE] as string) ||
+    // Suggestions computed from an older parse would not match the new buffer
+    parsedCommand !== command
   ) {
     return;
   }
-  const { buffer } = state.figState;
-  const suffix = inlineSuffix(state.suggestions[0], state);
+  const suffix = inlineSuffix(suggestions[0], state);
 
   if (
-    lastSent &&
-    lastSent.sessionId === sessionId &&
+    lastSent?.sessionId === sessionId &&
     lastSent.buffer === buffer &&
     lastSent.suffix === suffix
   ) {
