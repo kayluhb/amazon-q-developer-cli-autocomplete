@@ -1,9 +1,11 @@
+use crate::hooks::{
+    edit_buffer_hook,
+    intercepted_key_hook,
+    preexec_hook,
+    prompt_hook,
+};
 use crate::proto::local::{
-    EditBufferHook,
-    InterceptedKeyHook,
     PostExecHook,
-    PreExecHook,
-    PromptHook,
     ShellContext,
     TerminalCursorCoordinates,
 };
@@ -33,27 +35,18 @@ pub fn new_edit_buffer_hook(
     histno: i64,
     coords: impl Into<Option<TerminalCursorCoordinates>>,
 ) -> hostbound::Request {
-    hook_enum_to_hook(hostbound::request::Request::EditBuffer(EditBufferHook {
-        context: context.into(),
-        terminal_cursor_coordinates: coords.into(),
-        text: text.into(),
-        cursor,
-        histno,
-    }))
+    hook_enum_to_hook(hostbound::request::Request::EditBuffer(edit_buffer_hook(
+        context, text, cursor, histno, coords,
+    )))
 }
 
 /// Construct a new prompt hook
 pub fn new_prompt_hook(context: impl Into<Option<ShellContext>>) -> hostbound::Request {
-    hook_enum_to_hook(hostbound::request::Request::Prompt(PromptHook {
-        context: context.into(),
-    }))
+    hook_enum_to_hook(hostbound::request::Request::Prompt(prompt_hook(context)))
 }
 
 pub fn new_preexec_hook(context: impl Into<Option<ShellContext>>) -> hostbound::Request {
-    hook_enum_to_hook(hostbound::request::Request::PreExec(PreExecHook {
-        context: context.into(),
-        command: None,
-    }))
+    hook_enum_to_hook(hostbound::request::Request::PreExec(preexec_hook(context)))
 }
 
 pub fn new_postexec_hook(
@@ -73,11 +66,9 @@ pub fn new_intercepted_key_hook(
     action: impl Into<String>,
     key: impl Into<String>,
 ) -> hostbound::Request {
-    hook_enum_to_hook(hostbound::request::Request::InterceptedKey(InterceptedKeyHook {
-        context: context.into(),
-        action: action.into(),
-        key: key.into(),
-    }))
+    hook_enum_to_hook(hostbound::request::Request::InterceptedKey(intercepted_key_hook(
+        context, action, key,
+    )))
 }
 
 #[cfg(test)]
