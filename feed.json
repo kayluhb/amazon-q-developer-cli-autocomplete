@@ -13,6 +13,24 @@
     {
       "type": "release",
       "date": "2026-10-14",
+      "version": "2.2.0",
+      "title": "Version 2.2.0",
+      "description": "Grey inline suggestions on the zsh command line, from your shell history and the bundled completion specs. They work offline and are off by default.",
+      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "changes": [
+        {
+          "type": "added",
+          "description": "Inline suggestions for zsh. Set Inline suggestions to `history`, `specs` or `history-specs` in the dashboard, then open a new terminal window. Press → to accept a suggestion, or Option+→ to accept one word."
+        },
+        {
+          "type": "added",
+          "description": "`tab doctor` warns when zsh-autosuggestions is loaded, because it stops Tab's inline suggestions."
+        }
+      ]
+    },
+    {
+      "type": "release",
+      "date": "2026-10-14",
       "version": "2.1.0",
       "title": "Version 2.1.0",
       "description": "Up-to-date completion specs for the CLIs you use most. withfig/autocomplete stopped updating in May 2025, so Tab now ships its own specs.",
