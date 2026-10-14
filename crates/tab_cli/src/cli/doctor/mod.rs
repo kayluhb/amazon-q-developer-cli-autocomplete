@@ -56,8 +56,8 @@ use spinners::{
 };
 use tab_integrations::input_method::InputMethodError;
 use tab_integrations::shell::{
-    ShellExt,
     ShellIntegration,
+    all_shell_integrations,
 };
 use tab_integrations::ssh::SshIntegration;
 use tab_integrations::{
@@ -1934,12 +1934,12 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
     })
     .ok();
 
-    let shell_integrations: Vec<_> = [Shell::Bash, Shell::Zsh, Shell::Fish]
+    let (integrations, errors) = all_shell_integrations(&Env::new());
+    if let Some((_, err)) = errors.into_iter().next() {
+        return Err(err.into());
+    }
+    let shell_integrations: Vec<_> = integrations
         .into_iter()
-        .map(|shell| shell.get_shell_integrations(&Env::new()))
-        .collect::<Result<Vec<_>, tab_integrations::Error>>()?
-        .into_iter()
-        .flatten()
         .map(|integration| DotfileCheck { integration })
         .collect();
 

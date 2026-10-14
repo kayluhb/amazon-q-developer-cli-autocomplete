@@ -194,6 +194,32 @@ impl ShellExt for Shell {
     }
 }
 
+/// Shell integrations, and the shells whose integrations could not be read.
+pub type ShellIntegrations = (Vec<Box<dyn ShellIntegration>>, Vec<(Shell, Error)>);
+
+/// The dotfile integrations for each shell in `shells`.
+///
+/// A shell whose integrations cannot be read goes into the error list, so one bad shell does not
+/// hide the integrations of the other shells.
+pub fn shell_integrations(shells: &[Shell], env: &Env) -> ShellIntegrations {
+    let mut integrations = vec![];
+    let mut errors = vec![];
+    for shell in shells {
+        match shell.get_shell_integrations(env) {
+            Ok(shell_integrations) => integrations.extend(shell_integrations),
+            Err(err) => errors.push((*shell, err)),
+        }
+    }
+    (integrations, errors)
+}
+
+/// The dotfile integrations for every shell in [`Shell::all`].
+///
+/// Install, uninstall, and status must all use this list so that they cover the same shells.
+pub fn all_shell_integrations(env: &Env) -> ShellIntegrations {
+    shell_integrations(Shell::all(), env)
+}
+
 pub trait ShellIntegration: Send + Sync + Integration + ShellIntegrationClone {
     // The unique name of the integration file
     fn file_name(&self) -> &str;
@@ -778,6 +804,19 @@ mod test {
 
     fn check_script(shell: Shell, when: When) {
         run_shellcheck(shell.get_fig_integration_source(&when));
+    }
+
+    #[test]
+    fn all_shell_integrations_covers_every_shell_with_integrations() {
+        let env = Env::from_slice(&[]);
+        let (integrations, errors) = all_shell_integrations(&env);
+        assert!(errors.is_empty(), "{errors:?}");
+        for shell in [Shell::Bash, Shell::Zsh, Shell::Fish] {
+            assert!(
+                integrations.iter().any(|integration| integration.get_shell() == shell),
+                "missing {shell} integrations"
+            );
+        }
     }
 
     #[test]

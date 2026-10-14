@@ -1,4 +1,4 @@
-use tab_integrations::shell::ShellExt;
+use tab_integrations::shell::all_shell_integrations;
 use tab_os_shim::{
     ContextArcProvider,
     ContextProvider,
@@ -12,7 +12,6 @@ use tab_settings::{
     SettingsProvider,
     StateProvider,
 };
-use tab_util::Shell;
 use tao::event_loop::ControlFlow;
 use tokio::process::Command;
 #[allow(unused_imports)]
@@ -35,19 +34,14 @@ where
 {
     match request.action() {
         OnboardingAction::InstallationScript => {
-            let mut errs: Vec<String> = vec![];
-            for shell in [Shell::Bash, Shell::Zsh, Shell::Fish] {
-                match shell.get_shell_integrations(ctx.env()) {
-                    Ok(integrations) => {
-                        for integration in integrations {
-                            if let Err(err) = integration.install().await {
-                                errs.push(format!("{integration}: {err}"));
-                            }
-                        }
-                    },
-                    Err(err) => {
-                        errs.push(format!("{shell}: {err}"));
-                    },
+            let (integrations, shell_errors) = all_shell_integrations(ctx.env());
+            let mut errs: Vec<String> = shell_errors
+                .into_iter()
+                .map(|(shell, err)| format!("{shell}: {err}"))
+                .collect();
+            for integration in integrations {
+                if let Err(err) = integration.install().await {
+                    errs.push(format!("{integration}: {err}"));
                 }
             }
 
