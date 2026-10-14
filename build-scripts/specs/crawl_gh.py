@@ -40,7 +40,7 @@ def parse_flags(lines: list[str]) -> list[dict]:
 def crawl(path: list[str], description: str) -> dict:
     result = subprocess.run(["gh", *path, "--help"], capture_output=True, text=True, env=ENV)
     s = sections(result.stdout)
-    usage = next((l.strip() for l in s.get("USAGE", []) if l.strip()), "")
+    usage = next((line.strip() for line in s.get("USAGE", []) if line.strip()), "")
     node = {
         "name": path[-1] if path else "gh",
         "description": description,

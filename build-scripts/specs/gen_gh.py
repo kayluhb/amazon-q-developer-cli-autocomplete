@@ -196,8 +196,12 @@ def emit(value, indent=0) -> str:
 
 
 spec = command(tree, [])
-spec["args"] = {"name": "alias", "description": "Custom user defined gh alias", "isOptional": True,
-                "generators": Raw("ghGenerators.listAlias")}
+spec["args"] = {
+    "name": "alias",
+    "description": "Custom user defined gh alias",
+    "isOptional": True,
+    "generators": Raw("ghGenerators.listAlias"),
+}
 spec["options"] = [
     {"name": "--help", "description": "Show help for command", "isPersistent": True},
     *spec.get("options", []),
