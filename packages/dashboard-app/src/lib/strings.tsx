@@ -26,7 +26,7 @@ function wrapAlternateParts(
 }
 
 export function parseBracketsToKbd(string: string, className?: string) {
-  if (string.indexOf("[") === -1) return <span>{string}</span>;
+  if (!string.includes("[")) return <span>{string}</span>;
 
   // This *works* but is so hacky that it feels awful and some strings have both backticks *and* square brackets...
   // TODO: switch to regex-based solution
@@ -35,7 +35,7 @@ export function parseBracketsToKbd(string: string, className?: string) {
 }
 
 export function parseBackticksToCode(string: string, className?: string) {
-  if (string.indexOf("`") === -1) return <span>{string}</span>;
+  if (!string.includes("`")) return <span>{string}</span>;
 
   return wrapAlternateParts(
     string.split("`"),

@@ -12,6 +12,7 @@ const TerminalTab = forwardRef<HTMLDivElement, TerminalTabProps>(
     );
   },
 );
+TerminalTab.displayName = "TerminalTab";
 
 interface TerminalProps {
   title?: string;

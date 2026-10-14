@@ -95,7 +95,7 @@ export function WelcomeModal({ next }: { next: () => void }) {
           <h2 className="text-2xl text-white font-semibold select-none leading-none font-heading tracking-tight">
             Welcome!
           </h2>
-          <p className="text-sm">Let's get you set up...</p>
+          <p className="text-sm">Let&apos;s get you set up...</p>
         </div>
       </div>
       <div className="flex flex-col items-center gap-2 text-white text-sm font-bold">

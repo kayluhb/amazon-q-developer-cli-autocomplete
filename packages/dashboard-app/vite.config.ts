@@ -1,4 +1,4 @@
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -54,8 +54,8 @@ export default defineConfig(({ command }) => ({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@assets": path.resolve(__dirname, "./assets"),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@assets": fileURLToPath(new URL("./assets", import.meta.url)),
     },
   },
 }));

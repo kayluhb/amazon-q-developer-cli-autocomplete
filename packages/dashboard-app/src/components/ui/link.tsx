@@ -56,7 +56,7 @@ function Link({ className, variant, ...props }: LinkProps) {
   } else if (typeof props.to === "string") {
     return <RouterLink className={c} {...props} />;
   } else {
-    throw new Error("Invalid props for Link component");
+    throw new TypeError("Invalid props for Link component");
   }
 }
 
