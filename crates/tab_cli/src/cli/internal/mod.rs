@@ -1,4 +1,5 @@
 mod generate_ssh;
+mod inline_suggestion;
 pub mod local_state;
 mod multiplexer;
 pub mod should_figterm_launch;
@@ -258,6 +259,11 @@ pub enum InternalSubcommand {
     GenerateSsh(generate_ssh::GenerateSshArgs),
     #[command(alias = "mux")]
     Multiplexer(MultiplexerArgs),
+    /// Prints the inline suggestion for the buffer, used by the zsh inline suggestions plugin
+    InlineSuggestion {
+        #[arg(long, allow_hyphen_values = true)]
+        buffer: String,
+    },
 }
 
 const BUFFER_SIZE: usize = 1024;
@@ -578,6 +584,10 @@ impl InternalSubcommand {
                         }
                     }
                 }
+                Ok(ExitCode::SUCCESS)
+            },
+            InternalSubcommand::InlineSuggestion { buffer } => {
+                inline_suggestion::inline_suggestion(buffer).await;
                 Ok(ExitCode::SUCCESS)
             },
             InternalSubcommand::Uuidgen => {

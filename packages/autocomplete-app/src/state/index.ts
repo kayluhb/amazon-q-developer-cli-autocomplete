@@ -29,6 +29,7 @@ import { GeneratorState } from "../generators/helpers";
 import { getFullHistorySuggestions } from "../history";
 import { createGeneratorState } from "./generators";
 import { createInsertionState } from "./insertion";
+import { sendInlineSuggestion } from "./inlineSuggestion";
 
 const initialState: Partial<AutocompleteState> = {
   figState: initialFigState,
@@ -214,6 +215,7 @@ const updateSuggestions =
           (willBeVisible === wasVisible && !suggestionsMayChange)
         ) {
           set(updatedState, replace);
+          sendInlineSuggestion(get());
           return;
         }
 
@@ -252,6 +254,7 @@ const updateSuggestions =
           { ...state, ...update, suggestions, selectedIndex, hasChangedIndex },
           replace,
         );
+        sendInlineSuggestion(get());
       },
       get,
       api,

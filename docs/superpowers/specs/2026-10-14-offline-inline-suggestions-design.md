@@ -110,12 +110,14 @@ desktop app would need a new CLI → desktop message type instead.
 The build ships `packages/autocomplete-app` (`build-scripts/build.py:146`). Mirror every change into
 `packages/autocomplete`, because its `src/` is currently an identical copy.
 
-`inlineSuffix(item, searchTerm, buffer, cursorIndex, visibleState, settings): string` is a pure function. It
-returns `""` when any of these holds:
+`inlineSuffix(item, state): string` is a pure function. `state` is the part of the store it reads
+(`parserResult`, `figState`, `visibleState`, `fuzzySearchEnabled`, `settings`). It returns `""` when any of these holds:
 - `cursorIndex !== buffer.length`
 - `visibleState === HIDDEN_UNTIL_KEYPRESS` (the suggestions are stale)
-- `item` is missing, is a history suggestion, or has `execute` set
-- the full insertion (from `getFullInsertion`, so escaping matches the popup's) contains `{cursor}` anywhere but the end
+- `item` is missing, or its type is `history`, `auto-execute` or `special` (suggestions have no `execute` field;
+  these types are the ones that run or don't insert text)
+- the full insertion (from `getFullInsertion`, so escaping matches the popup's) contains `{cursor}` anywhere but the
+  end, or contains `\n` (it would execute)
 - the full insertion does not start with the query term (from `getQueryTermForSuggestion`). This rules out fuzzy
   matches and case-insensitive matches.
 - the buffer does not end with the query term. This rules out escaping or quoting differences between what was
@@ -123,6 +125,10 @@ returns `""` when any of these holds:
 
 Otherwise it returns `insertion.slice(queryTerm.length)`, plus `" "` when `item.shouldAddSpace` and
 `autocomplete.insertSpaceAutomatically` are both true. It strips a trailing `{cursor}`.
+
+`sendInlineSuggestion(state)` does the sending. It does nothing unless the session id is known and the
+`inline.source` setting (`SETTINGS.INLINE_SOURCE`) is `specs` or `history-specs`, so the popup adds no IPC traffic
+when spec ghost text is off.
 
 Call site: in the `updateSuggestions` middleware, after every `set` (both the early-return path and the
 recompute path). The popup computes the suffix from `suggestions[0]` of the new state (the top suggestion, not the

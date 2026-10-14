@@ -19,6 +19,7 @@ use tab_proto::fig::{
     PositionWindowRequest,
     RunProcessRequest,
     ServerOriginatedMessage,
+    SetInlineSuggestionRequest,
     UpdateApplicationPropertiesRequest,
     WindowFocusRequest,
 };
@@ -50,6 +51,10 @@ pub trait EventHandler {
     }
 
     async fn insert_text(&self, request: Wrapped<Self::Ctx, InsertTextRequest>) -> RequestResult {
+        RequestResult::unimplemented(request.request)
+    }
+
+    async fn set_inline_suggestion(&self, request: Wrapped<Self::Ctx, SetInlineSuggestionRequest>) -> RequestResult {
         RequestResult::unimplemented(request.request)
     }
 
@@ -181,6 +186,7 @@ where
                 PositionWindowRequest,
                 ReadFileRequest,
                 RunProcessRequest,
+                SetInlineSuggestionRequest,
                 SetProfileRequest,
                 TelemetryPageRequest,
                 TelemetryTrackRequest,
@@ -197,6 +203,7 @@ where
             match submessage {
                 // figterm
                 InsertTextRequest(request) => event_handler.insert_text(request!(request)).await,
+                SetInlineSuggestionRequest(request) => event_handler.set_inline_suggestion(request!(request)).await,
                 // fs
                 ReadFileRequest(request) => fs::read_file(request, ctx.env(), ctx.fs()).await,
                 WriteFileRequest(request) => fs::write_file(request, ctx.env(), ctx.fs()).await,

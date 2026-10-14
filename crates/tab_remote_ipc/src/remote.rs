@@ -19,6 +19,7 @@ use tab_proto::figterm::{
     InsertTextRequest,
     InterceptRequest,
     SetBufferRequest,
+    SetInlineSuggestionRequest,
     intercept_request,
 };
 use tab_proto::local::ShellContext;
@@ -424,6 +425,10 @@ async fn handle_commands(
             FigtermCommand::SetBuffer { text, cursor_position } => {
                 (Request::SetBuffer(SetBufferRequest { text, cursor_position }), None)
             },
+            FigtermCommand::SetInlineSuggestion { buffer, suffix } => (
+                Request::SetInlineSuggestion(SetInlineSuggestionRequest { buffer, suffix }),
+                None,
+            ),
             FigtermCommand::RunProcess {
                 channel,
                 executable,

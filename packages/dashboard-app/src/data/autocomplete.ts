@@ -150,6 +150,21 @@ const autocompleteSettings: PrefSection[] = [
     ],
   },
   {
+    title: "Inline suggestions",
+    properties: [
+      {
+        id: "inline.source",
+        title: "Inline suggestions",
+        description:
+          "Grey suggestions on the command line from history and/or completion specs. zsh only. Applies to new terminal windows. Press → to accept.",
+        type: "select",
+        default: "off",
+        options: ["off", "history", "specs", "history-specs"],
+        popular: false,
+      },
+    ],
+  },
+  {
     title: "Appearance",
     // withPreview: true,
     properties: [

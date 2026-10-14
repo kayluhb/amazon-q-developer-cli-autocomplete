@@ -79,6 +79,8 @@ import {
   RunProcessRequest,
   RunProcessRequestSchema,
   RunProcessResponse,
+  SetInlineSuggestionRequest,
+  SetInlineSuggestionRequestSchema,
   SetProfileRequest,
   SetProfileRequestSchema,
   TelemetryPageRequest,
@@ -1198,6 +1200,35 @@ export async function sendSetProfileRequest(
             reject(
               Error(
                 `Invalid response '${response?.case}' for 'SetProfileRequest'`,
+              ),
+            );
+        }
+      },
+    );
+  });
+}
+
+export async function sendSetInlineSuggestionRequest(
+  request: Omit<SetInlineSuggestionRequest, "$typeName" | "$unknown">,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    sendMessage(
+      {
+        case: "setInlineSuggestionRequest",
+        value: create(SetInlineSuggestionRequestSchema, request),
+      },
+      (response) => {
+        switch (response?.case) {
+          case "success":
+            resolve();
+            break;
+          case "error":
+            reject(Error(response.value));
+            break;
+          default:
+            reject(
+              Error(
+                `Invalid response '${response?.case}' for 'SetInlineSuggestionRequest'`,
               ),
             );
         }

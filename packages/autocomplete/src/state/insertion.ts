@@ -159,7 +159,7 @@ const escapeInsertion = (str: string, isFolder: boolean) => {
   return `'${str.replace(/'/g, "'\"'\"'")}'`;
 };
 
-const getFullInsertion = (
+export const getFullInsertion = (
   item: Suggestion,
   searchTerm: string,
   fuzzySearch: boolean,

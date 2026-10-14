@@ -1,3 +1,5 @@
+pub mod inline_plugin;
+
 use std::fs::File;
 use std::io::{
     ErrorKind,

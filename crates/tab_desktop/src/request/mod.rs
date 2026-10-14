@@ -35,6 +35,7 @@ use tab_proto::fig::{
     PositionWindowRequest,
     RunProcessRequest,
     ServerOriginatedMessage,
+    SetInlineSuggestionRequest,
     UpdateApplicationPropertiesRequest,
     WindowFocusRequest,
 };
@@ -129,6 +130,10 @@ impl<'a> tab_desktop_api::handler::EventHandler for EventHandler<'a> {
 
     async fn insert_text(&self, request: Wrapped<Self::Ctx, InsertTextRequest>) -> RequestResult {
         figterm::insert_text(request.request, request.context.figterm_state).await
+    }
+
+    async fn set_inline_suggestion(&self, request: Wrapped<Self::Ctx, SetInlineSuggestionRequest>) -> RequestResult {
+        figterm::set_inline_suggestion(request.request, request.context.figterm_state).await
     }
 
     async fn aggregate_session_metric_action(

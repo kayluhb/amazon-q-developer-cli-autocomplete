@@ -30,6 +30,7 @@ use super::internal::should_figterm_launch::should_figterm_launch_exit_status;
 use crate::util::app_path_from_bundle_id;
 
 const SHELL_INTEGRATIONS_ENABLED_STATE_KEY: &str = "shell-integrations.enabled";
+const INLINE_SOURCE_SETTINGS_KEY: &str = "inline.source";
 
 static IS_SNAPSHOT_TEST: LazyLock<bool> = LazyLock::new(|| tab_os_shim::Env::new().q_init_snapshot_test());
 
@@ -211,6 +212,13 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
         }
     }
 
+    if when == &When::Post && shell == &Shell::Zsh && rcfile.as_deref() != Some("zprofile") && !*IS_SNAPSHOT_TEST {
+        let inline_source = tab_settings::settings::get_string_opt(INLINE_SOURCE_SETTINGS_KEY);
+        if let Some(source) = inline_plugin_source(inline_source.as_deref()) {
+            to_source.push(source);
+        }
+    }
+
     if when == &When::Post
         && !tab_integrations::input_method::InputMethod::default()
             .is_enabled()
@@ -227,6 +235,28 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
     }
 
     Ok(to_source.join("\n"))
+}
+
+/// The zsh code that loads the inline suggestions plugin for an `inline.source` setting, or `None`
+/// when it is off
+fn inline_plugin_source(inline_source: Option<&str>) -> Option<String> {
+    let strategy = match inline_source? {
+        "history" => "match_prev_cmd history",
+        "specs" => "specs",
+        "history-specs" => "match_prev_cmd history specs",
+        _ => return None,
+    };
+
+    Some(guard_source(
+        &Shell::Zsh,
+        false,
+        "TAB_INLINE_PLUGIN_SOURCED",
+        GuardAssignment::AfterSourcing,
+        format!(
+            "TAB_AUTOSUGGEST_STRATEGY=({strategy})\n{}",
+            tab_integrations::shell::inline_plugin::zsh_script()
+        ),
+    ))
 }
 
 fn shell_integrations_disabled_code(shell: Shell) -> String {
@@ -281,6 +311,27 @@ mod tests {
 
         let output = child.wait_with_output().unwrap();
         String::from_utf8(output.stdout).unwrap()
+    }
+
+    #[test]
+    fn test_inline_plugin_source() {
+        for off in [None, Some("off"), Some(""), Some("bogus")] {
+            assert_eq!(inline_plugin_source(off), None, "{off:?}");
+        }
+
+        for (source, strategy) in [
+            ("history", "TAB_AUTOSUGGEST_STRATEGY=(match_prev_cmd history)\n"),
+            ("specs", "TAB_AUTOSUGGEST_STRATEGY=(specs)\n"),
+            (
+                "history-specs",
+                "TAB_AUTOSUGGEST_STRATEGY=(match_prev_cmd history specs)\n",
+            ),
+        ] {
+            let code = inline_plugin_source(Some(source)).unwrap();
+            assert!(code.starts_with("if [ -z \"${TAB_INLINE_PLUGIN_SOURCED}\" ]; then\n"));
+            assert!(code.contains(strategy), "{source}");
+            assert!(code.contains("_tab_autosuggest_strategy_specs()"));
+        }
     }
 
     #[test]

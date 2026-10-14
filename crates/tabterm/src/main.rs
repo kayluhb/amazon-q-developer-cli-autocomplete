@@ -1,6 +1,7 @@
 pub mod cli;
 mod event_handler;
 pub mod history;
+mod inline_suggestion;
 pub mod input;
 pub mod interceptor;
 pub mod ipc;

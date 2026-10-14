@@ -47,6 +47,9 @@ export enum SETTINGS {
 
   FIRST_COMMAND_COMPLETION = "autocomplete.firstTokenCompletion",
 
+  // Inline (ghost text) suggestions: one of "off", "history", "specs", "history-specs"
+  INLINE_SOURCE = "inline.source",
+
   TELEMETRY_ENABLED = "telemetry.enabled",
 }
 

@@ -46,6 +46,7 @@ message ClientOriginatedMessage {
     GetPlatformInfoRequest get_platform_info_request = 152;
     ListAvailableProfilesRequest list_available_profiles_request = 155;
     SetProfileRequest set_profile_request = 156;
+    SetInlineSuggestionRequest set_inline_suggestion_request = 157;
   }
 
   reserved 115;
@@ -180,6 +181,15 @@ message InsertTextRequest {
     string text = 1;
     TextUpdate update = 2;
   }
+  optional string terminal_session_id = 3;
+}
+
+// Sets the inline (ghost text) suggestion for a terminal session
+message SetInlineSuggestionRequest {
+  // The edit buffer the suggestion was computed for
+  string buffer = 1;
+  // The text to show after the buffer, empty for no suggestion
+  string suffix = 2;
   optional string terminal_session_id = 3;
 }
 

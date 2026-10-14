@@ -244,6 +244,10 @@ pub enum FigtermCommand {
         text: String,
         cursor_position: Option<u64>,
     },
+    SetInlineSuggestion {
+        buffer: String,
+        suffix: String,
+    },
     RunProcess {
         channel: oneshot::Sender<hostbound::response::Response>,
         executable: String,

@@ -1,4 +1,7 @@
-use tab_proto::fig::InsertTextRequest;
+use tab_proto::fig::{
+    InsertTextRequest,
+    SetInlineSuggestionRequest,
+};
 use tab_remote_ipc::figterm::{
     FigtermCommand,
     FigtermState,
@@ -33,7 +36,23 @@ pub async fn insert_text(request: InsertTextRequest, state: &FigtermState) -> Re
         None => return RequestResult::error("InsertTextRequest expects a request type"),
     };
 
-    let uuid_str = request.terminal_session_id.ok_or("terminal_session_id is required")?;
+    send_figterm_command(request.terminal_session_id, figterm_command, state)
+}
+
+pub async fn set_inline_suggestion(request: SetInlineSuggestionRequest, state: &FigtermState) -> RequestResult {
+    let figterm_command = FigtermCommand::SetInlineSuggestion {
+        buffer: request.buffer,
+        suffix: request.suffix,
+    };
+    send_figterm_command(request.terminal_session_id, figterm_command, state)
+}
+
+fn send_figterm_command(
+    terminal_session_id: Option<String>,
+    figterm_command: FigtermCommand,
+    state: &FigtermState,
+) -> RequestResult {
+    let uuid_str = terminal_session_id.ok_or("terminal_session_id is required")?;
     let uuid = Uuid::parse_str(&uuid_str).map_err(|err| format!("terminal_session_id is not a valid UUID: {err}"))?;
 
     match state.with(&uuid, |session| session.sender.clone()) {

@@ -6,7 +6,10 @@ import {
   HistoryUpdatedNotification,
   TextUpdateSchema,
 } from "@tab/proto/fig";
-import { sendInsertTextRequest } from "./requests.js";
+import {
+  sendInsertTextRequest,
+  sendSetInlineSuggestionRequest,
+} from "./requests.js";
 import { _subscribe, NotificationResponse } from "./notifications.js";
 import { create } from "@bufbuild/protobuf";
 
@@ -94,4 +97,12 @@ export async function insert(
     terminalSessionId,
     type: { case: "text", value: text },
   });
+}
+
+export function setInlineSuggestion(
+  buffer: string,
+  suffix: string,
+  terminalSessionId?: string,
+) {
+  return sendSetInlineSuggestionRequest({ buffer, suffix, terminalSessionId });
 }
