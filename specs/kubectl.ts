@@ -241,6 +241,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -315,6 +316,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
             {
               name: "--verb",
@@ -366,6 +368,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -439,6 +442,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -466,6 +470,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -539,6 +544,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -561,6 +567,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -630,6 +637,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -652,6 +660,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -721,6 +730,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -761,6 +771,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -820,6 +831,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -842,6 +854,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -916,6 +929,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: [
@@ -941,6 +955,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -993,6 +1008,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -1015,6 +1031,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -1085,6 +1102,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -1113,6 +1131,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -1179,6 +1198,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
             {
               name: "--value",
@@ -1206,6 +1226,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -1270,6 +1291,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -1292,6 +1314,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -1360,6 +1383,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
             {
               name: "--verb",
@@ -1410,6 +1434,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -1494,6 +1519,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -1547,6 +1573,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--field-manager",
@@ -1607,6 +1634,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -1634,6 +1662,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--field-manager",
@@ -1713,6 +1742,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -1744,6 +1774,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--field-manager",
@@ -1803,6 +1834,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -1837,6 +1869,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--field-manager",
@@ -1897,6 +1930,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -1919,6 +1953,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--external-name",
@@ -1984,6 +2019,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -2006,6 +2042,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--field-manager",
@@ -2066,6 +2103,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -2088,6 +2126,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["none", "server", "client"],
                     default: "none",
                   },
+                  requiresSeparator: true,
                 },
                 {
                   name: "--field-manager",
@@ -2154,6 +2193,7 @@ const completionSpec: Fig.Spec = {
                     suggestions: ["strict", "warn", "ignore"],
                     default: "strict",
                   },
+                  requiresSeparator: true,
                 },
               ],
               args: { name: "NAME" },
@@ -2178,6 +2218,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -2230,6 +2271,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
           ],
           args: { name: "NAME" },
@@ -2328,6 +2370,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--edit",
@@ -2414,6 +2457,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["strict", "warn", "ignore"],
             default: "strict",
           },
+          requiresSeparator: true,
         },
         {
           name: "--windows-line-endings",
@@ -2447,6 +2491,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--external-ip",
@@ -2621,6 +2666,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["background", "orphan", "foreground"],
             default: "background",
           },
+          requiresSeparator: true,
         },
         {
           name: "--command",
@@ -2641,6 +2687,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--env",
@@ -2847,6 +2894,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: ["-e", "--env"],
@@ -2984,6 +3032,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -3088,6 +3137,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -3196,6 +3246,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -3286,6 +3337,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -3378,6 +3430,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: "--field-manager",
@@ -3745,6 +3798,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["strict", "warn", "ignore"],
             default: "strict",
           },
+          requiresSeparator: true,
         },
         {
           name: "--windows-line-endings",
@@ -3780,6 +3834,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["background", "orphan", "foreground"],
             default: "background",
           },
+          requiresSeparator: true,
         },
         {
           name: "--dry-run",
@@ -3790,6 +3845,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-selector",
@@ -4236,6 +4292,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: ["-f", "--filename"],
@@ -4334,6 +4391,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: ["-f", "--filename"],
@@ -4439,6 +4497,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",
@@ -4848,6 +4907,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: ["-l", "--selector"],
@@ -4871,6 +4931,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: ["-l", "--selector"],
@@ -4910,6 +4971,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--force",
@@ -4971,6 +5033,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",
@@ -5029,6 +5092,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["strict", "warn", "ignore"],
             default: "strict",
           },
+          requiresSeparator: true,
         },
       ],
       args: [
@@ -5259,7 +5323,7 @@ const completionSpec: Fig.Spec = {
           name: "--address",
           description:
             "Addresses to listen on (comma separated). Only accepts IP addresses or localhost as a value. When localhost is supplied, kubectl will try to bind on both 127.0.0.1 and ::1 and will fail if neither of these addresses are available to bind",
-          args: { name: "address", default: "[localhost]" },
+          args: { name: "address", default: "localhost" },
           isRepeatable: true,
         },
         {
@@ -5459,6 +5523,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: ["-f", "--filename"],
@@ -5948,6 +6013,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["strict", "warn", "ignore"],
                 default: "strict",
               },
+              requiresSeparator: true,
             },
             {
               name: "--windows-line-endings",
@@ -5984,6 +6050,7 @@ const completionSpec: Fig.Spec = {
                 suggestions: ["none", "server", "client"],
                 default: "none",
               },
+              requiresSeparator: true,
             },
             {
               name: ["-f", "--filename"],
@@ -6096,6 +6163,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["background", "orphan", "foreground"],
             default: "background",
           },
+          requiresSeparator: true,
         },
         {
           name: "--dry-run",
@@ -6106,6 +6174,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",
@@ -6232,6 +6301,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["strict", "warn", "ignore"],
             default: "strict",
           },
+          requiresSeparator: true,
         },
         {
           name: "--wait",
@@ -6258,6 +6328,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",
@@ -6370,6 +6441,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["background", "orphan", "foreground"],
             default: "background",
           },
+          requiresSeparator: true,
         },
         {
           name: "--dry-run",
@@ -6380,6 +6452,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",
@@ -6479,6 +6552,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["strict", "warn", "ignore"],
             default: "strict",
           },
+          requiresSeparator: true,
         },
         {
           name: "--wait",
@@ -6691,6 +6765,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",
@@ -6814,6 +6889,7 @@ const completionSpec: Fig.Spec = {
             suggestions: ["none", "server", "client"],
             default: "none",
           },
+          requiresSeparator: true,
         },
         {
           name: "--field-manager",

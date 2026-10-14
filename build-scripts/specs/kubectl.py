@@ -2,9 +2,7 @@
 
     git -C build/autocomplete-specs show HEAD:src/kubectl.ts > /tmp/kubectl.upstream.ts
     python3 build-scripts/specs/kubectl.py [path/to/kubectl] /tmp/kubectl.upstream.ts > specs/kubectl.ts
-    cp specs/kubectl.ts build/autocomplete-specs/src/kubectl.ts
-    (cd build/autocomplete-specs && npx prettier --write src/kubectl.ts)  # withfig's prettier config
-    cp build/autocomplete-specs/src/kubectl.ts specs/kubectl.ts
+    npx prettier --write specs/kubectl.ts --parser typescript
 
 It walks `kubectl <path> --help` for every command (plus `kubectl options` for the global flags).
 Upstream's hand-written generators are copied over verbatim; positional args can't be parsed
@@ -270,6 +268,12 @@ def choices(description: str) -> list[str] | None:
     return None
 
 
+# Flags with a value used when given alone (cobra's NoOptDefVal), so kubectl only reads
+# `--flag=value`: `--cascade orphan` means `--cascade` plus a resource named orphan.
+# Help output doesn't say which flags these are.
+NO_OPT_DEFAULT_FLAGS = {"--cascade", "--dry-run", "--validate"}
+
+
 def is_bool(flag: dict) -> bool:
     return flag["default"] in {"true", "false"}
 
@@ -291,10 +295,12 @@ def option(flag: dict, path: list[str], persistent: bool = False) -> dict:
             args.update(override)
         elif values := choices(flag["description"]):
             args["suggestions"] = values
-        default = flag["default"].strip("'")
-        if default and default != "[]" and flag["long"] != "--cache-dir":
+        default = flag["default"].strip("'").removeprefix("[").removesuffix("]")
+        if default and flag["long"] != "--cache-dir":
             args["default"] = default
         out["args"] = args
+    if flag["long"] in NO_OPT_DEFAULT_FLAGS:
+        out["requiresSeparator"] = True
     if flag["default"].startswith("["):
         out["isRepeatable"] = True
     return out
