@@ -590,57 +590,27 @@ impl DoctorCheck for FigIntegrationsCheck {
 
     async fn check(&self, _: &()) -> Result<(), DoctorError> {
         if let Ok("WarpTerminal") = std::env::var("TERM_PROGRAM").as_deref() {
-            return Err(DoctorError::Error {
-                reason: "WarpTerminal is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("WarpTerminal is not supported"));
         }
 
         if std::env::var_os("__PWSH_LOGIN_CHECKED").is_some() {
-            return Err(DoctorError::Error {
-                reason: "Powershell is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("Powershell is not supported"));
         }
 
         if std::env::var_os("INSIDE_EMACS").is_some() {
-            return Err(DoctorError::Error {
-                reason: "Emacs is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("Emacs is not supported"));
         }
 
         if let Ok("com.vandyke.SecureCRT") = std::env::var("__CFBundleIdentifier").as_deref() {
-            return Err(DoctorError::Error {
-                reason: "SecureCRT is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("SecureCRT is not supported"));
         }
 
         if std::env::var_os(PROCESS_LAUNCHED_BY_TAB).is_some() {
-            return Err(DoctorError::Error {
-                reason: format!("{PRODUCT_NAME} can not run in a process it launched").into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(doctor_error!("{PRODUCT_NAME} can not run in a process it launched"));
         }
 
         if tab_util::system_info::in_ci() {
-            return Err(DoctorError::Error {
-                reason: "Doctor can not run in CI".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("Doctor can not run in CI"));
         }
 
         // Check that ~/.local/bin/tabterm exists
