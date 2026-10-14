@@ -7,7 +7,11 @@ upgrade:
 bq's help is absl-style (`bq --help` for global flags, `bq help <command>` for each command), so
 the whole tree is crawled from it. The Cloud SDK wrapper refuses `bq help init`, so the crawl runs
 the SDK's platform/bq/bq.py directly. Positional arguments aren't machine-readable in the help,
-so they live in ARGS below; check them against each command's "Usage:" text after an upgrade."""
+so they live in ARGS below; check them against each command's "Usage:" text after an upgrade.
+
+The output depends on the machine: it crawls whichever `bq` is first on PATH (last generated from
+Google Cloud SDK 583.0.0, bq 2.1.38). absl prints defaults with ~ expanded to $HOME, so the home
+directory is written back as ~ to keep the spec the same for every user."""
 
 import json
 import os
@@ -59,8 +63,9 @@ ARGS = {
         {"name": "schema", "isOptional": True, "description": "JSON schema file or inline schema", **FILE},
     ],
     "ls": {**IDENTIFIER, "isOptional": True},
+    # Optional: mk --reservation_assignment and --transfer_config take only flags
     "mk": [
-        IDENTIFIER,
+        {**IDENTIFIER, "isOptional": True},
         {"name": "schema", "isOptional": True, "description": "JSON schema file or inline schema", **FILE},
     ],
     "mkdef": [
@@ -99,6 +104,11 @@ FILE_FLAGS = {
 # Typos in bq's help text, which the repo's typos check would reject. Written as regexes so
 # the misspellings don't appear literally here either.
 TYPOS = {r"res[p]resents": "represents", r"ses[s]on\b": "session"}
+
+# Hand-written descriptions where bq's first sentence says nothing useful
+DESCRIPTIONS = {
+    "--use_legacy_sql": "Use Legacy SQL; if omitted, the server picks the dialect from the query",
+}
 
 FLAG_RE = re.compile(r"(?:(-\w+),)?--(\[no\])?(\w+):\s?(.*)")
 
@@ -150,7 +160,7 @@ def flag_to_option(f):
         if not m:
             break
         if m.group(1) is not None:
-            default = m.group(1)
+            default = m.group(1).replace(os.path.expanduser("~"), "~")
         body = body[: m.start()]
     repeatable = "repeat this option to specify a list of values" in body
     body = re.sub(r";?\s*repeat this option to specify a list of values", "", body)
@@ -160,7 +170,7 @@ def flag_to_option(f):
     if m:
         choices = [c for c in m.group(1).split("|") if c]
         body = re.sub(r"^<[^>]*>\s*:\s*", "", body)
-    opt["description"] = first_sentence(body) or f["name"]
+    opt["description"] = DESCRIPTIONS.get(long) or first_sentence(body) or f["name"]
     if repeatable:
         opt["isRepeatable"] = True
     if not f["bool"]:

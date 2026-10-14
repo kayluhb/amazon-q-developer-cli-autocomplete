@@ -1789,7 +1789,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--use_legacy_sql",
           description:
-            "The choice of using Legacy SQL for the query is optional",
+            "Use Legacy SQL; if omitted, the server picks the dialect from the query",
         },
         {
           name: "--nouse_legacy_sql",
@@ -1888,6 +1888,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "identifier",
           description: "Resource identifier, e.g. [project:]dataset.table",
+          isOptional: true,
         },
         {
           name: "schema",
@@ -2473,7 +2474,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--use_legacy_sql",
           description:
-            "The choice of using Legacy SQL for the query is optional",
+            "Use Legacy SQL; if omitted, the server picks the dialect from the query",
         },
         {
           name: "--nouse_legacy_sql",
@@ -3620,7 +3621,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--use_legacy_sql",
           description:
-            "The choice of using Legacy SQL for the query is optional",
+            "Use Legacy SQL; if omitted, the server picks the dialect from the query",
         },
         {
           name: "--nouse_legacy_sql",
@@ -3738,7 +3739,7 @@ const completionSpec: Fig.Spec = {
       description: "Path to configuration file",
       args: {
         name: "bigqueryrc",
-        default: "/Users/calebbrown/.bigqueryrc",
+        default: "~/.bigqueryrc",
         template: "filepaths",
       },
       isPersistent: true,
