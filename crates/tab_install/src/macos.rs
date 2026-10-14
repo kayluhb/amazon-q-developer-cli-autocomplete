@@ -1,6 +1,7 @@
 use std::ffi::CStr;
 use std::path::Path;
 
+use tab_integrations::vscode;
 use tab_util::consts::APP_BUNDLE_ID;
 use tab_util::directories;
 use tokio::fs;
@@ -94,18 +95,8 @@ pub async fn uninstall_terminal_integrations() {
         }
 
         // Delete VSCode integration
-        for folder in &[
-            ".vscode/extensions",
-            ".vscode-insiders/extensions",
-            ".vscode-oss/extensions",
-            ".cursor/extensions",
-            ".cursor-nightly/extensions",
-        ] {
-            let folder = home.join(folder);
-            for prefix in &[
-                "withfig.fig-",
-                "amazonwebservices.codewhisperer-for-command-line-companion-",
-            ] {
+        for folder in vscode::all_extensions_dirs(&home) {
+            for prefix in [vscode::OLD_EXTENSION_PREFIX, vscode::EXTENSION_PREFIX] {
                 remove_in_dir_with_prefix_unless(&folder, prefix, |_| false).await;
             }
         }
