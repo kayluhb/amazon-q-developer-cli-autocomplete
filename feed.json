@@ -13,6 +13,52 @@
     {
       "type": "release",
       "date": "2026-10-14",
+      "version": "2.3.0",
+      "title": "Version 2.3.0",
+      "description": "Security fixes for completion specs, shell integration, IPC and local files. Tab no longer loads completion specs from project folders by default.",
+      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "changes": [
+        {
+          "type": "changed",
+          "description": "Tab no longer loads completion specs from `.fig/autocomplete/build` in project folders by default, because these specs can run commands. To load them, turn on "Load completion specs from project folders" in the dashboard."
+        },
+        {
+          "type": "security",
+          "description": "Tab ignores shell integration sequences from program output that do not have the session ID. A program can no longer start a false prompt or change the shell state while a command runs."
+        },
+        {
+          "type": "security",
+          "description": "Completion spec generators use only absolute `PATH` entries. A program in the current folder can no longer replace a generator command."
+        },
+        {
+          "type": "security",
+          "description": "Tab quotes shell variables and SSH config values, and writes dotfiles and SSH config atomically. `tab debug fix-permissions` does not follow symlinks."
+        },
+        {
+          "type": "security",
+          "description": "Tab refuses IPC messages above 16 MiB and does not log the handshake secret or key events. The multiplexer WebSocket needs a token for each launch."
+        },
+        {
+          "type": "security",
+          "description": "`tab diagnostic` does not show environment variables that can contain your commands."
+        },
+        {
+          "type": "fixed",
+          "description": "The VS Code extension does not copy workspace settings into your user settings. It also starts one `tab` process for each burst of selection changes."
+        },
+        {
+          "type": "fixed",
+          "description": "The input method starts after it is installed."
+        },
+        {
+          "type": "fixed",
+          "description": "`tab debug sample` uses the correct process ID."
+        }
+      ]
+    },
+    {
+      "type": "release",
+      "date": "2026-10-14",
       "version": "2.2.0",
       "title": "Version 2.2.0",
       "description": "Grey inline suggestions on the zsh command line, from your shell history and the bundled completion specs. They work offline and are off by default.",
