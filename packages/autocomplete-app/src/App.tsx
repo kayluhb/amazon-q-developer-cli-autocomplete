@@ -419,7 +419,7 @@ function App() {
             type="button"
             className="text-xs underline"
             onClick={() => {
-              Settings.set("autocomplete.developerModeNPM", false);
+              Settings.set(SETTINGS.DEV_MODE_NPM, false);
             }}
           >
             Click to disable
