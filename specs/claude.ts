@@ -1,14 +1,14 @@
 // Completion spec for Claude Code (`claude`), written against v2.1.x.
 // Not part of withfig/autocomplete: build-scripts/build.py copies it into the specs source tree.
 
-const MODELS: Fig.Suggestion[] = [
+const models: Fig.Suggestion[] = [
   { name: "fable", description: "Latest Fable model" },
   { name: "opus", description: "Latest Opus model" },
   { name: "sonnet", description: "Latest Sonnet model" },
   { name: "haiku", description: "Latest Haiku model" },
 ];
 
-const SCOPES = ["local", "user", "project"];
+const scopeNames = ["local", "user", "project"];
 
 // Claude Code stores each project's transcripts in ~/.claude/projects/<cwd with
 // every non-alphanumeric character replaced by "-">/<session id>.jsonl
@@ -58,11 +58,16 @@ const mcpServerGenerator: Fig.Generator = {
       ["project", project.mcpServers],
       ["user", config.mcpServers],
     ];
-    return scopes.flatMap(([scope, servers]) =>
-      Object.keys(servers ?? {}).map((name) => ({
-        name,
-        description: `MCP server (${scope})`,
-      }))
+    // .mcp.json comes from the repo, and the engine does not escape ; $ or newlines on insert
+    const safeName = /^[\w.-]+$/;
+    return scopes.reduce<Fig.Suggestion[]>(
+      (suggestions, [scope, servers]) => [
+        ...suggestions,
+        ...Object.keys(servers ?? {})
+          .filter((name) => safeName.test(name))
+          .map((name) => ({ name, description: `MCP server (${scope})` })),
+      ],
+      []
     );
   },
 };
@@ -72,9 +77,17 @@ const pluginGenerator: Fig.Generator = {
   postProcess: (out) => {
     try {
       return JSON.parse(out).map(
-        (plugin: { id: string; version: string; enabled: boolean }) => ({
-          name: plugin.id,
-          description: `${plugin.version}${plugin.enabled ? "" : " (disabled)"}`,
+        ({
+          id,
+          version,
+          enabled,
+        }: {
+          id: string;
+          version: string;
+          enabled: boolean;
+        }) => ({
+          name: id,
+          description: `${version}${enabled ? "" : " (disabled)"}`,
         })
       );
     } catch {
@@ -88,14 +101,19 @@ const backgroundSessionGenerator: Fig.Generator = {
   postProcess: (out) => {
     try {
       return JSON.parse(out).map(
-        (session: {
+        ({
+          id,
+          name,
+          state,
+          cwd,
+        }: {
           id: string;
           name?: string;
           state: string;
           cwd: string;
         }) => ({
-          name: session.id,
-          description: `${session.name ?? session.cwd} (${session.state})`,
+          name: id,
+          description: `${name ?? cwd} (${state})`,
         })
       );
     } catch {
@@ -112,7 +130,7 @@ const helpOption: Fig.Option = {
 const scopeOption: Fig.Option = {
   name: ["-s", "--scope"],
   description: "Configuration scope",
-  args: { name: "scope", suggestions: SCOPES },
+  args: { name: "scope", suggestions: scopeNames },
 };
 
 const jsonOption: Fig.Option = {
@@ -123,6 +141,17 @@ const jsonOption: Fig.Option = {
 const yesOption: Fig.Option = {
   name: ["-y", "--yes"],
   description: "Skip confirmation",
+};
+
+const clientSecretOption: Fig.Option = {
+  name: "--client-secret",
+  description: "Prompt for OAuth client secret",
+};
+
+const acceptCommandOption: Fig.Option = {
+  name: "--accept-command",
+  description: "Accept a plugin command by hash",
+  args: { name: "sha256" },
 };
 
 const backgroundSessionArg: Fig.Arg = {
@@ -148,11 +177,6 @@ const effortLevels = ["low", "medium", "high", "xhigh", "max"];
 // Options shared by the interactive session and `claude agents`
 const sessionOptions: Fig.Option[] = [
   {
-    name: "--add-dir",
-    description: "Additional directories to allow tool access to",
-    args: { name: "directories", template: "folders", isVariadic: true },
-  },
-  {
     name: "--agent",
     description: "Agent for the current session",
     args: { name: "agent" },
@@ -173,14 +197,9 @@ const sessionOptions: Fig.Option[] = [
     args: { name: "level", suggestions: effortLevels },
   },
   {
-    name: "--mcp-config",
-    description: "Load MCP servers from JSON files or strings",
-    args: { name: "configs", template: "filepaths", isVariadic: true },
-  },
-  {
     name: "--model",
     description: "Model for the session",
-    args: { name: "model", suggestions: MODELS },
+    args: { name: "model", suggestions: models },
   },
   {
     name: "--permission-mode",
@@ -230,6 +249,18 @@ const completionSpec: Fig.Spec = {
       description: "Manage background agents",
       options: [
         ...sessionOptions,
+        {
+          name: "--add-dir",
+          description: "Additional directory for dispatched sessions",
+          args: { name: "directory", template: "folders" },
+          isRepeatable: true,
+        },
+        {
+          name: "--mcp-config",
+          description: "MCP server configuration for dispatched sessions",
+          args: { name: "config", template: "filepaths" },
+          isRepeatable: true,
+        },
         {
           name: "--all",
           description: "With --json: also include completed sessions",
@@ -305,15 +336,29 @@ const completionSpec: Fig.Spec = {
     {
       name: "gateway",
       description: "Run the enterprise auth/telemetry gateway",
-      options: [helpOption],
+      options: [
+        {
+          name: "--config",
+          description: "Path to gateway YAML config",
+          args: { name: "path", template: "filepaths" },
+        },
+        helpOption,
+      ],
     },
     {
       name: "import",
       description: "Import config from another AI coding agent",
-      args: { name: "source", isOptional: true },
+      args: {
+        name: "source",
+        isOptional: true,
+        suggestions: ["codex", "gemini", "cursor"],
+      },
       options: [
         { name: "--dry-run", description: "Show what would be imported" },
-        { name: "--yes", description: "Skip confirmation" },
+        {
+          name: "--yes",
+          description: "Skip the picker; --yes=<digest> on headless surfaces",
+        },
         helpOption,
       ],
     },
@@ -354,10 +399,7 @@ const completionSpec: Fig.Spec = {
               description: "OAuth client ID",
               args: { name: "clientId" },
             },
-            {
-              name: "--client-secret",
-              description: "Prompt for OAuth client secret",
-            },
+            clientSecretOption,
             {
               name: ["-e", "--env"],
               description: "Set environment variables (KEY=value)",
@@ -389,14 +431,7 @@ const completionSpec: Fig.Spec = {
           name: "add-json",
           description: "Add an MCP server with a JSON string",
           args: [{ name: "name" }, { name: "json" }],
-          options: [
-            {
-              name: "--client-secret",
-              description: "Prompt for OAuth client secret",
-            },
-            scopeOption,
-            helpOption,
-          ],
+          options: [clientSecretOption, scopeOption, helpOption],
         },
         {
           name: "get",
@@ -501,18 +536,53 @@ const completionSpec: Fig.Spec = {
         {
           name: ["init", "new"],
           description: "Create a new plugin",
-          options: [helpOption],
+          args: { name: "name" },
+          options: [
+            {
+              name: "--author",
+              description: "Author name",
+              args: { name: "name" },
+            },
+            {
+              name: "--author-email",
+              description: "Author email",
+              args: { name: "email" },
+            },
+            {
+              name: "--description",
+              description: "Manifest description",
+              args: { name: "text" },
+            },
+            {
+              name: ["-f", "--force"],
+              description: "Overwrite an existing .claude-plugin/",
+            },
+            {
+              name: "--with",
+              description: "Also scaffold these components",
+              args: {
+                name: "components",
+                isVariadic: true,
+                suggestions: [
+                  "skills",
+                  "agents",
+                  "hooks",
+                  "mcp",
+                  "lsp",
+                  "output-style",
+                  "channel",
+                ],
+              },
+            },
+            helpOption,
+          ],
         },
         {
           name: ["install", "i"],
           description: "Install a plugin",
           args: { name: "plugin" },
           options: [
-            {
-              name: "--accept-command",
-              description: "Accept a plugin command by hash",
-              args: { name: "sha256" },
-            },
+            acceptCommandOption,
             {
               name: "--config",
               description: "Set a plugin option",
@@ -582,9 +652,36 @@ const completionSpec: Fig.Spec = {
         {
           name: "tag",
           description: "Tag a plugin release",
+          args: { name: "path", isOptional: true, template: "folders" },
+          options: [
+            {
+              name: "--dry-run",
+              description: "Print the tag without creating it",
+            },
+            {
+              name: ["-f", "--force"],
+              description: "Skip the dirty-tree and existing-tag checks",
+            },
+            {
+              name: ["-m", "--message"],
+              description: "Tag annotation message (%s for the version)",
+              args: { name: "msg" },
+            },
+            { name: "--push", description: "Push the tag after creating it" },
+            {
+              name: "--remote",
+              description: "Remote to push to with --push",
+              args: { name: "name" },
+            },
+            helpOption,
+          ],
+        },
+        {
+          name: "test",
+          description: "Test a plugin",
+          args: { name: "dir", isOptional: true, template: "folders" },
           options: [helpOption],
         },
-        { name: "test", description: "Test a plugin", options: [helpOption] },
         {
           name: ["uninstall", "remove"],
           description: "Uninstall a plugin",
@@ -606,11 +703,7 @@ const completionSpec: Fig.Spec = {
           description: "Update a plugin",
           args: pluginArg,
           options: [
-            {
-              name: "--accept-command",
-              description: "Accept a plugin command by hash",
-              args: { name: "sha256" },
-            },
+            acceptCommandOption,
             jsonOption,
             scopeOption,
             yesOption,
@@ -620,7 +713,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "validate",
           description: "Validate a plugin",
-          args: { name: "path", isOptional: true, template: "folders" },
+          args: { name: "path", template: ["folders", "filepaths"] },
           options: [
             jsonOption,
             { name: "--strict", description: "Treat warnings as errors" },
@@ -660,7 +753,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--discard-unpushed",
           description: "Discard unpushed commits",
-          args: { name: "commit" },
+          args: { name: "commit@worktree-id" },
         },
         {
           name: "--force-remove-worktree",
@@ -704,6 +797,16 @@ const completionSpec: Fig.Spec = {
   ],
   options: [
     ...sessionOptions,
+    {
+      name: "--add-dir",
+      description: "Additional directories to allow tool access to",
+      args: { name: "directories", template: "folders", isVariadic: true },
+    },
+    {
+      name: "--mcp-config",
+      description: "Load MCP servers from JSON files or strings",
+      args: { name: "configs", template: "filepaths", isVariadic: true },
+    },
     {
       name: "--agents",
       description: "JSON object or file defining custom agents",
@@ -785,7 +888,7 @@ const completionSpec: Fig.Spec = {
     {
       name: "--fallback-model",
       description: "Fallback model(s) when the default is unavailable",
-      args: { name: "model", suggestions: MODELS },
+      args: { name: "model", suggestions: models },
     },
     {
       name: "--file",
@@ -906,6 +1009,8 @@ const completionSpec: Fig.Spec = {
     {
       name: "--tmux",
       description: "Create a tmux session for the worktree (with --worktree)",
+      requiresEquals: true,
+      args: { name: "mode", isOptional: true, suggestions: ["classic"] },
     },
     {
       name: "--tools",
