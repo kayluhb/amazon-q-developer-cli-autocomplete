@@ -6,19 +6,22 @@ from util import run_cmd, get_variants, Variant
 from const import DESKTOP_FUZZ_PACKAGE_NAME, DESKTOP_PACKAGE_NAME
 
 
-def run_clippy(
+def cargo_args(
+    command: List[str],
     variants: List[Variant],
-    features: Mapping[str, Sequence[str]] | None = None,
-    target: str | None = None,
-    fail_on_warn: bool = False,
-):
-    args = ["cargo", "clippy", "--locked", "--workspace"]
+    features: Mapping[str, Sequence[str]] | None,
+    target: str | None,
+    exclude_without_full: Sequence[str] = (DESKTOP_PACKAGE_NAME,),
+) -> List[str]:
+    """`cargo <command>` plus the target, the packages to exclude without the full variant, and the features."""
+    args = ["cargo", *command]
 
     if target:
         args.extend(["--target", target])
 
     if Variant.FULL not in variants:
-        args.extend(["--exclude", DESKTOP_PACKAGE_NAME, "--exclude", DESKTOP_FUZZ_PACKAGE_NAME])
+        for package in exclude_without_full:
+            args.extend(["--exclude", package])
 
     if features:
         args.extend(
@@ -28,9 +31,10 @@ def run_clippy(
             ]
         )
 
-    if fail_on_warn:
-        args.extend(["--", "-D", "warnings"])
+    return args
 
+
+def run_cargo(args: List[str]):
     run_cmd(
         args,
         env={
@@ -38,6 +42,26 @@ def run_clippy(
             **rust_env(release=False),
         },
     )
+
+
+def run_clippy(
+    variants: List[Variant],
+    features: Mapping[str, Sequence[str]] | None = None,
+    target: str | None = None,
+    fail_on_warn: bool = False,
+):
+    args = cargo_args(
+        ["clippy", "--locked", "--workspace"],
+        variants,
+        features,
+        target,
+        exclude_without_full=(DESKTOP_PACKAGE_NAME, DESKTOP_FUZZ_PACKAGE_NAME),
+    )
+
+    if fail_on_warn:
+        args.extend(["--", "-D", "warnings"])
+
+    run_cargo(args)
 
 
 def run_cargo_tests(
@@ -45,59 +69,33 @@ def run_cargo_tests(
     features: Mapping[str, Sequence[str]] | None = None,
     target: str | None = None,
 ):
-    args = ["cargo"]
-
-    args.extend(["build", "--tests", "--locked", "--workspace", "--exclude", DESKTOP_FUZZ_PACKAGE_NAME])
-
-    if target:
-        args.extend(["--target", target])
-
-    if Variant.FULL not in variants:
-        args.extend(["--exclude", DESKTOP_PACKAGE_NAME])
-
-    if features:
-        args.extend(
-            [
-                "--features",
-                ",".join(set(itertools.chain.from_iterable(features.values()))),
-            ]
+    run_cargo(
+        cargo_args(
+            ["build", "--tests", "--locked", "--workspace", "--exclude", DESKTOP_FUZZ_PACKAGE_NAME],
+            variants,
+            features,
+            target,
         )
-
-    run_cmd(
-        args,
-        env={
-            **os.environ,
-            **rust_env(release=False),
-        },
     )
-
-    args = ["cargo"]
 
     # Run all lib, bin, and integration tests. Required to exclude running doc tests.
-    args.extend(
-        ["test", "--locked", "--workspace", "--lib", "--bins", "--test", "*", "--exclude", DESKTOP_FUZZ_PACKAGE_NAME]
-    )
-
-    if target:
-        args.extend(["--target", target])
-
-    if Variant.FULL not in variants:
-        args.extend(["--exclude", DESKTOP_PACKAGE_NAME])
-
-    if features:
-        args.extend(
+    run_cargo(
+        cargo_args(
             [
-                "--features",
-                ",".join(set(itertools.chain.from_iterable(features.values()))),
-            ]
+                "test",
+                "--locked",
+                "--workspace",
+                "--lib",
+                "--bins",
+                "--test",
+                "*",
+                "--exclude",
+                DESKTOP_FUZZ_PACKAGE_NAME,
+            ],
+            variants,
+            features,
+            target,
         )
-
-    run_cmd(
-        args,
-        env={
-            **os.environ,
-            **rust_env(release=False),
-        },
     )
 
 
