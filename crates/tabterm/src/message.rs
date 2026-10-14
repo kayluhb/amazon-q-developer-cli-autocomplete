@@ -87,9 +87,12 @@ fn working_directory(path: Option<&str>, shell_state: &ShellState) -> PathBuf {
 
 /// Keep only absolute `PATH` entries. The working directory can come from terminal
 /// output, so relative entries must not resolve against it.
-fn absolute_path_entries(path: &str) -> std::ffi::OsString {
+fn absolute_path_entries(path: &str) -> String {
     let entries = std::env::split_paths(path).filter(|entry| entry.is_absolute());
-    std::env::join_paths(entries).unwrap_or_default()
+    std::env::join_paths(entries)
+        .ok()
+        .and_then(|joined| joined.into_string().ok())
+        .unwrap_or_default()
 }
 
 fn create_command(executable: impl AsRef<Path>, working_directory: impl AsRef<Path>) -> Command {
@@ -97,6 +100,14 @@ fn create_command(executable: impl AsRef<Path>, working_directory: impl AsRef<Pa
         .clone()
         .into_iter()
         .filter_map(|EnvironmentVariable { key, value }| value.map(|value| (key, value)))
+        // The child and its own children search PATH too, so filter it in the env.
+        .map(|(key, value)| match key.as_str() {
+            "PATH" => {
+                let value = absolute_path_entries(&value);
+                (key, value)
+            },
+            _ => (key, value),
+        })
         .collect::<Vec<_>>();
 
     let mut cmd = if executable.as_ref().is_absolute() {
@@ -104,8 +115,7 @@ fn create_command(executable: impl AsRef<Path>, working_directory: impl AsRef<Pa
     } else {
         let path = env
             .iter()
-            .find_map(|(key, value)| if key == "PATH" { Some(value.as_str()) } else { None })
-            .map(absolute_path_entries);
+            .find_map(|(key, value)| if key == "PATH" { Some(value.as_str()) } else { None });
 
         which::which_in(executable.as_ref(), path, working_directory.as_ref())
             .map_or_else(|_| Command::new(executable.as_ref()), Command::new)

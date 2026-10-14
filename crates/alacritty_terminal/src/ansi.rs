@@ -1175,6 +1175,8 @@ where
             b"697" => {
                 if let Some(fig_osc) = params.get(1) {
                     match *fig_osc {
+                        // Every shell integration sends NewCmd with a session ID.
+                        b"NewCmd" => trace!("Ignoring NewCmd without a session ID"),
                         b"StartPrompt" => self.handler.start_prompt(),
                         b"EndPrompt" => self.handler.end_prompt(),
                         b"PreExec" => self.handler.pre_exec(),

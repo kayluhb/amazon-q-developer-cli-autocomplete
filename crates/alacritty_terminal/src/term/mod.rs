@@ -816,15 +816,15 @@ impl<T> Term<T> {
             return;
         }
 
-        if let Some(remote_session_id) = session_id {
-            if let Some(local_session_id) = &self.shell_state.local_context.session_id {
-                trace!(
-                    "NewCmd check {remote_session_id} != {local_session_id}: {:?}",
-                    remote_session_id != local_session_id
-                );
-                if remote_session_id != local_session_id {
-                    return;
-                }
+        if let (Some(remote_session_id), Some(local_session_id)) =
+            (session_id, &self.shell_state.local_context.session_id)
+        {
+            trace!(
+                "NewCmd check {remote_session_id} != {local_session_id}: {:?}",
+                remote_session_id != local_session_id
+            );
+            if remote_session_id != local_session_id {
+                return;
             }
         }
 
