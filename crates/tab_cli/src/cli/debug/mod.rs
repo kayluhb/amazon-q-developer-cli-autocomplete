@@ -24,7 +24,6 @@ use crossterm::terminal::{
 };
 use eyre::{
     Context,
-    ContextCompat,
     Result,
     bail,
 };
@@ -451,15 +450,8 @@ impl DebugSubcommand {
                     bail!("sample is only supported on macOS");
                 }
 
-                let output = Command::new("lsappinfo")
-                    .args(["info", "-only", "-pid", "-app", APP_BUNDLE_ID])
-                    .output()?;
-                let pid_str = String::from_utf8(output.stdout)?;
-                let pid = pid_str
-                    .split('=')
-                    .nth(1)
-                    .context("Could not get desktop app pid")?
-                    .trim();
+                let pid =
+                    crate::util::get_running_app_info(APP_BUNDLE_ID, "pid").context("Could not get desktop app pid")?;
                 // A new 0700 directory in $TMPDIR. It stays so the user can send the file.
                 let outdir = tempfile::Builder::new().prefix("fig-sample-").tempdir()?.keep();
                 let outfile = outdir.join("fig-sample");
@@ -507,12 +499,7 @@ impl DebugSubcommand {
                             .spawn()?
                             .wait()?;
 
-                        launch_fig_desktop(LaunchArgs {
-                            wait_for_socket: true,
-                            open_dashboard: false,
-                            immediate_update: true,
-                            verbose: true,
-                        })?;
+                        launch_fig_desktop(LaunchArgs::default())?;
                     },
                     Some(AccessibilityAction::Reset) => {
                         quit_fig(true).await?;
@@ -523,12 +510,7 @@ impl DebugSubcommand {
                             .wait()?;
                     },
                     Some(AccessibilityAction::Prompt) => {
-                        launch_fig_desktop(LaunchArgs {
-                            wait_for_socket: true,
-                            open_dashboard: false,
-                            immediate_update: true,
-                            verbose: true,
-                        })?;
+                        launch_fig_desktop(LaunchArgs::default())?;
 
                         prompt_accessibility_command()
                             .await
@@ -697,12 +679,7 @@ impl DebugSubcommand {
                 }
             },
             Self::Devtools { app } => {
-                launch_fig_desktop(LaunchArgs {
-                    wait_for_socket: true,
-                    open_dashboard: false,
-                    immediate_update: true,
-                    verbose: true,
-                })?;
+                launch_fig_desktop(LaunchArgs::default())?;
 
                 devtools_command(match app {
                     App::Dashboard => tab_proto::local::devtools_command::Window::DevtoolsDashboard,

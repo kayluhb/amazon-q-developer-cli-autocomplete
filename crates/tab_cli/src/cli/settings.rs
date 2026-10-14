@@ -183,12 +183,7 @@ impl SettingsArgs {
                         return Ok(ExitCode::SUCCESS);
                     }
 
-                    launch_fig_desktop(LaunchArgs {
-                        wait_for_socket: true,
-                        open_dashboard: false,
-                        immediate_update: true,
-                        verbose: true,
-                    })?;
+                    launch_fig_desktop(LaunchArgs::default())?;
 
                     match open_ui_element(UiElement::Settings, None).await {
                         Ok(()) => Ok(ExitCode::SUCCESS),

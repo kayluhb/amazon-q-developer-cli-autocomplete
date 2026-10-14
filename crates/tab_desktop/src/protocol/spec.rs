@@ -15,33 +15,19 @@ use serde::{
 use tab_os_shim::Context;
 use tokio::sync::Mutex;
 use tracing::error;
-use wry::http::header::CONTENT_TYPE;
 use wry::http::{
-    HeaderValue,
     Request,
     Response,
-    StatusCode,
 };
 
+use super::util::{
+    mime_for_extension,
+    res_404,
+    res_ok,
+};
 use crate::webview::WindowId;
 
-const APPLICATION_JAVASCRIPT: HeaderValue = HeaderValue::from_static("application/javascript");
-
-fn res_404() -> Response<Cow<'static, [u8]>> {
-    Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .header(CONTENT_TYPE, "text/plain")
-        .body(b"Not Found".as_ref().into())
-        .unwrap()
-}
-
-fn res_ok(bytes: Vec<u8>, content_type: HeaderValue) -> Response<Cow<'static, [u8]>> {
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(CONTENT_TYPE, content_type)
-        .body(bytes.into())
-        .unwrap()
-}
+const APPLICATION_JAVASCRIPT: &str = "application/javascript";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -144,12 +130,13 @@ fn find_spec(dirs: &[PathBuf], relative: &str) -> Option<PathBuf> {
     dirs.iter().find_map(|dir| resolve(dir, relative))
 }
 
-fn content_type(path: &Path) -> HeaderValue {
+/// Specs are JavaScript unless the extension says otherwise.
+/// HTML stays JavaScript: the spec folders are user-writable, so a page
+/// there must not render under the spec origin.
+fn content_type(path: &Path) -> &'static str {
     match path.extension().and_then(|ext| ext.to_str()) {
-        Some("json") => HeaderValue::from_static("application/json"),
-        Some("png") => HeaderValue::from_static("image/png"),
-        Some("svg") => HeaderValue::from_static("image/svg+xml"),
-        _ => APPLICATION_JAVASCRIPT,
+        Some("js" | "html") | None => APPLICATION_JAVASCRIPT,
+        ext => mime_for_extension(ext).unwrap_or(APPLICATION_JAVASCRIPT),
     }
 }
 
@@ -160,22 +147,19 @@ pub async fn handle(
     _: WindowId,
 ) -> anyhow::Result<Response<Cow<'static, [u8]>>> {
     if request.uri().host() != Some("localhost") {
-        return Ok(res_404());
+        return res_404();
     }
 
     let path = request.uri().path();
     if path == "/index.json" {
         let index = merged_index_json(&ctx).await;
-        return Ok(res_ok(
-            serde_json::to_vec(&index)?,
-            "application/json".try_into().unwrap(),
-        ));
+        return res_ok(serde_json::to_vec(&index)?, mime::APPLICATION_JSON.as_ref());
     }
 
     let relative = path.strip_prefix('/').unwrap_or(path);
     match find_spec(&spec_dirs(&ctx), relative) {
-        Some(file) => Ok(res_ok(tokio::fs::read(&file).await?, content_type(&file))),
-        None => Ok(res_404()),
+        Some(file) => res_ok(tokio::fs::read(&file).await?, content_type(&file)),
+        None => res_404(),
     }
 }
 
@@ -263,5 +247,8 @@ mod tests {
         assert_eq!(content_type(Path::new("git.png")), "image/png");
         assert_eq!(content_type(Path::new("git.svg")), "image/svg+xml");
         assert_eq!(content_type(Path::new("git.js")), "application/javascript");
+        assert_eq!(content_type(Path::new("git")), "application/javascript");
+        assert_eq!(content_type(Path::new("git.html")), "application/javascript");
+        assert_eq!(content_type(Path::new("git.css")), "text/css; charset=utf-8");
     }
 }

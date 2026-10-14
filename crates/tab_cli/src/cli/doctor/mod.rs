@@ -56,8 +56,8 @@ use spinners::{
 };
 use tab_integrations::input_method::InputMethodError;
 use tab_integrations::shell::{
-    ShellExt,
     ShellIntegration,
+    all_shell_integrations,
 };
 use tab_integrations::ssh::SshIntegration;
 use tab_integrations::{
@@ -590,57 +590,27 @@ impl DoctorCheck for FigIntegrationsCheck {
 
     async fn check(&self, _: &()) -> Result<(), DoctorError> {
         if let Ok("WarpTerminal") = std::env::var("TERM_PROGRAM").as_deref() {
-            return Err(DoctorError::Error {
-                reason: "WarpTerminal is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("WarpTerminal is not supported"));
         }
 
         if std::env::var_os("__PWSH_LOGIN_CHECKED").is_some() {
-            return Err(DoctorError::Error {
-                reason: "Powershell is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("Powershell is not supported"));
         }
 
         if std::env::var_os("INSIDE_EMACS").is_some() {
-            return Err(DoctorError::Error {
-                reason: "Emacs is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("Emacs is not supported"));
         }
 
         if let Ok("com.vandyke.SecureCRT") = std::env::var("__CFBundleIdentifier").as_deref() {
-            return Err(DoctorError::Error {
-                reason: "SecureCRT is not supported".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("SecureCRT is not supported"));
         }
 
         if std::env::var_os(PROCESS_LAUNCHED_BY_TAB).is_some() {
-            return Err(DoctorError::Error {
-                reason: format!("{PRODUCT_NAME} can not run in a process it launched").into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(doctor_error!("{PRODUCT_NAME} can not run in a process it launched"));
         }
 
         if tab_util::system_info::in_ci() {
-            return Err(DoctorError::Error {
-                reason: "Doctor can not run in CI".into(),
-                info: vec![],
-                fix: None,
-                error: None,
-            });
+            return Err(DoctorError::error("Doctor can not run in CI"));
         }
 
         // Check that ~/.local/bin/tabterm exists
@@ -1178,11 +1148,7 @@ impl DoctorCheck<DiagnosticsResponse> for CliPathCheck {
     async fn check(&self, _: &DiagnosticsResponse) -> Result<(), DoctorError> {
         let path = std::env::current_exe().context("Could not get executable path.")?;
 
-        let local_bin_path = directories::home_dir()
-            .unwrap()
-            .join(".local")
-            .join("bin")
-            .join(CLI_BINARY_NAME);
+        let local_bin_path = directories::home_local_bin().unwrap().join(CLI_BINARY_NAME);
 
         if path == local_bin_path
             || path == Path::new(system_paths::USR_LOCAL_BIN).join(CLI_BINARY_NAME)
@@ -1927,19 +1893,17 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
 
     // Try to launch the desktop app
     launch_fig_desktop(LaunchArgs {
-        wait_for_socket: true,
-        open_dashboard: false,
-        immediate_update: true,
         verbose: false,
+        ..LaunchArgs::default()
     })
     .ok();
 
-    let shell_integrations: Vec<_> = [Shell::Bash, Shell::Zsh, Shell::Fish]
+    let (integrations, errors) = all_shell_integrations(&Env::new());
+    if let Some((_, err)) = errors.into_iter().next() {
+        return Err(err.into());
+    }
+    let shell_integrations: Vec<_> = integrations
         .into_iter()
-        .map(|shell| shell.get_shell_integrations(&Env::new()))
-        .collect::<Result<Vec<_>, tab_integrations::Error>>()?
-        .into_iter()
-        .flatten()
         .map(|integration| DotfileCheck { integration })
         .collect();
 
