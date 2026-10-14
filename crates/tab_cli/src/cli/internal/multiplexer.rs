@@ -112,10 +112,13 @@ pub struct MultiplexerArgs {
     port: Option<u16>,
 }
 
+/// The query parameter prefix that carries the WebSocket token
+const TOKEN_QUERY_PREFIX: &str = "token=";
+
 /// A random hex token for one multiplexer launch
 fn generate_websocket_token() -> String {
     let bytes: [u8; 32] = rand::random();
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 /// Compares two byte strings in constant time for equal lengths
@@ -136,7 +139,7 @@ fn check_websocket_handshake(request: &Request, token: &str) -> Result<(), &'sta
         .query()
         .unwrap_or_default()
         .split('&')
-        .find_map(|pair| pair.strip_prefix("token="));
+        .find_map(|pair| pair.strip_prefix(TOKEN_QUERY_PREFIX));
 
     match request_token {
         Some(request_token) if constant_time_eq(request_token.as_bytes(), token.as_bytes()) => Ok(()),
@@ -759,7 +762,7 @@ mod tests {
     #[test]
     fn test_constant_time_eq() {
         assert!(constant_time_eq(b"abc", b"abc"));
-        assert!(!constant_time_eq(b"abc", b"abd"));
+        assert!(!constant_time_eq(b"abc", b"abx"));
         assert!(!constant_time_eq(b"abc", b"ab"));
         assert!(constant_time_eq(b"", b""));
     }

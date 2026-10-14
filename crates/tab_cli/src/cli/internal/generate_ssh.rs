@@ -32,26 +32,28 @@ pub struct GenerateSshArgs {
     remote_original_host: Option<String>,
 }
 
+/// Accepts a value that is not empty, does not start with `-`, and has only ASCII alphanumerics
+/// and bytes from `allowed_punctuation`
+fn is_conservative_name(value: &str, allowed_punctuation: &[u8]) -> bool {
+    !value.is_empty()
+        && !value.starts_with('-')
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || allowed_punctuation.contains(&byte))
+}
+
 /// Accepts only a conservative host name or IP address charset
 fn is_valid_host(host: &str) -> bool {
-    !host.is_empty()
-        && !host.starts_with('-')
-        && host
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_' | b':'))
+    is_conservative_name(host, b".-_:")
 }
 
 /// Accepts only a conservative user name charset
 fn is_valid_username(username: &str) -> bool {
-    !username.is_empty()
-        && !username.starts_with('-')
-        && username
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_'))
+    is_conservative_name(username, b".-_")
 }
 
 fn is_valid_port(port: &str) -> bool {
-    !port.is_empty() && port.len() <= 5 && port.bytes().all(|b| b.is_ascii_digit())
+    !port.is_empty() && port.len() <= 5 && port.bytes().all(|byte| byte.is_ascii_digit())
 }
 
 impl GenerateSshArgs {

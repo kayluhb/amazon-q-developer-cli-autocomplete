@@ -23,6 +23,9 @@ use crate::error::{
     Result,
 };
 
+/// The permission bits of a file mode: rwx for all classes, plus setuid, setgid and sticky
+const PERMISSION_BITS: u32 = 0o7777;
+
 /// Replaces the contents of `path` with `contents` in one atomic step.
 ///
 /// The data goes to a temp file in the same directory. The temp file is synced and then renamed
@@ -61,17 +64,10 @@ pub(crate) fn write_atomic(path: &Path, contents: &[u8], mode: Option<u32>) -> s
 
     let file = temp.as_file();
     if let Some(existing) = &existing {
-        let new = file.metadata()?;
-        if existing.uid() != new.uid() || existing.gid() != new.gid() {
-            // Only a privileged process can do this. Otherwise the new file has the caller's owner,
-            // like a file the caller creates.
-            if let Err(err) = std::os::unix::fs::fchown(file, Some(existing.uid()), Some(existing.gid())) {
-                debug!(%err, path =? target, "could not keep the file owner");
-            }
-        }
+        keep_owner(file, existing, &target)?;
     }
 
-    let mode = mode.or_else(|| existing.as_ref().map(|metadata| metadata.mode() & 0o7777));
+    let mode = mode.or_else(|| existing.as_ref().map(|metadata| metadata.mode() & PERMISSION_BITS));
     if let Some(mode) = mode {
         file.set_permissions(Permissions::from_mode(mode))?;
     }
@@ -87,11 +83,41 @@ pub(crate) fn write_atomic(path: &Path, contents: &[u8], mode: Option<u32>) -> s
     Ok(())
 }
 
+/// Gives `file` the owner of `existing`. Only a privileged process can do this. Otherwise the new
+/// file has the caller's owner, like a file the caller creates.
+fn keep_owner(file: &std::fs::File, existing: &std::fs::Metadata, target: &Path) -> std::io::Result<()> {
+    let new = file.metadata()?;
+    if existing.uid() == new.uid() && existing.gid() == new.gid() {
+        return Ok(());
+    }
+    if let Err(err) = std::os::unix::fs::fchown(file, Some(existing.uid()), Some(existing.gid())) {
+        debug!(%err, path =? target, "could not keep the file owner");
+    }
+    Ok(())
+}
+
 #[derive(Debug, Clone)]
 pub struct FileIntegration {
     pub path: PathBuf,
     pub contents: String,
     pub mode: Option<u32>,
+}
+
+impl FileIntegration {
+    /// Sets `self.mode` on the existing file if its mode is different
+    async fn fix_mode(&self) -> Result<()> {
+        let Some(mode) = self.mode else {
+            return Ok(());
+        };
+        let metadata = fs::metadata(&self.path).await.with_path(&self.path)?;
+        if metadata.mode() & PERMISSION_BITS == mode {
+            return Ok(());
+        }
+        fs::set_permissions(&self.path, Permissions::from_mode(mode))
+            .await
+            .with_path(&self.path)?;
+        Ok(())
+    }
 }
 
 #[async_trait]
@@ -146,15 +172,7 @@ impl Integration for FileIntegration {
     async fn install(&self) -> Result<()> {
         if self.is_installed().await.is_ok() {
             // The contents are correct, but the mode can still be wrong
-            if let Some(mode) = self.mode {
-                let metadata = fs::metadata(&self.path).await.with_path(&self.path)?;
-                if metadata.mode() & 0o7777 != mode {
-                    fs::set_permissions(&self.path, Permissions::from_mode(mode))
-                        .await
-                        .with_path(&self.path)?;
-                }
-            }
-            return Ok(());
+            return self.fix_mode().await;
         }
 
         let parent_dir = self

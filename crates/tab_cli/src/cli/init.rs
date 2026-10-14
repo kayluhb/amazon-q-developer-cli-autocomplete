@@ -74,14 +74,14 @@ fn shell_quote(shell: &Shell, value: &str) -> String {
         Shell::Nu => {
             let mut quoted = String::with_capacity(value.len() + 2);
             quoted.push('"');
-            for c in value.chars() {
-                match c {
+            for character in value.chars() {
+                match character {
                     '\\' => quoted.push_str(r"\\"),
                     '"' => quoted.push_str(r#"\""#),
                     '\n' => quoted.push_str(r"\n"),
                     '\r' => quoted.push_str(r"\r"),
                     '\t' => quoted.push_str(r"\t"),
-                    c => quoted.push(c),
+                    character => quoted.push(character),
                 }
             }
             quoted.push('"');
