@@ -73,7 +73,8 @@ function Router() {
 
   useEffect(() => {
     try {
-      Telemetry.page("", location.pathname, { ...location });
+      const { pathname, search, hash, key, state } = location;
+      Telemetry.page("", pathname, { pathname, search, hash, key, state });
     } catch (e) {
       console.error(e);
     }
