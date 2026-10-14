@@ -605,29 +605,26 @@ impl WebviewManager {
     }
 }
 
-fn navigation_handler(window_id: WindowId) -> impl Fn(String) -> bool {
+/// Allows a URL only if it has a trusted origin. `kind` describes the request in the log.
+fn trusted_url_handler(window_id: WindowId, kind: &'static str) -> impl Fn(String) -> bool {
     move |url: String| {
         if origin::is_trusted_origin(&url, &origin::trusted_urls(&window_id)) {
-            trace!("{window_id} allowed url: {url}");
+            trace!("{window_id} allowed {kind}: {url}");
             true
         } else {
-            warn!("{window_id} denied url: {url}");
+            warn!("{window_id} denied {kind}: {url}");
             false
         }
     }
 }
 
+fn navigation_handler(window_id: WindowId) -> impl Fn(String) -> bool {
+    trusted_url_handler(window_id, "url")
+}
+
 /// Handles requests to open a new window or to load a subframe. Only trusted origins may load.
 fn new_window_req_handler(window_id: WindowId) -> impl Fn(String) -> bool {
-    move |url: String| {
-        if origin::is_trusted_origin(&url, &origin::trusted_urls(&window_id)) {
-            trace!("{window_id} allowed new window or subframe: {url}");
-            true
-        } else {
-            warn!("{window_id} denied new window or subframe: {url}");
-            false
-        }
-    }
+    trusted_url_handler(window_id, "new window or subframe")
 }
 
 /// Forwards IPC messages from trusted origins to the event loop. Drops all other messages.

@@ -125,7 +125,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn allowed_env_only_contains_allowlisted_keys() {
-        assert!(allowed_env().keys().all(|key| ENV_ALLOWLIST.contains(&key.as_str())));
+    fn constants_env_only_contains_allowlisted_keys() {
+        let env = Constants::new(true).env;
+        assert!(env.keys().all(|key| ENV_ALLOWLIST.contains(&key.as_str())));
+        assert!(!env.contains_key("PATH"));
     }
 }

@@ -84,21 +84,21 @@ where
                 // A request from a page sends an Origin header for cross-origin requests. Reject the
                 // request if the origin is not trusted. Otherwise allow only that exact origin.
                 let origin = req.headers().get(ORIGIN).cloned();
-                if let Some(origin) = &origin {
-                    let trusted = origin
+                let untrusted_origin = origin.as_ref().filter(|origin| {
+                    !origin
                         .to_str()
-                        .is_ok_and(|origin| is_trusted_origin(origin, &trusted_urls(&window_id)));
-                    if !trusted {
-                        warn!(?origin, uri =% req.uri(), "{proto_name} proto request from untrusted origin");
-                        responder.respond(
-                            HttpResponse::builder()
-                                .status(StatusCode::FORBIDDEN)
-                                .header(CONTENT_TYPE, "text/plain")
-                                .body(Cow::Borrowed(b"Forbidden origin".as_slice()))
-                                .unwrap(),
-                        );
-                        return;
-                    }
+                        .is_ok_and(|value| is_trusted_origin(value, &trusted_urls(&window_id)))
+                });
+                if let Some(origin) = untrusted_origin {
+                    warn!(?origin, uri =% req.uri(), "{proto_name} proto request from untrusted origin");
+                    responder.respond(
+                        HttpResponse::builder()
+                            .status(StatusCode::FORBIDDEN)
+                            .header(CONTENT_TYPE, "text/plain")
+                            .body(Cow::Borrowed(b"Forbidden origin".as_slice()))
+                            .unwrap(),
+                    );
+                    return;
                 }
 
                 let accept_json = req
@@ -131,9 +131,10 @@ where
                     .headers_mut()
                     .insert("X-Request-Id", HeaderValue::from_str(&id.to_string()).unwrap());
 
+                // The response depends on the Origin header, so send Vary on every response.
+                response.headers_mut().insert(VARY, HeaderValue::from_static("Origin"));
                 if let Some(origin) = origin {
                     response.headers_mut().insert(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                    response.headers_mut().insert(VARY, HeaderValue::from_static("Origin"));
                 }
 
                 debug!(status = %response.status(), "Custom proto response");

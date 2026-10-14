@@ -14,6 +14,8 @@ use super::{
     dashboard,
 };
 
+const FILE_SCHEME: &str = "file";
+
 /// The URLs that a window loads. The bundled resource URL is always trusted. The current
 /// URL can differ in development (`DASHBOARD_URL`, `developer.dashboard.host`, etc).
 pub fn trusted_urls(window_id: &WindowId) -> Vec<Url> {
@@ -29,7 +31,7 @@ pub fn trusted_urls(window_id: &WindowId) -> Vec<Url> {
 /// The (scheme, host, port) tuple of a URL. Returns `None` for `file:` URLs and URLs without
 /// a host.
 fn origin_tuple(url: &Url) -> Option<(&str, &str, Option<u16>)> {
-    if url.scheme() == "file" {
+    if url.scheme() == FILE_SCHEME {
         return None;
     }
     let host = url.host_str().filter(|host| !host.is_empty())?;
@@ -99,6 +101,23 @@ mod tests {
         assert!(!is_trusted_origin("null", &trusted));
         assert!(!is_trusted_origin("about:blank", &trusted));
         assert!(!is_trusted_origin("data:text/html,hi", &trusted));
+    }
+
+    #[test]
+    fn rejects_lookalike_urls() {
+        let trusted = trusted();
+        assert!(!is_trusted_origin("http://localhost:5173@evil.com", &trusted));
+        assert!(!is_trusted_origin("http://localhost.:5173", &trusted));
+        assert!(!is_trusted_origin("http://[::1]:5173", &trusted));
+        assert!(!is_trusted_origin("qcliresource://localhost:1234", &trusted));
+    }
+
+    #[test]
+    fn host_case_follows_url_normalization() {
+        let trusted = trusted();
+        // Special schemes such as http lowercase the host. Custom schemes keep the case.
+        assert!(is_trusted_origin("HTTP://LOCALHOST:5173", &trusted));
+        assert!(!is_trusted_origin("qcliresource://LOCALHOST", &trusted));
     }
 
     #[test]
