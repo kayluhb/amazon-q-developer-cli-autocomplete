@@ -135,6 +135,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn launch_args_default() {
+        let args = LaunchArgs::default();
+        assert!(args.wait_for_socket);
+        assert!(!args.open_dashboard);
+        assert!(args.immediate_update);
+        assert!(args.verbose);
+    }
+
+    #[test]
     #[ignore = "not in ci"]
     fn test_e2e_desktop_app_running() {
         println!("{}", desktop_app_running());

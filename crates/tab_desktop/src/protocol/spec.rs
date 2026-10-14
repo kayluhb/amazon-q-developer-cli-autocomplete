@@ -130,10 +130,12 @@ fn find_spec(dirs: &[PathBuf], relative: &str) -> Option<PathBuf> {
     dirs.iter().find_map(|dir| resolve(dir, relative))
 }
 
-/// Specs are JavaScript unless the extension says otherwise
+/// Specs are JavaScript unless the extension says otherwise.
+/// HTML stays JavaScript: the spec folders are user-writable, so a page
+/// there must not render under the spec origin.
 fn content_type(path: &Path) -> &'static str {
     match path.extension().and_then(|ext| ext.to_str()) {
-        Some("js") | None => APPLICATION_JAVASCRIPT,
+        Some("js" | "html") | None => APPLICATION_JAVASCRIPT,
         ext => mime_for_extension(ext).unwrap_or(APPLICATION_JAVASCRIPT),
     }
 }
@@ -245,5 +247,8 @@ mod tests {
         assert_eq!(content_type(Path::new("git.png")), "image/png");
         assert_eq!(content_type(Path::new("git.svg")), "image/svg+xml");
         assert_eq!(content_type(Path::new("git.js")), "application/javascript");
+        assert_eq!(content_type(Path::new("git")), "application/javascript");
+        assert_eq!(content_type(Path::new("git.html")), "application/javascript");
+        assert_eq!(content_type(Path::new("git.css")), "text/css; charset=utf-8");
     }
 }

@@ -75,6 +75,14 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_res_ok() {
+        let res = res_ok(b"{}".to_vec(), "application/json").unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(res.headers()[CONTENT_TYPE], "application/json");
+        assert_eq!(res.body().as_ref(), b"{}");
+    }
+
+    #[test]
     fn test_mime_for_extension() {
         assert_eq!(mime_for_extension(Some("html")), Some("text/html; charset=utf-8"));
         assert_eq!(mime_for_extension(Some("json")), Some("application/json"));

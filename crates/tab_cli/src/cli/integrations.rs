@@ -117,7 +117,8 @@ enum DotfileAction {
 }
 
 /// Installs or uninstalls the dotfile integrations for `shell`, or for every shell if `shell` is
-/// `None`. Returns `true` if any integration changed.
+/// `None`. Returns `true` if it tried to install or uninstall any integration, even if that
+/// attempt failed.
 async fn apply_dotfiles(shell: Option<Shell>, action: DotfileAction) -> (bool, Result<()>) {
     let env = Env::new();
     let (integrations, shell_errors) = match shell {
