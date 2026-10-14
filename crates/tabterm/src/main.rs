@@ -74,10 +74,6 @@ use tab_util::env_var::{
     TAB_TERM,
     TABTERM_SESSION_ID,
 };
-use tab_util::process_info::{
-    Pid,
-    PidExt,
-};
 use tab_util::{
     PRODUCT_NAME,
     PTY_BINARY_NAME,
@@ -512,7 +508,7 @@ fn figterm_main(command: Option<&[String]>) -> Result<()> {
     let (child_tx, mut child_rx) = oneshot::channel();
     std::thread::spawn(move || child_tx.send(child.wait()));
 
-    info!("Pid: {}", Pid::current());
+    info!("Pid: {}", std::process::id());
     info!("Pty name: {pty_name}");
 
     let runtime = runtime::Builder::new_multi_thread()

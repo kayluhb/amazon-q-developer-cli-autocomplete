@@ -1,7 +1,6 @@
 pub mod directories;
 pub mod manifest;
 mod open;
-pub mod process_info;
 mod shell;
 pub mod system_info;
 pub mod terminal;
@@ -20,7 +19,6 @@ pub use open::{
     open_url,
     open_url_async,
 };
-pub use process_info::get_parent_process_exe;
 use rand::Rng;
 pub use shell::Shell;
 pub use terminal::Terminal;
@@ -98,6 +96,14 @@ pub fn search_xdg_data_dirs(ext: impl AsRef<std::path::Path>) -> Option<PathBuf>
         }
     }
     None
+}
+
+/// Returns the executable of the current process's parent, skipping `toolbox-exec`.
+///
+/// This is a convenience wrapper around [tab_os_shim::process_info::get_parent_process_exe]
+/// that uses a real [tab_os_shim::Context].
+pub fn get_parent_process_exe() -> Option<PathBuf> {
+    tab_os_shim::process_info::get_parent_process_exe(&tab_os_shim::Context::new())
 }
 
 /// Returns the path to the original executable, not the symlink
