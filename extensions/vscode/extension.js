@@ -1,6 +1,8 @@
 const vscode = require("vscode");
 const cp = require("child_process");
 
+const SELECTION_DEBOUNCE_MS = 100;
+
 let runCommand = function (command) {
   cp.exec(command, (err) => {
     if (err) {
@@ -16,9 +18,18 @@ let config = vscode.workspace.getConfiguration();
 let shouldLog = config.get("q.log") === true;
 
 // Ensure that any VSCode terminal session has TAB_NEW_SESSION set as an environment variable
-let osxEnv = config.get("terminal.integrated.env.osx");
-osxEnv["TAB_NEW_SESSION"] = "1";
-config.update("terminal.integrated.env.osx", osxEnv, true);
+// The setting can be unset, so fall back to an empty object. Only write the global settings when the
+// value changes.
+let osxEnv = config.get("terminal.integrated.env.osx") ?? {};
+if (osxEnv["TAB_NEW_SESSION"] !== "1") {
+  config
+    .update(
+      "terminal.integrated.env.osx",
+      { ...osxEnv, TAB_NEW_SESSION: "1" },
+      true,
+    )
+    .then(undefined, logError);
+}
 
 function log(...args) {
   if (shouldLog) {
@@ -75,8 +86,14 @@ function activate() {
       updateActiveTerminal(terminal);
     });
 
+    // Selection changes fire on every cursor move. Debounce them so that we start one `tab`
+    // process per burst instead of one per event.
+    let selectionTimer;
     vscode.window.onDidChangeTextEditorSelection(() => {
-      runCommand(`tab hook keyboard-focus-changed ${vscode.env.uriScheme} 0`);
+      clearTimeout(selectionTimer);
+      selectionTimer = setTimeout(() => {
+        runCommand(`tab hook keyboard-focus-changed ${vscode.env.uriScheme} 0`);
+      }, SELECTION_DEBOUNCE_MS);
     });
   } catch (e) {
     logError(e);

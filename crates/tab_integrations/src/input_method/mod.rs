@@ -7,7 +7,6 @@ use std::path::{
     Path,
     PathBuf,
 };
-use std::process::Command;
 use std::ptr;
 
 use async_trait::async_trait;
@@ -68,6 +67,7 @@ use tracing::{
     debug,
     info,
     trace,
+    warn,
 };
 
 use crate::Integration;
@@ -531,8 +531,10 @@ impl Integration for InputMethod {
             InputMethod::register(&destination)?;
 
             debug!("Launch Input Method...");
-            if let Some(dest) = destination.to_str() {
-                Command::new("open").arg(dest);
+            match tokio::process::Command::new("open").arg(&destination).status().await {
+                Ok(status) if status.success() => {},
+                Ok(status) => warn!("Could not launch input method, `open` exited with {status}"),
+                Err(err) => warn!("Could not launch input method: {err}"),
             }
 
             run_on_main(|| {

@@ -220,7 +220,7 @@ impl CurrentEnvironment {
 
         let cli_path = ctx
             .env()
-            .current_dir()
+            .current_exe()
             .ok()
             .map(|path| path.to_string_lossy().replace(&username, "/USER"));
 
@@ -286,5 +286,17 @@ mod tests {
         let diagnostics = Diagnostics::new().await;
         let toml = diagnostics.user_readable().unwrap();
         assert!(!toml.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_current_environment_cli_path_is_current_exe() {
+        let username = format!("/{}", whoami::username());
+        let expected = std::env::current_exe()
+            .unwrap()
+            .to_string_lossy()
+            .replace(&username, "/USER");
+
+        let env = CurrentEnvironment::new().await;
+        assert_eq!(env.cli_path, Some(expected));
     }
 }

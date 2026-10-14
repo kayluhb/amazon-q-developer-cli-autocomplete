@@ -107,7 +107,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_fish_version_check() {
+    async fn test_sshd_config_check() {
         let check = SshdConfigCheck;
         let name = check.name();
         let doctor_type = check.get_type(&(), Platform::current()).await;
