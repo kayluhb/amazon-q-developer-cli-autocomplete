@@ -4,10 +4,13 @@ use serde_json::{
     Value,
 };
 
-use crate::Result;
 use crate::sqlite::{
     Db,
     database,
+};
+use crate::{
+    Result,
+    ValueStore,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -48,63 +51,30 @@ impl State {
         }
     }
 
-    pub fn all(&self) -> Result<Map<String, Value>> {
-        self.database()?.all_state_values()
-    }
-
-    pub fn set_value(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
-        self.database()?.set_state_value(key, value)?;
-        Ok(())
-    }
-
-    pub fn remove_value(&self, key: impl AsRef<str>) -> Result<()> {
-        self.database()?.unset_state_value(key)?;
-        Ok(())
-    }
-
-    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Option<Value>> {
-        self.database()?.get_state_value(key)
-    }
-
-    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>> {
-        Ok(self
-            .database()?
-            .get_state_value(key)?
-            .map(|value| serde_json::from_value(value.clone()))
-            .transpose()?)
-    }
-
-    pub fn get_bool(&self, key: impl AsRef<str>) -> Result<Option<bool>> {
-        Ok(self.database()?.get_state_value(key)?.and_then(|value| value.as_bool()))
-    }
-
-    pub fn get_bool_or(&self, key: impl AsRef<str>, default: bool) -> bool {
-        self.get_bool(key).ok().flatten().unwrap_or(default)
-    }
-
-    pub fn get_string(&self, key: impl AsRef<str>) -> Result<Option<String>> {
-        Ok(self.database()?.get_state_value(key)?.and_then(|value| match value {
-            Value::String(s) => Some(s),
-            _ => None,
-        }))
-    }
-
-    pub fn get_string_or(&self, key: impl AsRef<str>, default: impl Into<String>) -> String {
-        self.get_string(key).ok().flatten().unwrap_or_else(|| default.into())
-    }
-
-    pub fn get_int(&self, key: impl AsRef<str>) -> Result<Option<i64>> {
-        Ok(self.database()?.get_state_value(key)?.and_then(|value| value.as_i64()))
-    }
-
-    pub fn get_int_or(&self, key: impl AsRef<str>, default: i64) -> i64 {
-        self.get_int(key).ok().flatten().unwrap_or(default)
-    }
-
     // Atomic style operations
 
     pub fn atomic_bool_or(&self, key: impl AsRef<str>, or: bool) -> Result<bool> {
         self.database()?.atomic_bool_or(key, or)
+    }
+}
+
+impl ValueStore for State {
+    fn all(&self) -> Result<Map<String, Value>> {
+        self.database()?.all_state_values()
+    }
+
+    fn get_value(&self, key: impl AsRef<str>) -> Result<Option<Value>> {
+        self.database()?.get_state_value(key)
+    }
+
+    fn set_value(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
+        self.database()?.set_state_value(key, value)?;
+        Ok(())
+    }
+
+    fn remove_value(&self, key: impl AsRef<str>) -> Result<()> {
+        self.database()?.unset_state_value(key)?;
+        Ok(())
     }
 }
 
@@ -150,6 +120,10 @@ pub fn get_string(key: impl AsRef<str>) -> Result<Option<String>> {
     State::new().get_string(key)
 }
 
+pub fn get_string_opt(key: impl AsRef<str>) -> Option<String> {
+    State::new().get_string_opt(key)
+}
+
 pub fn get_string_or(key: impl AsRef<str>, default: impl Into<String>) -> String {
     State::new().get_string_or(key, default)
 }
@@ -167,6 +141,7 @@ mod tests {
     use super::{
         Result,
         State,
+        ValueStore,
     };
 
     /// General read/write state test

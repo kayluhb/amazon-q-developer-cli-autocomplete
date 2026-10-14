@@ -220,7 +220,7 @@ async fn _should_install_remote_ssh_integration(
 ) -> Option<bool> {
     use tab_proto::remote::clientbound;
 
-    let remote_install_setting = tab_settings::settings::get_string_or("ssh.remote-prompt", "ask".into());
+    let remote_install_setting = tab_settings::settings::get_string_or("ssh.remote-prompt", "ask");
     if remote_install_setting == "never" {
         return Some(false);
     }

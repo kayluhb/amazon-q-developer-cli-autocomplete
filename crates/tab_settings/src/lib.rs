@@ -5,6 +5,7 @@ pub mod keys;
 pub mod settings;
 pub mod sqlite;
 pub mod state;
+mod value_store;
 
 use std::fs::{
     self,
@@ -42,6 +43,7 @@ pub use state::{
 use tab_util::directories;
 use thiserror::Error;
 use tracing::error;
+pub use value_store::ValueStore;
 
 pub type Map = serde_json::Map<String, Value>;
 
@@ -333,8 +335,8 @@ pub trait JsonStore: Sized {
         self.get(key).and_then(|value| value.as_str().map(|s| s.into()))
     }
 
-    fn get_string_or(&self, key: impl AsRef<str>, default: String) -> String {
-        self.get_string(key).unwrap_or(default)
+    fn get_string_or(&self, key: impl AsRef<str>, default: impl Into<String>) -> String {
+        self.get_string(key).unwrap_or_else(|| default.into())
     }
 
     fn get_int(&self, key: impl AsRef<str>) -> Option<i64> {

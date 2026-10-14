@@ -13,6 +13,7 @@ use crate::{
     JsonStore,
     OldSettings,
     Result,
+    ValueStore,
 };
 
 #[derive(Debug, Clone, Default)]
@@ -51,23 +52,39 @@ impl Settings {
             slice.iter().map(|(k, v)| ((*k).to_owned(), v.clone())).collect(),
         ))))
     }
+}
 
-    pub fn set_value(&self, key: impl Into<String>, value: impl Into<serde_json::Value>) -> Result<()> {
+impl ValueStore for Settings {
+    fn all(&self) -> Result<Map<String, Value>> {
+        match &self.0 {
+            inner::Inner::Real => Ok(OldSettings::load()?.map().clone()),
+            inner::Inner::Fake(map) => Ok(map.lock()?.clone()),
+        }
+    }
+
+    fn get_value(&self, key: impl AsRef<str>) -> Result<Option<Value>> {
+        match &self.0 {
+            inner::Inner::Real => Ok(OldSettings::load()?.get(key.as_ref()).map(|v| v.clone())),
+            inner::Inner::Fake(map) => Ok(map.lock()?.get(key.as_ref()).cloned()),
+        }
+    }
+
+    fn set_value(&self, key: impl AsRef<str>, value: impl Into<Value>) -> Result<()> {
         match &self.0 {
             inner::Inner::Real => {
                 let mut settings = OldSettings::load()?;
-                settings.set(key, value);
+                settings.set(key.as_ref(), value);
                 settings.save_to_file()?;
                 Ok(())
             },
             inner::Inner::Fake(map) => {
-                map.lock()?.insert(key.into(), value.into());
+                map.lock()?.insert(key.as_ref().to_owned(), value.into());
                 Ok(())
             },
         }
     }
 
-    pub fn remove_value(&self, key: impl AsRef<str>) -> Result<()> {
+    fn remove_value(&self, key: impl AsRef<str>) -> Result<()> {
         match &self.0 {
             inner::Inner::Real => {
                 let mut settings = OldSettings::load()?;
@@ -80,74 +97,6 @@ impl Settings {
                 Ok(())
             },
         }
-    }
-
-    pub fn get_value(&self, key: impl AsRef<str>) -> Result<Option<serde_json::Value>> {
-        match &self.0 {
-            inner::Inner::Real => Ok(OldSettings::load()?.get(key.as_ref()).map(|v| v.clone())),
-            inner::Inner::Fake(map) => Ok(map.lock()?.get(key.as_ref()).cloned()),
-        }
-    }
-
-    pub fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Result<Option<T>> {
-        match &self.0 {
-            inner::Inner::Real => {
-                let settings = OldSettings::load()?;
-                let v = settings.get(key);
-                match v.as_deref() {
-                    Some(value) => Ok(Some(serde_json::from_value(value.clone())?)),
-                    None => Ok(None),
-                }
-            },
-            inner::Inner::Fake(map) => {
-                let value = map.lock()?.get(key.as_ref()).cloned();
-                match value {
-                    Some(value) => Ok(Some(serde_json::from_value(value)?)),
-                    None => Ok(None),
-                }
-            },
-        }
-    }
-
-    pub fn get_bool(&self, key: impl AsRef<str>) -> Result<Option<bool>> {
-        match &self.0 {
-            inner::Inner::Real => Ok(OldSettings::load()?.get_bool(key.as_ref())),
-            inner::Inner::Fake(map) => Ok(map.lock()?.get(key.as_ref()).cloned().and_then(|v| v.as_bool())),
-        }
-    }
-
-    pub fn get_bool_or(&self, key: impl AsRef<str>, default: bool) -> bool {
-        self.get_bool(key).ok().flatten().unwrap_or(default)
-    }
-
-    pub fn get_string(&self, key: impl AsRef<str>) -> Result<Option<String>> {
-        match &self.0 {
-            inner::Inner::Real => Ok(OldSettings::load()?.get_string(key.as_ref())),
-            inner::Inner::Fake(map) => Ok(map
-                .lock()?
-                .get(key.as_ref())
-                .cloned()
-                .and_then(|v| v.as_str().map(|s| s.to_owned()))),
-        }
-    }
-
-    pub fn get_string_opt(&self, key: impl AsRef<str>) -> Option<String> {
-        self.get_string(key).ok().flatten()
-    }
-
-    pub fn get_string_or(&self, key: impl AsRef<str>, default: String) -> String {
-        self.get_string(key).ok().flatten().unwrap_or(default)
-    }
-
-    pub fn get_int(&self, key: impl AsRef<str>) -> Result<Option<i64>> {
-        match &self.0 {
-            inner::Inner::Real => Ok(OldSettings::load()?.get_int(key.as_ref())),
-            inner::Inner::Fake(map) => Ok(map.lock()?.get(key.as_ref()).cloned().and_then(|v| v.as_i64())),
-        }
-    }
-
-    pub fn get_int_or(&self, key: impl AsRef<str>, default: i64) -> i64 {
-        self.get_int(key).ok().flatten().unwrap_or(default)
     }
 }
 
@@ -165,8 +114,12 @@ pub fn init_global() -> Result<()> {
     OldSettings::load_into_global()
 }
 
+pub fn all() -> Result<Map<String, Value>> {
+    Settings::new().all()
+}
+
 pub fn set_value(key: impl Into<String>, value: impl Into<serde_json::Value>) -> Result<()> {
-    Settings::new().set_value(key, value)
+    Settings::new().set_value(key.into(), value)
 }
 
 pub fn remove_value(key: impl AsRef<str>) -> Result<()> {
@@ -197,7 +150,7 @@ pub fn get_string_opt(key: impl AsRef<str>) -> Option<String> {
     Settings::new().get_string_opt(key)
 }
 
-pub fn get_string_or(key: impl AsRef<str>, default: String) -> String {
+pub fn get_string_or(key: impl AsRef<str>, default: impl Into<String>) -> String {
     Settings::new().get_string_or(key, default)
 }
 
@@ -214,6 +167,7 @@ mod test {
     use super::{
         Result,
         Settings,
+        ValueStore,
     };
 
     /// General read/write settings test
@@ -234,7 +188,7 @@ mod test {
         settings.set_value("bool", true).unwrap();
         assert!(settings.get_bool("bool").unwrap().unwrap());
 
-        assert_eq!(settings.get_string_or("string", "hi".into()), "hi");
+        assert_eq!(settings.get_string_or("string", "hi"), "hi");
         settings.set_value("string", "hi").unwrap();
         assert_eq!(settings.get_string("string").unwrap().unwrap(), "hi");
 
