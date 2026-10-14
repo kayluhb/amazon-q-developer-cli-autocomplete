@@ -10,7 +10,7 @@ import {
   sendInsertTextRequest,
   sendSetInlineSuggestionRequest,
 } from "./requests.js";
-import { _subscribe, NotificationResponse } from "./notifications.js";
+import { _subscribeToCase, NotificationResponse } from "./notifications.js";
 import { create } from "@bufbuild/protobuf";
 
 export const processDidChange = {
@@ -19,18 +19,10 @@ export const processDidChange = {
       notification: ProcessChangedNotification,
     ) => NotificationResponse | undefined,
   ) {
-    return _subscribe(
-      { type: NotificationType.NOTIFY_ON_PROCESS_CHANGED },
-      (notification) => {
-        switch (notification?.type?.case) {
-          case "processChangeNotification":
-            return handler(notification.type.value);
-          default:
-            break;
-        }
-
-        return { unsubscribe: false };
-      },
+    return _subscribeToCase(
+      NotificationType.NOTIFY_ON_PROCESS_CHANGED,
+      "processChangeNotification",
+      handler,
     );
   },
 };
@@ -41,18 +33,10 @@ export const promptDidReturn = {
       notification: ShellPromptReturnedNotification,
     ) => NotificationResponse | undefined,
   ) {
-    return _subscribe(
-      { type: NotificationType.NOTIFY_ON_PROMPT },
-      (notification) => {
-        switch (notification?.type?.case) {
-          case "shellPromptReturnedNotification":
-            return handler(notification.type.value);
-          default:
-            break;
-        }
-
-        return { unsubscribe: false };
-      },
+    return _subscribeToCase(
+      NotificationType.NOTIFY_ON_PROMPT,
+      "shellPromptReturnedNotification",
+      handler,
     );
   },
 };
@@ -63,18 +47,10 @@ export const historyUpdated = {
       notification: HistoryUpdatedNotification,
     ) => NotificationResponse | undefined,
   ) {
-    return _subscribe(
-      { type: NotificationType.NOTIFY_ON_HISTORY_UPDATED },
-      (notification) => {
-        switch (notification?.type?.case) {
-          case "historyUpdatedNotification":
-            return handler(notification.type.value);
-          default:
-            break;
-        }
-
-        return { unsubscribe: false };
-      },
+    return _subscribeToCase(
+      NotificationType.NOTIFY_ON_HISTORY_UPDATED,
+      "historyUpdatedNotification",
+      handler,
     );
   },
 };

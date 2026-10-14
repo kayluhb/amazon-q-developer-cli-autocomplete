@@ -1,5 +1,5 @@
 import { SettingsChangedNotification, NotificationType } from "@tab/proto/fig";
-import { _subscribe, NotificationResponse } from "./notifications.js";
+import { _subscribeToCase, NotificationResponse } from "./notifications.js";
 
 import {
   sendGetSettingsPropertyRequest,
@@ -12,18 +12,10 @@ export const didChange = {
       notification: SettingsChangedNotification,
     ) => NotificationResponse | undefined,
   ) {
-    return _subscribe(
-      { type: NotificationType.NOTIFY_ON_SETTINGS_CHANGE },
-      (notification) => {
-        switch (notification?.type?.case) {
-          case "settingsChangedNotification":
-            return handler(notification.type.value);
-          default:
-            break;
-        }
-
-        return { unsubscribe: false };
-      },
+    return _subscribeToCase(
+      NotificationType.NOTIFY_ON_SETTINGS_CHANGE,
+      "settingsChangedNotification",
+      handler,
     );
   },
 };

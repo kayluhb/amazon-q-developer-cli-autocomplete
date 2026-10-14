@@ -98,6 +98,26 @@ export function _subscribe(
   });
 }
 
+type NotificationCase = NonNullable<Notification["type"]["case"]>;
+type NotificationValue<C extends NotificationCase> = Extract<
+  Notification["type"],
+  { case: C }
+>["value"];
+
+/** Subscribe to `type` and pass only the `notificationCase` payloads to `handler`. */
+export function _subscribeToCase<C extends NotificationCase>(
+  type: NotificationType,
+  notificationCase: C,
+  handler: (value: NotificationValue<C>) => NotificationResponse | undefined,
+) {
+  return _subscribe({ type }, (notification) => {
+    if (notification?.type?.case === notificationCase) {
+      return handler(notification.type.value as NotificationValue<C>);
+    }
+    return { unsubscribe: false };
+  });
+}
+
 const unsubscribeFromAll = () => {
   sendMessage({
     case: "notificationRequest",

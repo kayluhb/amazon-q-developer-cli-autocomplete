@@ -8,7 +8,7 @@ import {
 } from "@tab/proto/fig";
 
 import { sendInstallRequest } from "./requests.js";
-import { NotificationResponse, _subscribe } from "./notifications.js";
+import { NotificationResponse, _subscribeToCase } from "./notifications.js";
 
 export type Component =
   | "dotfiles"
@@ -106,18 +106,10 @@ export const installStatus = {
     handler: (isInstalled: boolean) => NotificationResponse | undefined,
   ) => {
     if (component === "accessibility") {
-      return _subscribe(
-        { type: NotificationType.NOTIFY_ON_ACCESSIBILITY_CHANGE },
-        (notification) => {
-          switch (notification?.type?.case) {
-            case "accessibilityChangeNotification":
-              return handler(notification.type.value.enabled);
-            default:
-              break;
-          }
-
-          return { unsubscribe: false };
-        },
+      return _subscribeToCase(
+        NotificationType.NOTIFY_ON_ACCESSIBILITY_CHANGE,
+        "accessibilityChangeNotification",
+        (value) => handler(value.enabled),
       );
     }
     throw Error("Not implemented");

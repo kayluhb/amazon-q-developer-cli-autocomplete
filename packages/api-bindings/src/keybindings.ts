@@ -5,7 +5,7 @@ import {
   NotificationType,
 } from "@tab/proto/fig";
 import { sendUpdateApplicationPropertiesRequest } from "./requests.js";
-import { _subscribe, NotificationResponse } from "./notifications.js";
+import { _subscribeToCase, NotificationResponse } from "./notifications.js";
 import { create } from "@bufbuild/protobuf";
 
 export function pressed(
@@ -13,18 +13,10 @@ export function pressed(
     notification: KeybindingPressedNotification,
   ) => NotificationResponse | undefined,
 ) {
-  return _subscribe(
-    { type: NotificationType.NOTIFY_ON_KEYBINDING_PRESSED },
-    (notification) => {
-      switch (notification?.type?.case) {
-        case "keybindingPressedNotification":
-          return handler(notification.type.value);
-        default:
-          break;
-      }
-
-      return { unsubscribe: false };
-    },
+  return _subscribeToCase(
+    NotificationType.NOTIFY_ON_KEYBINDING_PRESSED,
+    "keybindingPressedNotification",
+    handler,
   );
 }
 
