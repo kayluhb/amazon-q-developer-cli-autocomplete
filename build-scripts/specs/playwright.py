@@ -19,18 +19,18 @@ NODE_MODULES = sys.argv[1]
 PLAYWRIGHT = os.path.join(NODE_MODULES, ".bin", "playwright")
 CLI_HELP = os.path.join(NODE_MODULES, "playwright-core", "lib", "tools", "cli-client", "help.json")
 
+# What `playwright install` accepts: registry executables whose installType isn't "none", plus
+# chromiumAliases (see suggestedBrowsersToInstall in playwright-core). chrome-dev, chrome-canary and
+# msedge-canary are valid --channel values but can't be installed. webkit-wsl is Windows-only.
 PRELUDE = """const browserSuggestions: Fig.Suggestion[] = [
   { name: "chromium", displayName: "Chromium" },
   { name: "chromium-headless-shell", displayName: "Chromium Headless Shell" },
   { name: "chrome", displayName: "Chrome" },
   { name: "chrome-beta", displayName: "Chrome Beta" },
-  { name: "chrome-dev", displayName: "Chrome Dev" },
-  { name: "chrome-canary", displayName: "Chrome Canary" },
   { name: "chrome-for-testing", displayName: "Chrome for Testing" },
   { name: "msedge", displayName: "Microsoft Edge" },
   { name: "msedge-beta", displayName: "Microsoft Edge Beta" },
   { name: "msedge-dev", displayName: "Microsoft Edge Dev" },
-  { name: "msedge-canary", displayName: "Microsoft Edge Canary" },
   { name: "firefox", displayName: "Firefox" },
   { name: "webkit", displayName: "WebKit" },
   { name: "ffmpeg", displayName: "FFmpeg" },
@@ -65,6 +65,7 @@ class Raw(str):
 OVERRIDES = {
     "install browser": {"suggestions": Raw("browserSuggestions")},
     "install-deps browser": {"suggestions": Raw("browserSuggestions")},
+    "cli install-browser browser": {"suggestions": Raw("browserSuggestions")},
     "test test-filter": {"template": ["filepaths", "folders"]},
     "test --reporter": {"suggestions": REPORTERS},
     "test --add-reporter": {"suggestions": REPORTERS},
@@ -73,6 +74,8 @@ OVERRIDES = {
     "show-trace trace": {"template": "filepaths"},
     "trace open trace": {"template": "filepaths"},
     "trace snapshot --phase": {"suggestions": ["before", "action", "after"]},
+    "mcp --console-level": {"suggestions": ["error", "warning", "info", "debug"]},
+    "mcp --file-paths": {"suggestions": ["relative", "absolute"]},
     "pdf --paper-format": {
         "suggestions": ["Letter", "Legal", "Tabloid", "Ledger", "A0", "A1", "A2", "A3", "A4", "A5", "A6"]
     },
@@ -94,7 +97,7 @@ def choices(description: str) -> list[str] | None:
     """Values listed in a description, e.g. `(choices: "a", "b")` or `one of a, b or c`."""
     for pattern in (
         r"\(choices: ([^)]*?)(?:, preset: [^)]*)?(?:, default: [^)]*)?\)",
-        r"one of ([^().]*)",
+        r"one of:? ([^().]*)",
         r"possible values: ([^().]*?)(?:\.|$| Default)",
         r"[Cc]an be ((?:\"[\w-]+\"(?:, | or )?)+)",
     ):

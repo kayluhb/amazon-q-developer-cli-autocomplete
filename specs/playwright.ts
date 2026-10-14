@@ -4,13 +4,10 @@ const browserSuggestions: Fig.Suggestion[] = [
   { name: "chromium-headless-shell", displayName: "Chromium Headless Shell" },
   { name: "chrome", displayName: "Chrome" },
   { name: "chrome-beta", displayName: "Chrome Beta" },
-  { name: "chrome-dev", displayName: "Chrome Dev" },
-  { name: "chrome-canary", displayName: "Chrome Canary" },
   { name: "chrome-for-testing", displayName: "Chrome for Testing" },
   { name: "msedge", displayName: "Microsoft Edge" },
   { name: "msedge-beta", displayName: "Microsoft Edge Beta" },
   { name: "msedge-dev", displayName: "Microsoft Edge Dev" },
-  { name: "msedge-canary", displayName: "Microsoft Edge Canary" },
   { name: "firefox", displayName: "Firefox" },
   { name: "webkit", displayName: "WebKit" },
   { name: "ffmpeg", displayName: "FFmpeg" },
@@ -1724,7 +1721,7 @@ const completionSpec: Fig.Spec = {
               name: "--type",
               description:
                 "Image format. if unset, inferred from the filename extension, otherwise png. (one of: png, jpeg, webp)",
-              args: { name: "type" },
+              args: { name: "type", suggestions: ["png", "jpeg", "webp"] },
             },
             {
               name: "--full-page",
@@ -1859,7 +1856,10 @@ const completionSpec: Fig.Spec = {
               name: "--sameSite",
               description:
                 "Cookie samesite attribute (one of: Strict, Lax, None)",
-              args: { name: "sameSite" },
+              args: {
+                name: "sameSite",
+                suggestions: ["Strict", "Lax", "None"],
+              },
             },
           ],
           args: [
@@ -2245,13 +2245,23 @@ const completionSpec: Fig.Spec = {
               name: "--position",
               description:
                 "Where to place the action title: top-left, top, top-right, bottom-left, bottom, bottom-right. defaults to top-right. (one of: top-left, top, top-right, bottom-left, bottom, bottom-right)",
-              args: { name: "position" },
+              args: {
+                name: "position",
+                suggestions: [
+                  "top-left",
+                  "top",
+                  "top-right",
+                  "bottom-left",
+                  "bottom",
+                  "bottom-right",
+                ],
+              },
             },
             {
               name: "--cursor",
               description:
                 'Cursor decoration: "pointer" (default) animates a mouse pointer between action points; "none" disables it. (one of: none, pointer)',
-              args: { name: "cursor" },
+              args: { name: "cursor", suggestions: ["none", "pointer"] },
             },
             {
               name: "--point-style",
@@ -2426,6 +2436,7 @@ const completionSpec: Fig.Spec = {
             name: "browser",
             description: "Browser to install",
             isOptional: true,
+            suggestions: browserSuggestions,
           },
         },
         {
@@ -2553,7 +2564,10 @@ const completionSpec: Fig.Spec = {
           name: "--console-level",
           description:
             'Level of console messages to return: "error", "warning", "info", "debug". Each level includes the messages of more severe levels',
-          args: { name: "level" },
+          args: {
+            name: "level",
+            suggestions: ["error", "warning", "info", "debug"],
+          },
         },
         {
           name: "--device",
@@ -2584,7 +2598,7 @@ const completionSpec: Fig.Spec = {
           name: "--file-paths",
           description:
             'How file paths are rendered in tool results, "relative" to the workspace root or "absolute". Default is "relative"',
-          args: { name: "mode" },
+          args: { name: "mode", suggestions: ["relative", "absolute"] },
         },
         {
           name: "--grant-permissions",
