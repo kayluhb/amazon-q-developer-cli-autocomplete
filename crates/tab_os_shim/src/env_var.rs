@@ -1,6 +1,7 @@
 //! Names of the environment variables that Tab reads or sets.
 //!
-//! [`ALL`] lists every name so that diagnostics can show them.
+//! [`ALL`] lists the names that diagnostics show. Names whose values can hold user commands
+//! are not in [`ALL`].
 
 macro_rules! define_env_vars {
     ($($(#[$meta:meta])* $ident:ident = $name:expr),*) => {
@@ -59,15 +60,6 @@ define_env_vars! {
     /// Set to `1` when qterm should start the shell as a login shell
     TAB_IS_LOGIN_SHELL = "TAB_IS_LOGIN_SHELL",
 
-    /// A command string that qterm passes to the shell with `-c`
-    TAB_EXECUTION_STRING = "TAB_EXECUTION_STRING",
-
-    /// Extra arguments that qterm passes to the shell
-    TAB_SHELL_EXTRA_ARGS = "TAB_SHELL_EXTRA_ARGS",
-
-    /// Initial text that qterm writes to the shell
-    TAB_START_TEXT = "TAB_START_TEXT",
-
     /// Forces codespaces detection
     TAB_CODESPACES = "TAB_CODESPACES",
 
@@ -90,6 +82,18 @@ define_env_vars! {
     TAB_PROMPT_OFFSET_WORKAROUND = "TAB_PROMPT_OFFSET_WORKAROUND"
 }
 
+// The values of the names below can hold user commands and arguments. They are not in [`ALL`],
+// so diagnostics do not show them.
+
+/// A command string that qterm passes to the shell with `-c`
+pub const TAB_EXECUTION_STRING: &str = "TAB_EXECUTION_STRING";
+
+/// Extra arguments that qterm passes to the shell
+pub const TAB_SHELL_EXTRA_ARGS: &str = "TAB_SHELL_EXTRA_ARGS";
+
+/// Initial text that qterm writes to the shell
+pub const TAB_START_TEXT: &str = "TAB_START_TEXT";
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
@@ -104,15 +108,15 @@ mod tests {
 
     #[test]
     fn all_contains_tabterm_vars() {
-        for name in [
-            TAB_DISABLE_AUTOCOMPLETE,
-            TAB_EXECUTION_STRING,
-            TAB_IS_LOGIN_SHELL,
-            TAB_SHELL_EXTRA_ARGS,
-            TAB_START_TEXT,
-            TAB_TERM_TMUX,
-        ] {
+        for name in [TAB_DISABLE_AUTOCOMPLETE, TAB_IS_LOGIN_SHELL, TAB_TERM_TMUX] {
             assert!(ALL.contains(&name), "{name} is missing from ALL");
+        }
+    }
+
+    #[test]
+    fn all_excludes_command_vars() {
+        for name in [TAB_EXECUTION_STRING, TAB_SHELL_EXTRA_ARGS, TAB_START_TEXT] {
+            assert!(!ALL.contains(&name), "{name} must not be in ALL");
         }
     }
 }

@@ -211,6 +211,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn shared_hook_builders_set_fields() {
+        let context = generate_shell_context(1, "tty", Some("session_id")).unwrap();
+
+        let intercepted_key = intercepted_key_hook(context.clone(), "action", "key");
+        assert_eq!(intercepted_key.action, "action");
+        assert_eq!(intercepted_key.key, "key");
+        assert_eq!(intercepted_key.context, Some(context.clone()));
+
+        let edit_buffer = edit_buffer_hook(context.clone(), "text", 2, 3, None);
+        assert_eq!(edit_buffer.text, "text");
+        assert_eq!(edit_buffer.cursor, 2);
+        assert_eq!(edit_buffer.histno, 3);
+
+        assert_eq!(preexec_hook(context.clone()).command, None);
+        assert_eq!(prompt_hook(context.clone()).context, Some(context));
+    }
+
+    #[test]
     fn new_hooks() {
         let context = generate_shell_context(1, "tty", Some("session_id")).unwrap();
 

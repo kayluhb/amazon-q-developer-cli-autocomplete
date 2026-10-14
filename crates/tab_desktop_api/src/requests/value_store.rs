@@ -31,7 +31,7 @@ pub(super) fn get_json_blob(store: &impl ValueStore, name: &str, key: Option<Str
 /// Sets `key` to `value`, or removes `key` when there is no value.
 ///
 /// A value that is not valid JSON is stored as a JSON string.
-pub(super) fn update(store: &impl ValueStore, key: Option<&String>, value: Option<String>) -> RequestResult {
+pub(super) fn update(store: &impl ValueStore, key: Option<&str>, value: Option<String>) -> RequestResult {
     match (key, value) {
         (Some(key), Some(value)) => {
             let value = serde_json::from_str(&value).unwrap_or(serde_json::Value::String(value));
@@ -58,6 +58,7 @@ mod tests {
     use tab_settings::Settings;
 
     use super::*;
+    use crate::requests::ServerOriginatedSubMessage;
 
     #[test]
     fn get_json_blob_returns_value_or_all() {
@@ -75,15 +76,25 @@ mod tests {
     #[test]
     fn update_sets_and_removes() {
         let store = Settings::new_fake();
-        let key = "key".to_string();
+        let key = "key";
 
-        update(&store, Some(&key), Some("true".into())).unwrap();
-        assert_eq!(store.get_value(&key).unwrap(), Some(json!(true)));
+        update(&store, Some(key), Some("true".into())).unwrap();
+        assert_eq!(store.get_value(key).unwrap(), Some(json!(true)));
 
-        update(&store, Some(&key), Some("not json".into())).unwrap();
-        assert_eq!(store.get_value(&key).unwrap(), Some(json!("not json")));
+        update(&store, Some(key), Some("not json".into())).unwrap();
+        assert_eq!(store.get_value(key).unwrap(), Some(json!("not json")));
 
-        update(&store, Some(&key), None).unwrap();
-        assert_eq!(store.get_value(&key).unwrap(), None);
+        update(&store, Some(key), None).unwrap();
+        assert_eq!(store.get_value(key).unwrap(), None);
+    }
+
+    #[test]
+    fn update_without_key_fails() {
+        let store = Settings::new_fake();
+        for value in [Some("true".to_string()), None] {
+            let response = *update(&store, None, value).unwrap();
+            assert!(matches!(response, ServerOriginatedSubMessage::Error(_)), "{response:?}");
+        }
+        assert!(store.all().unwrap().is_empty());
     }
 }

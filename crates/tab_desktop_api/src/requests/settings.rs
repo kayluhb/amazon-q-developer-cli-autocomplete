@@ -23,5 +23,5 @@ pub async fn get(request: GetSettingsPropertyRequest) -> RequestResult {
 }
 
 pub async fn update(request: UpdateSettingsPropertyRequest) -> RequestResult {
-    value_store::update(&Settings::new(), request.key.as_ref(), request.value)
+    value_store::update(&Settings::new(), request.key.as_deref(), request.value)
 }

@@ -22,5 +22,5 @@ pub async fn get(request: GetLocalStateRequest) -> RequestResult {
 }
 
 pub async fn update(request: UpdateLocalStateRequest) -> RequestResult {
-    value_store::update(&State::new(), request.key.as_ref(), request.value)
+    value_store::update(&State::new(), request.key.as_deref(), request.value)
 }
