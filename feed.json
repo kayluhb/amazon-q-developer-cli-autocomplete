@@ -20,7 +20,7 @@
       "changes": [
         {
           "type": "changed",
-          "description": "Tab no longer loads completion specs from `.fig/autocomplete/build` in project folders by default, because these specs can run commands. To load them, turn on "Load completion specs from project folders" in the dashboard."
+          "description": "Tab no longer loads completion specs from `.fig/autocomplete/build` in project folders by default, because these specs can run commands. To load them, turn on \"Load completion specs from project folders\" in the dashboard."
         },
         {
           "type": "security",
