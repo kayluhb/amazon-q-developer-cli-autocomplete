@@ -3,6 +3,7 @@ pub mod companion;
 pub mod dashboard;
 pub mod menu;
 pub mod notification;
+pub mod origin;
 pub mod window;
 pub mod window_id;
 
@@ -17,7 +18,6 @@ use std::time::Duration;
 
 use fnv::FnvBuildHasher;
 use muda::MenuEvent;
-use regex::RegexSet;
 use tab_desktop_api::init_script::javascript_init;
 use tab_desktop_api::kv::DashKVStore;
 use tab_os_shim::Context;
@@ -605,31 +605,54 @@ impl WebviewManager {
     }
 }
 
-fn navigation_handler<I, S>(window_id: WindowId, exprs: I) -> impl Fn(String) -> bool
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
-    let regex_set = RegexSet::new(exprs);
-
-    if let Err(ref err) = regex_set {
-        error!("Failed to compile regex: {err}");
-    }
-
-    move |url: String| match regex_set.as_ref().ok().and_then(|r| {
-        Url::parse(&url)
-            .ok()
-            .and_then(|url| url.domain().map(|domain| r.is_match(domain)))
-    }) {
-        Some(true) => {
+fn navigation_handler(window_id: WindowId) -> impl Fn(String) -> bool {
+    move |url: String| {
+        if origin::is_trusted_origin(&url, &origin::trusted_urls(&window_id)) {
             trace!("{window_id} allowed url: {url}");
             true
-        },
-        Some(false) | None => {
+        } else {
             warn!("{window_id} denied url: {url}");
             false
-        },
+        }
     }
+}
+
+/// Handles requests to open a new window or to load a subframe. Only trusted origins may load.
+fn new_window_req_handler(window_id: WindowId) -> impl Fn(String) -> bool {
+    move |url: String| {
+        if origin::is_trusted_origin(&url, &origin::trusted_urls(&window_id)) {
+            trace!("{window_id} allowed new window or subframe: {url}");
+            true
+        } else {
+            warn!("{window_id} denied new window or subframe: {url}");
+            false
+        }
+    }
+}
+
+/// Forwards IPC messages from trusted origins to the event loop. Drops all other messages.
+fn ipc_handler(window_id: WindowId, proxy: EventLoopProxy) -> impl Fn(wry::http::Request<String>) {
+    move |payload| {
+        let uri = payload.uri().to_string();
+        if !origin::is_trusted_origin(&uri, &origin::trusted_urls(&window_id)) {
+            warn!("{window_id} dropped ipc message from untrusted origin: {uri}");
+            return;
+        }
+
+        proxy
+            .send_event(Event::WindowEvent {
+                window_id: window_id.clone(),
+                window_event: WindowEvent::Api {
+                    payload: payload.into_body(),
+                },
+            })
+            .unwrap();
+    }
+}
+
+/// Devtools are enabled in debug builds, or when the window loads a developer URL.
+fn devtools_enabled(url: &Url) -> bool {
+    cfg!(debug_assertions) || *url != *autocomplete::RESOURCE_URL
 }
 
 pub struct DashboardOptions {
@@ -678,17 +701,8 @@ pub fn build_dashboard(
 
     let webview_builder = WebViewBuilder::with_web_context(web_context)
         .with_url(url.as_str())
-        .with_ipc_handler(move |payload| {
-            proxy
-                .send_event(Event::WindowEvent {
-                    window_id: DASHBOARD_ID.clone(),
-                    window_event: WindowEvent::Api {
-                        payload: payload.into_body(),
-                    },
-                })
-                .unwrap();
-        })
-        .with_devtools(true)
+        .with_ipc_handler(ipc_handler(DASHBOARD_ID, proxy))
+        .with_devtools(devtools_enabled(&dashboard::url()))
         .with_asynchronous_custom_protocol(
             "qcliresource".into(),
             utils::wrap_custom_protocol(
@@ -702,7 +716,8 @@ pub fn build_dashboard(
             "api".into(),
             utils::wrap_custom_protocol(Arc::clone(&ctx), "api", DashboardId, api::handle),
         )
-        .with_navigation_handler(navigation_handler(DASHBOARD_ID, &[r"^localhost$", r"^127\.0\.0\.1$"]))
+        .with_navigation_handler(navigation_handler(DASHBOARD_ID))
+        .with_new_window_req_handler(new_window_req_handler(DASHBOARD_ID))
         .with_initialization_script(&javascript_init(true))
         .with_clipboard(true)
         .with_hotkeys_zoom(true);
@@ -740,18 +755,11 @@ pub fn build_autocomplete(
 
     let proxy = event_loop.create_proxy();
 
+    let autocomplete_url = autocomplete::url();
+
     let webview_builder = WebViewBuilder::with_web_context(web_context)
-        .with_url(autocomplete::url().as_str())
-        .with_ipc_handler(move |payload| {
-            proxy
-                .send_event(Event::WindowEvent {
-                    window_id: AUTOCOMPLETE_ID.clone(),
-                    window_event: WindowEvent::Api {
-                        payload: payload.into_body(),
-                    },
-                })
-                .unwrap();
-        })
+        .with_url(autocomplete_url.as_str())
+        .with_ipc_handler(ipc_handler(AUTOCOMPLETE_ID, proxy))
         .with_asynchronous_custom_protocol(
             "fig".into(),
             utils::wrap_custom_protocol(Arc::clone(&ctx), "fig", AutocompleteId, icons::handle),
@@ -777,10 +785,11 @@ pub fn build_autocomplete(
             "api".into(),
             utils::wrap_custom_protocol(Arc::clone(&ctx), "api", AutocompleteId, api::handle),
         )
-        .with_devtools(true)
+        .with_devtools(devtools_enabled(&autocomplete_url))
         .with_transparent(true)
         .with_initialization_script(&javascript_init(true))
-        .with_navigation_handler(navigation_handler(AUTOCOMPLETE_ID, &[r"localhost$", r"^127\.0\.0\.1$"]))
+        .with_navigation_handler(navigation_handler(AUTOCOMPLETE_ID))
+        .with_new_window_req_handler(new_window_req_handler(AUTOCOMPLETE_ID))
         .with_clipboard(true)
         .with_hotkeys_zoom(true)
         .with_accept_first_mouse(true);

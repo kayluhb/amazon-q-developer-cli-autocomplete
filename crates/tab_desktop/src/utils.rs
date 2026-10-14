@@ -22,10 +22,13 @@ use tracing::{
     debug,
     debug_span,
     error,
+    warn,
 };
 use wry::http::header::{
     ACCESS_CONTROL_ALLOW_ORIGIN,
     CONTENT_TYPE,
+    ORIGIN,
+    VARY,
 };
 use wry::http::status::StatusCode;
 use wry::http::{
@@ -39,6 +42,10 @@ use wry::{
 };
 
 use crate::webview::WindowId;
+use crate::webview::origin::{
+    is_trusted_origin,
+    trusted_urls,
+};
 use crate::webview::window_id::WindowIdProvider;
 
 /// Determines if the build is ran in debug mode
@@ -72,13 +79,35 @@ where
             async move {
                 debug!(uri =% req.uri(), "{proto_name} proto request");
 
+                let window_id = window_id.window_id();
+
+                // A request from a page sends an Origin header for cross-origin requests. Reject the
+                // request if the origin is not trusted. Otherwise allow only that exact origin.
+                let origin = req.headers().get(ORIGIN).cloned();
+                if let Some(origin) = &origin {
+                    let trusted = origin
+                        .to_str()
+                        .is_ok_and(|origin| is_trusted_origin(origin, &trusted_urls(&window_id)));
+                    if !trusted {
+                        warn!(?origin, uri =% req.uri(), "{proto_name} proto request from untrusted origin");
+                        responder.respond(
+                            HttpResponse::builder()
+                                .status(StatusCode::FORBIDDEN)
+                                .header(CONTENT_TYPE, "text/plain")
+                                .body(Cow::Borrowed(b"Forbidden origin".as_slice()))
+                                .unwrap(),
+                        );
+                        return;
+                    }
+                }
+
                 let accept_json = req
                     .headers()
                     .get("Accept")
                     .and_then(|accept| accept.to_str().ok())
                     .is_some_and(|accept| accept.split('/').next_back() == Some("json"));
 
-                let mut response = match f(ctx_clone, req, window_id.window_id()).in_current_span().await {
+                let mut response = match f(ctx_clone, req, window_id).in_current_span().await {
                     Ok(res) => res,
                     Err(err) => {
                         error!(%err, "Custom protocol failed");
@@ -102,9 +131,10 @@ where
                     .headers_mut()
                     .insert("X-Request-Id", HeaderValue::from_str(&id.to_string()).unwrap());
 
-                response
-                    .headers_mut()
-                    .insert(ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
+                if let Some(origin) = origin {
+                    response.headers_mut().insert(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+                    response.headers_mut().insert(VARY, HeaderValue::from_static("Origin"));
+                }
 
                 debug!(status = %response.status(), "Custom proto response");
 
