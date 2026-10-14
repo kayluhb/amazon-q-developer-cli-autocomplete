@@ -67,7 +67,7 @@ const mcpServerGenerator: Fig.Generator = {
           .filter((name) => safeName.test(name))
           .map((name) => ({ name, description: `MCP server (${scope})` })),
       ],
-      []
+      [],
     );
   },
 };
@@ -88,7 +88,7 @@ const pluginGenerator: Fig.Generator = {
         }) => ({
           name: id,
           description: `${version}${enabled ? "" : " (disabled)"}`,
-        })
+        }),
       );
     } catch {
       return [];
@@ -114,7 +114,7 @@ const backgroundSessionGenerator: Fig.Generator = {
         }) => ({
           name: id,
           description: `${name ?? cwd} (${state})`,
-        })
+        }),
       );
     } catch {
       return [];
