@@ -811,11 +811,9 @@ impl<T> Term<T> {
     where
         T: EventListener,
     {
-        // A forced call replays an event that passed this check when it was queued.
-        if self.shell_state.osc_lock && !force {
-            return;
-        }
-
+        // NewCmd ignores osc_lock. When preexec did not run (an empty line or ^C), precmd
+        // unlocks and then calls preexec by hand, which locks again before the prompt sends
+        // NewCmd. The session ID check below guards NewCmd instead.
         if let (Some(remote_session_id), Some(local_session_id)) =
             (session_id, &self.shell_state.local_context.session_id)
         {
@@ -2400,15 +2398,6 @@ mod tests {
     }
 
     #[test]
-    fn new_cmd_is_ignored_while_locked() {
-        let mut term = Term::new_test(SizeInfo::new(10, 5), VoidListener, 0);
-        start_command(&mut term);
-
-        feed(&mut term, &osc("NewCmd=test-session-123"));
-        assert!(term.shell_state.preexec);
-    }
-
-    #[test]
     fn username_is_ignored_while_locked() {
         let mut term = Term::new_test(SizeInfo::new(10, 5), VoidListener, 0);
         feed(&mut term, &osc("User=alice"));
@@ -2419,13 +2408,18 @@ mod tests {
         assert_eq!(term.shell_state.get_context().username.as_deref(), Some("alice"));
     }
 
+    /// precmd after an empty line or ^C: unlock, then the manual preexec locks again
+    /// before the prompt sends NewCmd.
     #[test]
-    fn unlock_restores_new_cmd() {
+    fn new_cmd_after_manual_preexec_ends_preexec() {
         let mut term = Term::new_test(SizeInfo::new(10, 5), VoidListener, 0);
         start_command(&mut term);
 
         feed(&mut term, &osc("OSCUnlock=test-session-123"));
+        feed(&mut term, &osc("OSCLock=test-session-123"));
+        feed(&mut term, &osc("PreExec"));
         feed(&mut term, &osc("NewCmd=test-session-123"));
         assert!(!term.shell_state.preexec);
+        assert!(term.shell_state.cmd_cursor.is_some());
     }
 }
