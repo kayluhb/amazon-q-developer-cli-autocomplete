@@ -54,3 +54,6 @@ run-build.sh
 
 # TypeScript incremental build output
 *.tsbuildinfo
+
+# Packed by build-scripts/build.py and embedded by crates/tab_integrations/build.rs
+crates/tab_integrations/src/vscode/vscode-plugin.vsix
