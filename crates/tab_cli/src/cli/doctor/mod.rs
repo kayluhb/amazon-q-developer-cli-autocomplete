@@ -1897,10 +1897,8 @@ pub async fn doctor_cli(all: bool, strict: bool) -> Result<ExitCode> {
 
     // Try to launch the desktop app
     launch_fig_desktop(LaunchArgs {
-        wait_for_socket: true,
-        open_dashboard: false,
-        immediate_update: true,
         verbose: false,
+        ..LaunchArgs::default()
     })
     .ok();
 

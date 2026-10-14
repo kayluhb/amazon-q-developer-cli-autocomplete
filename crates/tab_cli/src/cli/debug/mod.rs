@@ -507,12 +507,7 @@ impl DebugSubcommand {
                             .spawn()?
                             .wait()?;
 
-                        launch_fig_desktop(LaunchArgs {
-                            wait_for_socket: true,
-                            open_dashboard: false,
-                            immediate_update: true,
-                            verbose: true,
-                        })?;
+                        launch_fig_desktop(LaunchArgs::default())?;
                     },
                     Some(AccessibilityAction::Reset) => {
                         quit_fig(true).await?;
@@ -523,12 +518,7 @@ impl DebugSubcommand {
                             .wait()?;
                     },
                     Some(AccessibilityAction::Prompt) => {
-                        launch_fig_desktop(LaunchArgs {
-                            wait_for_socket: true,
-                            open_dashboard: false,
-                            immediate_update: true,
-                            verbose: true,
-                        })?;
+                        launch_fig_desktop(LaunchArgs::default())?;
 
                         prompt_accessibility_command()
                             .await
@@ -697,12 +687,7 @@ impl DebugSubcommand {
                 }
             },
             Self::Devtools { app } => {
-                launch_fig_desktop(LaunchArgs {
-                    wait_for_socket: true,
-                    open_dashboard: false,
-                    immediate_update: true,
-                    verbose: true,
-                })?;
+                launch_fig_desktop(LaunchArgs::default())?;
 
                 devtools_command(match app {
                     App::Dashboard => tab_proto::local::devtools_command::Window::DevtoolsDashboard,

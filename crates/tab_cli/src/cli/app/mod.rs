@@ -88,12 +88,7 @@ pub async fn restart_fig() -> Result<()> {
     }
 
     if !desktop_app_running() {
-        launch_fig_desktop(LaunchArgs {
-            wait_for_socket: true,
-            open_dashboard: false,
-            immediate_update: true,
-            verbose: true,
-        })?;
+        launch_fig_desktop(LaunchArgs::default())?;
 
         Ok(())
     } else {
@@ -101,10 +96,8 @@ pub async fn restart_fig() -> Result<()> {
         crate::util::quit_fig(false).await?;
         tokio::time::sleep(Duration::from_millis(1000)).await;
         launch_fig_desktop(LaunchArgs {
-            wait_for_socket: true,
-            open_dashboard: false,
-            immediate_update: true,
             verbose: false,
+            ..LaunchArgs::default()
         })?;
 
         Ok(())
@@ -119,12 +112,7 @@ impl AppSubcommand {
 
         match self {
             AppSubcommand::Onboarding => {
-                launch_fig_desktop(LaunchArgs {
-                    wait_for_socket: true,
-                    open_dashboard: false,
-                    immediate_update: true,
-                    verbose: true,
-                })?;
+                launch_fig_desktop(LaunchArgs::default())?;
 
                 if state::set_value("user.onboarding", true).is_ok()
                     && state::set_value("doctor.prompt-restart-terminal", false).is_ok()
@@ -188,12 +176,7 @@ impl AppSubcommand {
                     return Ok(ExitCode::FAILURE);
                 }
 
-                launch_fig_desktop(LaunchArgs {
-                    wait_for_socket: true,
-                    open_dashboard: false,
-                    immediate_update: true,
-                    verbose: true,
-                })?;
+                launch_fig_desktop(LaunchArgs::default())?;
             },
             AppSubcommand::Running => {
                 println!("{}", if desktop_app_running() { "1" } else { "0" });
