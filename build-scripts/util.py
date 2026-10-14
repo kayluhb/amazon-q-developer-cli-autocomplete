@@ -83,9 +83,16 @@ Env = Mapping[str, str | os.PathLike]
 Cwd = str | os.PathLike
 
 
+class Secret(str):
+    """An argv value that run_cmd prints as *** instead of its value."""
+
+
+def format_cmd(args: Args) -> str:
+    return shlex.join("***" if isinstance(arg, Secret) else str(arg) for arg in args)
+
+
 def run_cmd(args: Args, env: Env | None = None, cwd: Cwd | None = None, check: bool = True):
-    args_str = [str(arg) for arg in args]
-    print(f"+ {shlex.join(args_str)}")
+    print(f"+ {format_cmd(args)}")
     subprocess.run(args, env=env, cwd=cwd, check=check)
 
 
@@ -94,8 +101,7 @@ def run_cmd_output(
     env: Env | None = None,
     cwd: Cwd | None = None,
 ) -> str:
-    args_str = [str(arg) for arg in args]
-    print(f"+ {shlex.join(args_str)}")
+    print(f"+ {format_cmd(args)}")
     res = subprocess.run(args, env=env, cwd=cwd, check=True, stdout=subprocess.PIPE)
     return res.stdout.decode("utf-8")
 

@@ -50,6 +50,10 @@ SPECS_COMMIT = "aef52acff84c45edde61ae610cc2c964802b9a38"
 # Our own specs, laid out like upstream's src/; they add to or replace upstream specs
 SPECS_OVERRIDES_PATH = pathlib.Path("specs")
 
+# Themes, bundled into the app
+THEMES_REPO = "https://github.com/withfig/themes.git"
+THEMES_COMMIT = "ab71dc82974f4750736d2583867bf6c7219515cb"
+
 
 @dataclass
 class NpmBuildOutput:
@@ -373,7 +377,8 @@ def build_macos_desktop_app(
     info("Grabbing themes")
     theme_repo = BUILD_DIR / "themes"
     shutil.rmtree(theme_repo, ignore_errors=True)
-    run_cmd(["git", "clone", "https://github.com/withfig/themes.git", theme_repo])
+    run_cmd(["git", "clone", "--filter=blob:none", THEMES_REPO, theme_repo])
+    run_cmd(["git", "checkout", "--quiet", THEMES_COMMIT], cwd=theme_repo)
     shutil.copytree(theme_repo / "themes", app_path / "Contents/Resources/themes")
 
     info("Copying dashboard into bundle")

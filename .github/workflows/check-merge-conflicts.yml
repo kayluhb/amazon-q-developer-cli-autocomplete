@@ -4,25 +4,29 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+
 jobs:
   check-merge-conflicts:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Check if PR is against main branch
         id: check-target-branch
+        env:
+          TARGET_BRANCH: ${{ github.base_ref }}
         run: |
-          TARGET_BRANCH="${{ github.base_ref }}"
           if [[ "$TARGET_BRANCH" == "main" ]]; then
             echo "PR is against main branch, no need to check for conflicts"
-            echo "is_main=true" >> $GITHUB_OUTPUT
+            echo "is_main=true" >> "$GITHUB_OUTPUT"
           else
             echo "PR is not against main branch, will check for conflicts"
-            echo "is_main=false" >> $GITHUB_OUTPUT
+            echo "is_main=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check for merge conflicts with main

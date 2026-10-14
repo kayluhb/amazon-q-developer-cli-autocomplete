@@ -5,7 +5,7 @@ import pathlib
 from typing import Any, List, Optional
 from const import APPLE_TEAM_ID
 from manifest import CdSigningType, app_manifest, dmg_manifest, ime_manifest
-from util import Args, Env, info, run_cmd, run_cmd_output, warn
+from util import Args, Env, Secret, info, run_cmd, run_cmd_output, warn
 import json
 import shutil
 import time
@@ -274,9 +274,9 @@ def apple_notarize_file(file: pathlib.Path, signing_data: CdSigningData):
             "--team-id",
             APPLE_TEAM_ID,
             "--apple-id",
-            secrets["appleId"],
+            Secret(secrets["appleId"]),
             "--password",
-            secrets["appleIdPassword"],
+            Secret(secrets["appleIdPassword"]),
             "--wait",
         ]
     )
