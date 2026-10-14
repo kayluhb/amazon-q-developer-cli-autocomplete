@@ -1,24 +1,22 @@
 import { Code } from "@/components/text/code";
 import { Kbd } from "@/components/ui/keystrokeInput";
 
-// Wraps every other part in `Wrap`: the even parts if the string starts with
-// the delimiter, the odd parts otherwise.
+// Wraps the odd parts in `Wrap`. Splitting on the delimiter always puts the
+// delimited text at the odd indices: "`a` b".split("`") is ["", "a", " b"].
 function wrapAlternateParts(
   parts: string[],
-  startsWithDelimiter: boolean,
   Wrap: typeof Code | typeof Kbd,
   className?: string,
 ) {
-  const wrappedParity = startsWithDelimiter ? 0 : 1;
   return (
     <span>
-      {parts.map((s, i) =>
-        i % 2 === wrappedParity ? (
-          <Wrap key={i} className={className}>
-            {s}
+      {parts.map((part, index) =>
+        index % 2 === 1 ? (
+          <Wrap key={index} className={className}>
+            {part}
           </Wrap>
         ) : (
-          <span key={i}>{s}</span>
+          <span key={index}>{part}</span>
         ),
       )}
     </span>
@@ -31,16 +29,11 @@ export function parseBracketsToKbd(string: string, className?: string) {
   // This *works* but is so hacky that it feels awful and some strings have both backticks *and* square brackets...
   // TODO: switch to regex-based solution
   const strArray = string.split("[").join("*").split("]").join("*").split("*");
-  return wrapAlternateParts(strArray, string.charAt(0) === "[", Kbd, className);
+  return wrapAlternateParts(strArray, Kbd, className);
 }
 
 export function parseBackticksToCode(string: string, className?: string) {
   if (!string.includes("`")) return <span>{string}</span>;
 
-  return wrapAlternateParts(
-    string.split("`"),
-    string.charAt(0) === "`",
-    Code,
-    className,
-  );
+  return wrapAlternateParts(string.split("`"), Code, className);
 }

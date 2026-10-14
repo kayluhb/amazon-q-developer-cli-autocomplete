@@ -1,8 +1,10 @@
 // Types are in csp.d.ts.
 
+const DEVELOPMENT_MODE = "development";
+
 export function htmlCspPlugin(csp) {
   const content = Object.entries(csp)
-    .map(([k, v]) => `${k} ${v}`)
+    .map(([directive, value]) => `${directive} ${value}`)
     .join("; ");
 
   return {
@@ -10,7 +12,7 @@ export function htmlCspPlugin(csp) {
     transformIndexHtml: {
       order: "post",
       handler: (_html, ctx) => {
-        if (ctx.server?.config?.mode === "development") {
+        if (ctx.server?.config?.mode === DEVELOPMENT_MODE) {
           return [];
         }
 

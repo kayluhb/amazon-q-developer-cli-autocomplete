@@ -39,7 +39,7 @@ const overrides: Record<string, Partial<Action>> = {
 
 function action(identifier: string): Action {
   const contributed = app.contributes.actions.find(
-    (a) => a.identifier === identifier,
+    (candidate) => candidate.identifier === identifier,
   );
   if (!contributed) {
     throw new Error(`No autocomplete action "${identifier}" in fig.json`);

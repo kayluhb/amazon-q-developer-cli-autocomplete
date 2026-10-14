@@ -109,7 +109,7 @@ export const installStatus = {
       return _subscribeToCase(
         NotificationType.NOTIFY_ON_ACCESSIBILITY_CHANGE,
         "accessibilityChangeNotification",
-        (value) => handler(value.enabled),
+        ({ enabled }) => handler(enabled),
       );
     }
     throw Error("Not implemented");

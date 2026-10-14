@@ -487,7 +487,7 @@ const completionSpec: Fig.Spec = {
             {
               name: "--from-file",
               description:
-                "Key file can be specified using its file path, in which case file basename will be used as configmap key, or optionally with a key and file path, in which case the given key will be used.  Specifying a directory will iterate each named file in the directory whose basename is a valid configmap key",
+                "Key file can be specified using its file path, in which case file basename will be used as configmap key, or optionally with a key and file path, in which case the given key will be used. Specifying a directory will iterate each named file in the directory whose basename is a valid configmap key",
               args: { name: "from-file", template: "filepaths" },
               isRepeatable: true,
             },
@@ -1680,7 +1680,7 @@ const completionSpec: Fig.Spec = {
                 {
                   name: "--from-file",
                   description:
-                    "Key files can be specified using their file path, in which case a default name will be given to them, or optionally with a name and file path, in which case the given name will be used.  Specifying a directory will iterate each named file in the directory that is a valid secret key",
+                    "Key files can be specified using their file path, in which case a default name will be given to them, or optionally with a name and file path, in which case the given name will be used. Specifying a directory will iterate each named file in the directory that is a valid secret key",
                   args: { name: "from-file", template: "filepaths" },
                   isRepeatable: true,
                 },
@@ -2418,7 +2418,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--raw",
           description:
-            "Raw URI to POST to the server.  Uses the transport specified by the kubeconfig file",
+            "Raw URI to POST to the server. Uses the transport specified by the kubeconfig file",
           args: { name: "raw" },
         },
         {
@@ -2655,7 +2655,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--attach",
           description:
-            "If true, wait for the Pod to start running, and then attach to the Pod as if 'kubectl attach ...' were called.  Default false, unless '-i/--stdin' is set, in which case the default is true. With '--restart=Never' the exit code of the container process is returned",
+            "If true, wait for the Pod to start running, and then attach to the Pod as if 'kubectl attach ...' were called. Default false, unless '-i/--stdin' is set, in which case the default is true. With '--restart=Never' the exit code of the container process is returned",
         },
         {
           name: "--cascade",
@@ -2698,7 +2698,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--expose",
           description:
-            "If true, create a ClusterIP service associated with the pod.  Requires `--port`",
+            "If true, create a ClusterIP service associated with the pod. Requires `--port`",
         },
         {
           name: "--field-manager",
@@ -2724,7 +2724,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--image-pull-policy",
           description:
-            "The image pull policy for the container.  If left empty, this value will not be specified by the client and defaulted by the server",
+            "The image pull policy for the container. If left empty, this value will not be specified by the client and defaulted by the server",
           args: {
             name: "image-pull-policy",
             suggestions: ["Always", "IfNotPresent", "Never"],
@@ -2807,7 +2807,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--restart",
           description:
-            "The restart policy for this Pod.  Legal values [Always, OnFailure, Never]",
+            "The restart policy for this Pod. Legal values [Always, OnFailure, Never]",
           args: {
             name: "restart",
             suggestions: ["Always", "OnFailure", "Never"],
@@ -2817,7 +2817,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--rm",
           description:
-            "If true, delete the pod after it exits.  Only valid when attaching to the container, e.g. with '--attach' or with '-i/--stdin'",
+            "If true, delete the pod after it exits. Only valid when attaching to the container, e.g. with '--attach' or with '-i/--stdin'",
         },
         {
           name: "--save-config",
@@ -3160,7 +3160,7 @@ const completionSpec: Fig.Spec = {
             {
               name: "--limits",
               description:
-                "The resource requirement requests for this container.  For example, 'cpu=100m,memory=256Mi'.  Note that server side components may assign requests depending on the server configuration, such as limit ranges",
+                "The resource requirement requests for this container. For example, 'cpu=100m,memory=256Mi'. Note that server side components may assign requests depending on the server configuration, such as limit ranges",
               args: { name: "limits" },
             },
             {
@@ -3197,7 +3197,7 @@ const completionSpec: Fig.Spec = {
             {
               name: "--requests",
               description:
-                "The resource requirement requests for this container.  For example, 'cpu=100m,memory=256Mi'.  Note that server side components may assign requests depending on the server configuration, such as limit ranges",
+                "The resource requirement requests for this container. For example, 'cpu=100m,memory=256Mi'. Note that server side components may assign requests depending on the server configuration, such as limit ranges",
               args: { name: "requests" },
             },
             {
@@ -3642,7 +3642,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--raw",
           description:
-            "Raw URI to request from the server.  Uses the transport specified by the kubeconfig file",
+            "Raw URI to request from the server. Uses the transport specified by the kubeconfig file",
           args: { name: "raw" },
         },
         {
@@ -3679,7 +3679,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--sort-by",
           description:
-            "If non-empty, sort list types using this field specification.  The field specification is expressed as a JSONPath expression (e.g. '{.metadata.name}'). The field in the API resource specified by this JSONPath expression must be an integer or a string",
+            "If non-empty, sort list types using this field specification. The field specification is expressed as a JSONPath expression (e.g. '{.metadata.name}'). The field in the API resource specified by this JSONPath expression must be an integer or a string",
           args: { name: "sort-by" },
         },
         {
@@ -3899,7 +3899,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--raw",
           description:
-            "Raw URI to DELETE to the server.  Uses the transport specified by the kubeconfig file",
+            "Raw URI to DELETE to the server. Uses the transport specified by the kubeconfig file",
           args: { name: "raw" },
         },
         {
@@ -4738,7 +4738,7 @@ const completionSpec: Fig.Spec = {
             {
               name: ["-A", "--all-namespaces"],
               description:
-                "If true, dump all namespaces.  If true, --namespaces is ignored",
+                "If true, dump all namespaces. If true, --namespaces is ignored",
             },
             {
               name: "--allow-missing-template-keys",
@@ -4776,7 +4776,7 @@ const completionSpec: Fig.Spec = {
             {
               name: "--output-directory",
               description:
-                "Where to output the files.  If empty or '-' uses stdout, otherwise creates a directory hierarchy in that directory",
+                "Where to output the files. If empty or '-' uses stdout, otherwise creates a directory hierarchy in that directory",
               args: { name: "output-directory", template: "folders" },
             },
             {
@@ -5002,7 +5002,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--skip-wait-for-delete-timeout",
           description:
-            "If pod DeletionTimestamp older than N seconds, skip waiting for the pod.  Seconds must be greater than 0 to skip",
+            "If pod DeletionTimestamp older than N seconds, skip waiting for the pod. Seconds must be greater than 0 to skip",
           args: { name: "skip-wait-for-delete-timeout", default: "0" },
         },
         {
@@ -5182,7 +5182,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--insecure-skip-tls-verify-backend",
           description:
-            "Skip verifying the identity of the kubelet that logs are requested from.  In theory, an attacker could provide invalid log content back. You might want to use this if your kubelet serving certificates have expired",
+            "Skip verifying the identity of the kubelet that logs are requested from. In theory, an attacker could provide invalid log content back. You might want to use this if your kubelet serving certificates have expired",
         },
         {
           name: "--limit-bytes",
@@ -5644,7 +5644,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--attach",
           description:
-            "If true, wait for the container to start running, and then attach as if 'kubectl attach ...' were called.  Default false, unless '-i/--stdin' is set, in which case the default is true",
+            "If true, wait for the container to start running, and then attach as if 'kubectl attach ...' were called. Default false, unless '-i/--stdin' is set, in which case the default is true",
         },
         {
           name: ["-c", "--container"],
@@ -6277,7 +6277,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--subresource",
           description:
-            "If specified, apply will operate on the subresource of the requested object.  Only allowed when using --server-side",
+            "If specified, apply will operate on the subresource of the requested object. Only allowed when using --server-side",
           args: { name: "subresource" },
         },
         {
@@ -6507,7 +6507,7 @@ const completionSpec: Fig.Spec = {
         {
           name: "--raw",
           description:
-            "Raw URI to PUT to the server.  Uses the transport specified by the kubeconfig file",
+            "Raw URI to PUT to the server. Uses the transport specified by the kubeconfig file",
           args: { name: "raw" },
         },
         {

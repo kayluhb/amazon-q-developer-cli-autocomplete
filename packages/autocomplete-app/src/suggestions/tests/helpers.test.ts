@@ -216,6 +216,22 @@ describe("getSameTypeSuggestionNames", () => {
     ).toEqual(["commit", "com"]);
   });
 
+  it("leaves out ../ unless ../ is selected", () => {
+    const withParent: Suggestion[] = [
+      { name: "../", type: "folder" },
+      ...suggestions,
+    ];
+    expect(getSameTypeSuggestionNames(withParent[3], withParent)).toEqual([
+      "foo/",
+      "foo",
+    ]);
+    expect(getSameTypeSuggestionNames(withParent[0], withParent)).toEqual([
+      "../",
+      "foo/",
+      "foo",
+    ]);
+  });
+
   it("returns null for types without a common prefix", () => {
     expect(getSameTypeSuggestionNames(suggestions[4], suggestions)).toBe(null);
     expect(
