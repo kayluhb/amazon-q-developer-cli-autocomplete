@@ -36,10 +36,7 @@ use tab_proto::remote::{
 };
 use tab_util::PTY_BINARY_NAME;
 use time::OffsetDateTime;
-use tokio::net::{
-    UnixListener,
-    UnixStream,
-};
+use tokio::net::UnixStream;
 use tokio::select;
 use tokio::sync::Notify;
 use tokio::time::{
@@ -70,21 +67,9 @@ pub async fn start_remote_ipc(
     figterm_state: Arc<FigtermState>,
     hook: impl RemoteHookHandler + Send + Clone + 'static,
 ) -> Result<()> {
-    if let Some(parent) = socket_path.parent() {
-        if !parent.exists() {
-            std::fs::create_dir_all(parent).context("Failed creating socket path")?;
-        }
-
-        {
-            use std::fs::Permissions;
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(parent, Permissions::from_mode(0o700))?;
-        }
-    }
-
-    tokio::fs::remove_file(&socket_path).await.ok();
-
-    let listener = UnixListener::bind(socket_path)?;
+    let listener = tab_ipc::socket_bind(&socket_path)
+        .await
+        .context("Failed binding remote socket")?;
 
     while let Ok((stream, _)) = listener.accept().await {
         tokio::spawn(handle_remote_ipc(stream, figterm_state.clone(), hook.clone()));

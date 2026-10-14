@@ -1,7 +1,10 @@
 use std::path::Path;
 use std::time::Duration;
 
-use tokio::net::UnixStream;
+use tokio::net::{
+    UnixListener,
+    UnixStream,
+};
 use tracing::{
     debug,
     error,
@@ -103,6 +106,24 @@ pub async fn socket_connect_timeout(socket: impl AsRef<Path>, timeout: Duration)
     }
 }
 
+/// Binds a unix socket listener at `socket_path`.
+///
+/// Creates the parent folder if it does not exist and sets its permissions to 0o700, which
+/// [validate_socket] expects. Removes an old socket file at `socket_path` before the bind.
+pub async fn socket_bind(socket_path: impl AsRef<Path>) -> std::io::Result<UnixListener> {
+    use std::fs::Permissions;
+    use std::os::unix::fs::PermissionsExt;
+
+    let socket_path = socket_path.as_ref();
+    if let Some(parent) = socket_path.parent() {
+        std::fs::create_dir_all(parent)?;
+        std::fs::set_permissions(parent, Permissions::from_mode(0o700))?;
+    }
+
+    tokio::fs::remove_file(socket_path).await.ok();
+    UnixListener::bind(socket_path)
+}
+
 /// Checks all the lower bits of a permission with the mask 0o777
 fn validate_mode_bits(left: u32, right: u32) -> bool {
     left & 0o777 == right & 0o777
@@ -155,6 +176,26 @@ mod tests {
         let _stream = socket_connect(&socket_path).await.expect("Failed to validate socket");
 
         socket_thread.abort();
+    }
+
+    #[tokio::test]
+    async fn test_socket_bind() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = tempfile::tempdir().unwrap();
+        let socket_path = dir.path().join("nested").join("socket.sock");
+
+        let listener = socket_bind(&socket_path).await.unwrap();
+        let mode = std::fs::metadata(socket_path.parent().unwrap())
+            .unwrap()
+            .permissions()
+            .mode();
+        assert!(validate_mode_bits(mode, 0o700));
+        drop(listener);
+
+        // A second bind replaces the old socket file.
+        let _listener = socket_bind(&socket_path).await.unwrap();
+        validate_socket(&socket_path).await.unwrap();
     }
 
     /// If this test fails, we need to reevaluate the permissions model design around our sockets
