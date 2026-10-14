@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import os
 import json
 import datetime
+import hashlib
 import pathlib
 import shutil
 import subprocess
@@ -46,6 +47,8 @@ BUILD_DIR = BUILD_DIR_RELATIVE.absolute()
 # Completion specs, built from source and bundled into the app
 SPECS_REPO = "https://github.com/withfig/autocomplete.git"
 SPECS_COMMIT = "aef52acff84c45edde61ae610cc2c964802b9a38"
+# Our own specs, laid out like upstream's src/; they add to or replace upstream specs
+SPECS_OVERRIDES_PATH = pathlib.Path("specs")
 
 
 @dataclass
@@ -56,8 +59,17 @@ class NpmBuildOutput:
     vscode_path: pathlib.Path
 
 
-def specs_built(repo: pathlib.Path) -> bool:
-    if not (repo / "build" / "index.json").exists():
+def specs_overrides_digest() -> str:
+    digest = hashlib.sha256()
+    for path in sorted(SPECS_OVERRIDES_PATH.rglob("*")):
+        if path.is_file():
+            digest.update(str(path.relative_to(SPECS_OVERRIDES_PATH)).encode())
+            digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+def specs_cloned(repo: pathlib.Path) -> bool:
+    if not (repo / "node_modules").exists():
         return False
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True)
     return head.returncode == 0 and head.stdout.strip() == SPECS_COMMIT
@@ -66,24 +78,25 @@ def specs_built(repo: pathlib.Path) -> bool:
 def build_specs() -> pathlib.Path:
     repo = BUILD_DIR / "autocomplete-specs"
     specs_path = repo / "build"
-    # Specs maintained in this repo, for tools withfig has no spec for
-    local_specs = list(pathlib.Path("specs").glob("*.ts"))
-    if specs_built(repo):
-        # A build that fails part way leaves index.json older than the spec, so it rebuilds next time
-        built_at = (specs_path / "index.json").stat().st_mtime
-        rebuild = any(spec.stat().st_mtime > built_at for spec in local_specs)
-        if not rebuild:
-            info(f"Specs already built at {SPECS_COMMIT}")
-    else:
+    # Written only after a successful build, so a build that fails part way reruns next time
+    stamp = repo / "overrides.sha256"
+    digest = specs_overrides_digest()
+    if not specs_cloned(repo):
         shutil.rmtree(repo, ignore_errors=True)
         run_cmd(["git", "clone", "--filter=blob:none", SPECS_REPO, repo])
         run_cmd(["git", "checkout", "--quiet", SPECS_COMMIT], cwd=repo)
         # --ignore-workspace: BUILD_DIR sits inside this repo's pnpm workspace
         run_cmd(["pnpm", "install", "--frozen-lockfile", "--ignore-scripts", "--ignore-workspace"], cwd=repo)
-        rebuild = True
-    if rebuild:
-        for spec in local_specs:
-            shutil.copy2(spec, repo / "src" / spec.name)
+    if (specs_path / "index.json").exists() and stamp.exists() and stamp.read_text() == digest:
+        info(f"Specs already built at {SPECS_COMMIT}")
+    else:
+        # Reset upstream's sources first so a removed or renamed spec in specs/ doesn't linger
+        run_cmd(["git", "checkout", "--quiet", "--", "src"], cwd=repo)
+        run_cmd(["git", "clean", "-fdq", "--", "src"], cwd=repo)
+        if SPECS_OVERRIDES_PATH.exists():
+            shutil.copytree(SPECS_OVERRIDES_PATH, repo / "src", dirs_exist_ok=True)
+        stamp.unlink(missing_ok=True)
+        shutil.rmtree(specs_path, ignore_errors=True)
         run_cmd(["pnpm", "--ignore-workspace", "build"], cwd=repo)
 
     # The spec compiler exits 0 even when specs fail to bundle, so check the output
@@ -96,6 +109,7 @@ def build_specs() -> pathlib.Path:
     ]
     if missing:
         raise RuntimeError(f"{len(missing)} completion specs failed to build, e.g. {missing[:5]}")
+    stamp.write_text(digest)
     return specs_path
 
 

@@ -93,8 +93,11 @@ Use the same layout as the withfig build output: an `index.json` listing the spe
 `<name>.js` files. To bundle newer withfig specs, change `SPECS_COMMIT` in
 `build-scripts/build.py` and rebuild.
 
-Specs that withfig doesn't have, such as `claude` for Claude Code, live in `specs/` as
-TypeScript. The build copies them into the withfig source tree and compiles them with the rest.
+withfig/autocomplete is no longer maintained, so newer or missing specs, such as `claude` for
+Claude Code, live in `specs/` as TypeScript, laid out like withfig's `src/`. The build copies
+them over the withfig sources before compiling, so `specs/gh.ts` replaces withfig's `gh` spec.
+Some are generated from a tool's help output by scripts in `build-scripts/specs/`; each
+generated spec's first line says how.
 
 ### Troubleshooting
 
