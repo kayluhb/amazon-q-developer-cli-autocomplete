@@ -11,12 +11,13 @@ The first argument is pnpm's native binary (pnpm 11+ ships one per platform unde
 script can shadow a built-in). Options every command accepts become persistent root options.
 Dynamic suggestions reuse upstream's hand-written generators, which are copied over verbatim."""
 
-import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+
+from _common import Raw, emit, tidy
 
 PNPM = sys.argv[1]
 upstream = open(sys.argv[2]).read()
@@ -144,10 +145,6 @@ def parse(path: list[str], description: str, aliases: list[str]) -> dict:
     return node
 
 
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
-
-
 def words(*values: str) -> list[dict]:
     return [{"name": v} for v in values]
 
@@ -198,12 +195,6 @@ OVERRIDES = {
     " --filter": {"template": "filepaths"},
     " --npmrc-auth-file": {"template": "filepaths"},
 }
-
-
-def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = description.strip().removesuffix(".")
-    return description[:1].upper() + description[1:]
 
 
 def suggestions(values: list[dict]) -> list:
@@ -261,16 +252,6 @@ def command(node: dict, path: list[str], persistent: set[str]) -> dict:
     if args:
         out["args"] = args[0] if len(args) == 1 else args
     return out
-
-
-def emit(value) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 def all_nodes(node: dict):

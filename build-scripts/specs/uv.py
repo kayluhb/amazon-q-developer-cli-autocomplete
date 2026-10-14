@@ -25,6 +25,8 @@ import re
 import subprocess
 import sys
 
+from _common import Raw, emit, tidy
+
 args = sys.argv[1:]
 DUMP_JSON = args[:1] == ["--json"]
 if DUMP_JSON:
@@ -39,10 +41,6 @@ PRELUDE = upstream[
         "// ////////////////////////////////////////////////////////////////// Options"
     )
 ]
-
-
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
 
 
 def run(argv: list[str]) -> str:
@@ -186,12 +184,6 @@ FOLDER_ARGS = {"DIRECTORY", "PROJECT", "CACHE_DIR", "OUT_DIR", "INSTALL_DIR", "T
 FILE_ARGS = re.compile(r"FILE|PATH|REQUIREMENTS|CONSTRAINT|OVERRIDE|SCRIPT|^SRC$")
 
 
-def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = description.strip().removesuffix(".")
-    return description[:1].upper() + description[1:]
-
-
 def completion(key: str, meta: str, values: list[str] | None) -> dict:
     if key in OVERRIDES:
         return OVERRIDES[key]
@@ -262,16 +254,6 @@ def command(node: dict, path: list[str]) -> dict:
     if " ".join(path) in PASSTHROUGH:
         out["parserDirectives"] = {"optionsMustPrecedeArguments": True}
     return out
-
-
-def emit(value) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 spec = command(tree, [])

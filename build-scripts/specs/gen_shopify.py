@@ -13,6 +13,9 @@ import json
 import re
 import sys
 
+from _common import emit
+from _common import tidy as base_tidy
+
 package = sys.argv[1]
 manifest = json.load(open(f"{package}/oclif.manifest.json"))
 pkg = json.load(open(f"{package}/package.json"))
@@ -62,8 +65,7 @@ def tidy(text: str) -> str:
     text = text.replace("<%= config.bin %>", "shopify").strip()
     text = re.split(r"\n\s*\n|\n\s*- ", text)[0]
     text = re.sub(r'"([^"]+)" \((https?://[^)]+)\)', r"\1", text)
-    text = " ".join(text.split()).removesuffix(".").removesuffix(":")
-    return text[:1].upper() + text[1:]
+    return base_tidy(text).removesuffix(":")
 
 
 def visible_commands() -> dict[str, dict]:
@@ -173,14 +175,6 @@ def subcommand(name: str, node: dict, path: list[str]) -> dict:
     if not out["description"]:
         del out["description"]
     return out
-
-
-def emit(value) -> str:
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 tree = build_tree(visible_commands())

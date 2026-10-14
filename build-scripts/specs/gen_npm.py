@@ -11,12 +11,14 @@ Commands, aliases, usage lines and option flags come from that help; option desc
 Upstream's hand-written generators (registry search, scripts, dependencies, workspaces) are copied over verbatim
 and attached through the tables below. Warnings about undescribed subcommands go to stderr."""
 
-import json
 import os
 import re
 import subprocess
 import sys
 from collections import Counter
+
+from _common import Raw, emit
+from _common import tidy as base_tidy
 
 PKG = sys.argv[1]
 upstream = open(sys.argv[2]).read()
@@ -26,10 +28,6 @@ upstream = open(sys.argv[2]).read()
 PRELUDE = upstream[upstream.index("const atsInStr") : upstream.index("const globalOption")].replace(
     "sugge" + "tsions", "suggestions"
 )
-
-
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
 
 
 def npm(*args: str) -> str:
@@ -294,9 +292,8 @@ GLOBAL_OPTIONS = [
 
 
 def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = re.sub(r"\s+", " ", description).strip().removesuffix(".").removesuffix(":")
-    return description[:1].upper() + description[1:]
+    """The shared tidy, also without a trailing colon."""
+    return base_tidy(description).removesuffix(":")
 
 
 def strip_markdown(text: str) -> str:
@@ -639,16 +636,6 @@ def command(cmd: str, path: list[str], text: str) -> dict:
             sys.exit(f"error: {cmd} aliases {names[1:]} don't match cmd-list.js {sorted(expected)}")
     out["name"] = names[0] if len(names) == 1 else names
     return out
-
-
-def emit(value) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 def share_options(spec: dict) -> list[str]:

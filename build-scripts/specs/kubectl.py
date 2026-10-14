@@ -8,20 +8,17 @@ It walks `kubectl <path> --help` for every command (plus `kubectl options` for t
 Upstream's hand-written generators are copied over verbatim; positional args can't be parsed
 reliably from kubectl's free-form usage lines, so they come from the ARGS table below."""
 
-import json
 import re
 import subprocess
 import sys
+
+from _common import Raw, emit, tidy
 
 KUBECTL = sys.argv[1] if len(sys.argv) > 2 else "kubectl"
 upstream = open(sys.argv[-1]).read()
 
 # Upstream's helpers and shared args, everything before its shared options
 PRELUDE = upstream[: upstream.index("const sharedOpts")]
-
-
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
 
 
 def help_text(path: list[str]) -> str:
@@ -246,12 +243,6 @@ OPTION_ARGS: dict[str, dict] = {
 }
 
 
-def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = description.strip().rstrip(".")
-    return description[:1].upper() + description[1:]
-
-
 def choices(description: str) -> list[str] | None:
     """Values listed in a flag's description, e.g. `One of: (a, b, c)`, `either 'a' or 'b'`,
     `Must be "a", "b", or "c"`."""
@@ -316,16 +307,6 @@ def command(node: dict, path: list[str]) -> dict:
     if (args := ARGS.pop(" ".join(path), None)) is not None:
         out["args"] = args
     return out
-
-
-def emit(value) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 tree = crawl([], "")

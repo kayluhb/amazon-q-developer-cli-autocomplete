@@ -20,6 +20,8 @@ import shutil
 import subprocess
 import sys
 
+from _common import Raw
+
 BQ_PY = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(shutil.which("bq")))), "platform", "bq", "bq.py")
 
 
@@ -31,10 +33,6 @@ def bq(*args):
         text=True,
         timeout=60,
     ).stdout
-
-
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
 
 
 FILE = {"template": "filepaths"}

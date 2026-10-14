@@ -15,6 +15,8 @@ import re
 import subprocess
 import sys
 
+from _common import Raw, emit, tidy
+
 NODE_MODULES = sys.argv[1]
 PLAYWRIGHT = os.path.join(NODE_MODULES, ".bin", "playwright")
 CLI_HELP = os.path.join(NODE_MODULES, "playwright-core", "lib", "tools", "cli-client", "help.json")
@@ -57,10 +59,6 @@ CHANNELS = [
 ]
 
 
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
-
-
 # Completions the help text can't tell us about, keyed by "<command path> <--flag or positional name>"
 OVERRIDES = {
     "install browser": {"suggestions": Raw("browserSuggestions")},
@@ -85,12 +83,6 @@ SHARED_OVERRIDES = {
     "--channel": {"suggestions": CHANNELS},
     "--color-scheme": {"suggestions": ["light", "dark"]},
 }
-
-
-def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = " ".join(description.split()).removesuffix(".")
-    return description[:1].upper() + description[1:]
 
 
 def choices(description: str) -> list[str] | None:
@@ -278,16 +270,6 @@ def cli(description: str) -> dict:
         "subcommands": [cli_command(n, data["commands"][n]) for n in listed if n in data["commands"]],
         "options": globals_,
     }
-
-
-def emit(value) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 spec = command([], "Playwright end-to-end testing and browser automation")

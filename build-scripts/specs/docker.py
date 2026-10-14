@@ -17,6 +17,9 @@ import re
 import subprocess
 import sys
 
+from _common import Raw, emit
+from _common import tidy as base_tidy
+
 # Plugins that get their own spec, or whose help isn't about docker commands
 NOT_CRAWLED = {"compose"}
 SKIP_COMMANDS = {"help", "completion", "docker-cli-plugin-hooks", "__complete", "__completeNoDesc"}
@@ -133,10 +136,6 @@ def crawl(path: list[str], description: str) -> dict:
 
 
 # ------------------------------------------------------------------------------------------ gen
-
-
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
 
 
 def balanced(src: str, start: int) -> str:
@@ -271,9 +270,8 @@ def override(path: list[str], key: str) -> dict | None:
 
 
 def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = re.sub(r"\s+", " ", description).strip().removesuffix(".").removesuffix(":")
-    return description[:1].upper() + description[1:]
+    """The shared tidy, also without a trailing colon."""
+    return base_tidy(description).removesuffix(":")
 
 
 def choices(description: str) -> list[str] | None:
@@ -413,16 +411,6 @@ def command(node: dict, path: list[str]) -> dict:
     elif args := positional_args(node, path):
         out["args"] = args[0] if len(args) == 1 else args
     return out
-
-
-def emit(value) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 def gen(tree: dict, upstream: str) -> str:

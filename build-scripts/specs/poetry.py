@@ -13,6 +13,8 @@ import re
 import subprocess
 import sys
 
+from _common import Raw
+
 
 def run(poetry, *args):
     return subprocess.run(
@@ -94,10 +96,6 @@ NAMESPACES = {
     "self show": "Show packages from Poetry's runtime environment",
     "source": "Manage repository sources for the project",
 }
-
-
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
 
 
 CACHE_NAMES = """const CACHE_NAMES: Fig.Generator = {

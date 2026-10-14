@@ -24,6 +24,11 @@ import pathlib
 import re
 import sys
 
+# `python3 -I` leaves this script's directory off sys.path; add it back for _common
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _common import emit  # noqa: E402
+from _common import tidy as base_tidy  # noqa: E402
+
 cli_dir, *plugin_dirs = (pathlib.Path(p) for p in sys.argv[1:])
 
 # Completions keyed by "<command id> <arg name>" / "<command id> --<flag>"
@@ -57,9 +62,7 @@ TOPIC_FALLBACKS = {
 
 def tidy(description: str) -> str:
     """First paragraph, capitalised, no trailing dot (the fig linter's style)."""
-    description = re.split(r"\n\s*\n", description.strip())[0]
-    description = " ".join(description.split()).removesuffix(".")
-    return description[:1].upper() + description[1:]
+    return base_tidy(re.split(r"\n\s*\n", description.strip())[0])
 
 
 def load(pkg: pathlib.Path) -> tuple[dict, dict, dict]:
@@ -236,14 +239,6 @@ spec = {
         {"name": ["--version", "-v"], "description": "Show the installed version of the Sanity CLI"},
     ],
 }
-
-
-def emit(value) -> str:
-    if isinstance(value, dict):
-        return "{" + ", ".join(f"{k}: {emit(v)}" for k, v in value.items()) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 plugins = ", ".join(f"{p['name']} {p['version']}" for p in (load(d)[2] for d in plugin_dirs))

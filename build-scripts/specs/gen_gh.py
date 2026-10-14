@@ -12,6 +12,8 @@ import re
 import subprocess
 import sys
 
+from _common import Raw, emit, tidy
+
 tree = json.load(open(sys.argv[1]))
 upstream = open(sys.argv[2]).read()
 
@@ -49,10 +51,6 @@ CUSTOM_REPO_COMMANDS = {"clone", "fork", "view", "set-default"}
 BRANCH_FLAGS = {"--base", "--head", "--branch"}
 
 
-class Raw(str):
-    """Emitted as-is instead of as a string literal."""
-
-
 # Completions the help text can't tell us about, keyed by "<command path> <--flag or positional name>"
 OVERRIDES = {
     "gist edit --add": {"template": "filepaths"},
@@ -62,12 +60,6 @@ OVERRIDES = {
         "isVariadic": True,
     },
 }
-
-
-def tidy(description: str) -> str:
-    """Match the fig linter's description style: capitalised, no trailing dot."""
-    description = description.strip().removesuffix(".")
-    return description[:1].upper() + description[1:]
 
 
 def choices(description: str) -> list[str] | None:
@@ -182,17 +174,6 @@ def command(node: dict, path: list[str]) -> dict:
     if args := positional_args(node, path):
         out["args"] = args[0] if len(args) == 1 else args
     return out
-
-
-def emit(value, indent=0) -> str:
-    if isinstance(value, Raw):
-        return str(value)
-    if isinstance(value, dict):
-        items = [f"{k}: {emit(v, indent + 1)}" for k, v in value.items()]
-        return "{" + ", ".join(items) + "}"
-    if isinstance(value, list):
-        return "[" + ", ".join(emit(v, indent + 1) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
 
 
 spec = command(tree, [])
