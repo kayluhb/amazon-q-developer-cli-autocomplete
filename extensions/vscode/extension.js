@@ -2,6 +2,12 @@ const vscode = require("vscode");
 const cp = require("child_process");
 
 const SELECTION_DEBOUNCE_MS = 100;
+const OSX_TERMINAL_ENV_SETTING = "terminal.integrated.env.osx";
+const NEW_SESSION_ENV_VALUE = "1";
+
+// Pending debounced selection event. Terminal focus events cancel it, so a late
+// editor-focus event cannot override a newer terminal-focus event.
+let selectionTimer;
 
 let runCommand = function (command) {
   cp.exec(command, (err) => {
@@ -18,14 +24,14 @@ let config = vscode.workspace.getConfiguration();
 let shouldLog = config.get("q.log") === true;
 
 // Ensure that any VSCode terminal session has TAB_NEW_SESSION set as an environment variable
-// The setting can be unset, so fall back to an empty object. Only write the global settings when the
-// value changes.
-let osxEnv = config.get("terminal.integrated.env.osx") ?? {};
-if (osxEnv["TAB_NEW_SESSION"] !== "1") {
+// The setting can be unset, so fall back to an empty object. Read the global value only, so that
+// workspace values are not copied into the global settings. Only write when the value changes.
+let osxEnv = config.inspect(OSX_TERMINAL_ENV_SETTING)?.globalValue ?? {};
+if (osxEnv.TAB_NEW_SESSION !== NEW_SESSION_ENV_VALUE) {
   config
     .update(
-      "terminal.integrated.env.osx",
-      { ...osxEnv, TAB_NEW_SESSION: "1" },
+      OSX_TERMINAL_ENV_SETTING,
+      { ...osxEnv, TAB_NEW_SESSION: NEW_SESSION_ENV_VALUE },
       true,
     )
     .then(undefined, logError);
@@ -42,6 +48,7 @@ function logError(message) {
 }
 
 function updateActiveTerminal(terminal) {
+  clearTimeout(selectionTimer);
   let activeTerminal = terminal || vscode.window.activeTerminal;
 
   if (!activeTerminal) {
@@ -88,7 +95,6 @@ function activate() {
 
     // Selection changes fire on every cursor move. Debounce them so that we start one `tab`
     // process per burst instead of one per event.
-    let selectionTimer;
     vscode.window.onDidChangeTextEditorSelection(() => {
       clearTimeout(selectionTimer);
       selectionTimer = setTimeout(() => {
@@ -101,7 +107,9 @@ function activate() {
 }
 exports.activate = activate;
 
-function deactivate() {}
+function deactivate() {
+  clearTimeout(selectionTimer);
+}
 
 module.exports = {
   activate,
