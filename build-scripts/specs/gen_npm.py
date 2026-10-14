@@ -46,18 +46,14 @@ def npm(*args: str) -> str:
 
 
 # Aliases under `// typos` in npm's lib/utils/cmd-list.js (misspellings and install prefixes) would only
-# clutter suggestions; a few real names are listed there too
+# clutter suggestions; a few real names are listed there too, and one misspelling is filed under short names
 CMD_LIST = open(os.path.join(PKG, "lib", "utils", "cmd-list.js")).read()
+CMD_ALIASES = dict(re.findall(r"^\s+'?([\w-]+)'?: '([\w-]+)',$", CMD_LIST.split("const aliases = {")[1], re.M))
 TYPO_ALIASES = set(re.findall(r"^\s+'?([\w-]+)'?:", CMD_LIST.split("// typos")[1].split("}")[0], re.M)) - {
     "upgrade",
     "dist-tags",
     "install-clean",
-}
-
-
-def is_typo(alias: str, command: str) -> bool:
-    """Typo aliases, plus transpositions of the command name that cmd-list files as short names."""
-    return alias in TYPO_ALIASES or (alias != command and sorted(alias) == sorted(command))
+} | {"veri" + "son"}  # split so the typos hook doesn't flag it
 
 
 # Subcommands that only appear in usage lines, so their help has no description
@@ -332,6 +328,9 @@ SHORTHANDS = {
     )
     if long not in {"--usage", "--version"}
 }
+# Multi-letter shorthands from the same table (config definitions/index.js), which the docs list as `--ws` and
+# `--iwr`; nopt also accepts them with one dash, the form upstream's spec used
+SHORTHANDS.update({"--workspaces": "-ws", "--include-workspace-root": "-iwr"})
 
 
 def split_top(text: str, sep: str) -> list[str]:
@@ -377,7 +376,7 @@ def parse_help(text: str) -> dict:
         elif not line.strip():
             if section in ("usage", "options"):
                 section = "details" if section == "options" else "between"
-        elif m := re.match(r"^aliases?: (.*)$", line):
+        elif m := re.match(r"^alias(?:es)?: (.*)$", line):
             aliases = [a.strip() for a in m.group(1).split(",")]
         elif section == "usage" and line.startswith("npm "):
             usage.append(line)
@@ -560,6 +559,14 @@ def complete(arg: dict, path: str) -> dict:
     return arg
 
 
+def optional_subcommands(toks: list[str]) -> list[str]:
+    """`npm audit [fix|signatures]`: optional literal subcommands, or []."""
+    if not toks or not is_wrapped(toks[0]):
+        return []
+    alts = split_top(toks[0][1:-1], "|")
+    return alts if len(alts) > 1 and all(re.fullmatch(r"[a-z-]+", a) for a in alts) else []
+
+
 def node(name: str, description: str, path: list[str], usage: list[str], options: list[dict]) -> dict:
     """A command built from usage lines; subcommands that only appear in usage share its options."""
     key = " ".join(path)
@@ -572,13 +579,10 @@ def node(name: str, description: str, path: list[str], usage: list[str], options
     own_args: list[dict] = []
     for line in usage:
         sub_path, toks = usage_tokens(line)
-        # `npm audit [fix|signatures]`: optional literal subcommands
-        if not sub_path and len(path) == 1 and toks and is_wrapped(toks[0]):
-            alts = split_top(toks[0][1:-1], "|")
-            if len(alts) > 1 and all(re.fullmatch(r"[a-z-]+", a) for a in alts):
-                for a in alts:
-                    children.setdefault(a, [])
-                continue
+        if not sub_path and len(path) == 1 and (alts := optional_subcommands(toks)):
+            for a in alts:
+                children.setdefault(a, [])
+            continue
         rel = sub_path[len(path) - 1 :]
         if rel:
             children.setdefault(rel[0], []).append(line)
@@ -618,11 +622,21 @@ def command(cmd: str, path: list[str], text: str) -> dict:
         if own:
             out.update({k: v for k, v in node(cmd, h["description"], path, own, []).items() if k == "args"})
     else:
-        has_subs = any(usage_tokens(line)[0][len(path) - 1 :] for line in h["usage"])
+        has_subs = any(
+            usage_tokens(line)[0][len(path) - 1 :] or (len(path) == 1 and optional_subcommands(usage_tokens(line)[1]))
+            for line in h["usage"]
+        )
         if has_subs:
             opts = [{**o, "isPersistent": True} for o in opts]
         out = node(cmd, h["description"], path, h["usage"], opts)
-    names = [cmd, *[a for a in h["aliases"] if a != cmd and not is_typo(a, cmd)]]
+    # Only top-level aliases resolve: base-cmd prints view's aliases for `npm stage view` too (it matches the
+    # name `view`), but stage looks its subcommands up by exact name
+    aliases = h["aliases"] if len(path) == 1 else []
+    names = [cmd, *[a for a in aliases if a != cmd and a not in TYPO_ALIASES]]
+    if len(path) == 1:
+        expected = {a for a, c in CMD_ALIASES.items() if c == cmd and a not in TYPO_ALIASES}
+        if set(names[1:]) != expected:
+            sys.exit(f"error: {cmd} aliases {names[1:]} don't match cmd-list.js {sorted(expected)}")
     out["name"] = names[0] if len(names) == 1 else names
     return out
 

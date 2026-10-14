@@ -1132,13 +1132,13 @@ const workspaceOption: Fig.Option = {
 };
 
 const workspacesOption: Fig.Option = {
-  name: "--workspaces",
+  name: ["-ws", "--workspaces"],
   description:
     "Set to true to run the command in the context of all configured workspaces",
 };
 
 const includeWorkspaceRootOption: Fig.Option = {
-  name: "--include-workspace-root",
+  name: ["-iwr", "--include-workspace-root"],
   description:
     "Include the workspace root when workspaces are enabled for a command",
 };
@@ -1167,16 +1167,16 @@ const ignoreScriptsOption: Fig.Option = {
     "If true, npm does not run scripts specified in package.json files",
 };
 
-const installLinksOption: Fig.Option = {
-  name: "--install-links",
-  description:
-    "When set file: protocol dependencies will be packed and installed as regular dependencies instead of creating a symlink",
-};
-
 const globalOption: Fig.Option = {
   name: ["-g", "--global"],
   description:
     'Operates in "global" mode, so that packages are installed into the `prefix` folder instead of the current working directory',
+};
+
+const installLinksOption: Fig.Option = {
+  name: "--install-links",
+  description:
+    "When set file: protocol dependencies will be packed and installed as regular dependencies instead of creating a symlink",
 };
 
 const omitOption: Fig.Option = {
@@ -1192,12 +1192,6 @@ const includeOption: Fig.Option = {
     "Option that allows for defining which types of dependencies to install",
   isRepeatable: 4,
   args: { name: "include", suggestions: ["prod", "dev", "optional", "peer"] },
-};
-
-const foregroundScriptsOption: Fig.Option = {
-  name: "--foreground-scripts",
-  description:
-    "Run all build scripts (ie, `preinstall`, `install`, and `postinstall`) scripts for installed packages in the foreground process, sharing standard input, output, and error with the main npm process",
 };
 
 const noBinLinksOption: Fig.Option = {
@@ -1233,6 +1227,12 @@ const strictPeerDepsOption: Fig.Option = {
     "If set to `true`, and `--legacy-peer-deps` is not set, then any conflicting `peerDependencies` will be treated as an install failure, even if npm could reasonably guess the appropriate resolution based on non-peer dependency relationships",
 };
 
+const foregroundScriptsOption: Fig.Option = {
+  name: "--foreground-scripts",
+  description:
+    "Run all build scripts (ie, `preinstall`, `install`, and `postinstall`) scripts for installed packages in the foreground process, sharing standard input, output, and error with the main npm process",
+};
+
 const noAuditOption: Fig.Option = {
   name: "--no-audit",
   description: "Don't submit audit reports to the registry",
@@ -1241,17 +1241,6 @@ const noAuditOption: Fig.Option = {
 const noFundOption: Fig.Option = {
   name: "--no-fund",
   description: "Don't show the message about dependencies looking for funding",
-};
-
-const packageLockOnlyOption: Fig.Option = {
-  name: "--package-lock-only",
-  description:
-    "If set to true, the current operation will only use the `package-lock.json`, ignoring `node_modules`",
-};
-
-const noPackageLockOption: Fig.Option = {
-  name: "--no-package-lock",
-  description: "Ignore package-lock.json files when installing",
 };
 
 const allowScriptsOption: Fig.Option = {
@@ -1309,6 +1298,11 @@ const allowRemoteOption: Fig.Option = {
   args: { name: "allow-remote", suggestions: ["all", "none", "root"] },
 };
 
+const noPackageLockOption: Fig.Option = {
+  name: "--no-package-lock",
+  description: "Ignore package-lock.json files when installing",
+};
+
 const saveOption: Fig.Option = {
   name: ["-S", "--save"],
   description:
@@ -1347,6 +1341,12 @@ const saveBundleOption: Fig.Option = {
   name: ["-B", "--save-bundle"],
   description:
     "If a package would be saved at install time by the use of `--save`, `--save-dev`, or `--save-optional`, then also put it in the `bundleDependencies` list",
+};
+
+const packageLockOnlyOption: Fig.Option = {
+  name: "--package-lock-only",
+  description:
+    "If set to true, the current operation will only use the `package-lock.json`, ignoring `node_modules`",
 };
 
 const allOption: Fig.Option = {
@@ -1410,13 +1410,6 @@ const parseableOption: Fig.Option = {
   name: ["-p", "--parseable"],
   description:
     "Output parseable results from commands that write to standard output",
-};
-
-const forceOption: Fig.Option = {
-  name: ["-f", "--force"],
-  description:
-    "Removes various protections against unfortunate side effects, common mistakes, unnecessary performance degradation, and malicious input",
-  isDangerous: true,
 };
 
 const tagOption: Fig.Option = {
@@ -1599,29 +1592,105 @@ const completionSpec: Fig.Spec = {
               "none",
             ],
           },
+          isPersistent: true,
         },
-        dryRunOption,
-        forceOption,
-        jsonOption,
-        packageLockOnlyOption,
-        noPackageLockOption,
-        omitOption,
-        includeOption,
-        foregroundScriptsOption,
-        ignoreScriptsOption,
+        {
+          name: "--dry-run",
+          description:
+            "Indicates that you don't want npm to make any changes and that it should only report what it would have done",
+          isPersistent: true,
+        },
+        {
+          name: ["-f", "--force"],
+          description:
+            "Removes various protections against unfortunate side effects, common mistakes, unnecessary performance degradation, and malicious input",
+          isDangerous: true,
+          isPersistent: true,
+        },
+        {
+          name: "--json",
+          description:
+            "Whether or not to output JSON data, rather than the normal output",
+          isPersistent: true,
+        },
+        {
+          name: "--package-lock-only",
+          description:
+            "If set to true, the current operation will only use the `package-lock.json`, ignoring `node_modules`",
+          isPersistent: true,
+        },
+        {
+          name: "--no-package-lock",
+          description: "Ignore package-lock.json files when installing",
+          isPersistent: true,
+        },
+        {
+          name: "--omit",
+          description:
+            "Dependency types to omit from the installation tree on disk",
+          isRepeatable: 3,
+          args: { name: "omit", suggestions: ["dev", "optional", "peer"] },
+          isPersistent: true,
+        },
+        {
+          name: "--include",
+          description:
+            "Option that allows for defining which types of dependencies to install",
+          isRepeatable: 4,
+          args: {
+            name: "include",
+            suggestions: ["prod", "dev", "optional", "peer"],
+          },
+          isPersistent: true,
+        },
+        {
+          name: "--foreground-scripts",
+          description:
+            "Run all build scripts (ie, `preinstall`, `install`, and `postinstall`) scripts for installed packages in the foreground process, sharing standard input, output, and error with the main npm process",
+          isPersistent: true,
+        },
+        {
+          name: "--ignore-scripts",
+          description:
+            "If true, npm does not run scripts specified in package.json files",
+          isPersistent: true,
+        },
         {
           name: "--include-attestations",
           description:
             "When used with `npm audit signatures --json`, includes the full sigstore attestation bundles in the JSON output for each verified package",
+          isPersistent: true,
         },
-        workspaceOption,
-        workspacesOption,
-        includeWorkspaceRootOption,
-        installLinksOption,
+        {
+          name: ["-w", "--workspace"],
+          description:
+            "Enable running a command in the context of the configured workspaces of the current project while filtering by running only the workspaces defined by this configuration option",
+          isRepeatable: true,
+          args: { name: "workspace-name", generators: workspaceGenerator },
+          isPersistent: true,
+        },
+        {
+          name: ["-ws", "--workspaces"],
+          description:
+            "Set to true to run the command in the context of all configured workspaces",
+          isPersistent: true,
+        },
+        {
+          name: ["-iwr", "--include-workspace-root"],
+          description:
+            "Include the workspace root when workspaces are enabled for a command",
+          isPersistent: true,
+        },
+        {
+          name: "--install-links",
+          description:
+            "When set file: protocol dependencies will be packed and installed as regular dependencies instead of creating a symlink",
+          isPersistent: true,
+        },
       ],
     },
     {
-      name: "bugs",
+      name: ["bugs", "issues"],
       description: "Report bugs for a package in a web browser",
       options: [
         noBrowserOption,
@@ -1698,7 +1767,7 @@ const completionSpec: Fig.Spec = {
       ],
     },
     {
-      name: ["ci", "clean-install", "install-clean"],
+      name: ["ci", "clean-install", "ic", "install-clean"],
       description: "Clean install a project",
       options: [
         installStrategyOption,
@@ -1728,7 +1797,7 @@ const completionSpec: Fig.Spec = {
     },
     { name: "completion", description: "Tab Completion for npm" },
     {
-      name: "config",
+      name: ["config", "c"],
       description: "Manage the npm configuration files",
       subcommands: [
         {
@@ -1798,7 +1867,7 @@ const completionSpec: Fig.Spec = {
       ],
     },
     {
-      name: "dedupe",
+      name: ["dedupe", "ddp"],
       description: "Reduce duplication in the package tree",
       options: [
         installStrategyOption,
@@ -1924,7 +1993,7 @@ const completionSpec: Fig.Spec = {
       args: { name: "paths", isVariadic: true, isOptional: true },
     },
     {
-      name: "dist-tag",
+      name: ["dist-tag", "dist-tags"],
       description: "Modify package distribution tags",
       subcommands: [
         {
@@ -1972,13 +2041,13 @@ const completionSpec: Fig.Spec = {
           isPersistent: true,
         },
         {
-          name: "--workspaces",
+          name: ["-ws", "--workspaces"],
           description:
             "Set to true to run the command in the context of all configured workspaces",
           isPersistent: true,
         },
         {
-          name: "--include-workspace-root",
+          name: ["-iwr", "--include-workspace-root"],
           description:
             "Include the workspace root when workspaces are enabled for a command",
           isPersistent: true,
@@ -1986,7 +2055,7 @@ const completionSpec: Fig.Spec = {
       ],
     },
     {
-      name: "docs",
+      name: ["docs", "home"],
       description: "Open documentation for a package in a web browser",
       options: [
         noBrowserOption,
@@ -2036,7 +2105,7 @@ const completionSpec: Fig.Spec = {
       args: { name: "pkg" },
     },
     {
-      name: "exec",
+      name: ["exec", "x"],
       description: "Run a command from a local or remote npm package",
       options: [
         {
@@ -2070,7 +2139,7 @@ const completionSpec: Fig.Spec = {
       },
     },
     {
-      name: "explain",
+      name: ["explain", "why"],
       description: "Explain installed packages",
       options: [jsonOption, workspaceOption],
       args: {
@@ -2213,7 +2282,12 @@ const completionSpec: Fig.Spec = {
             "The value `npm init` should use by default for the package's private flag",
         },
         yesOption,
-        forceOption,
+        {
+          name: ["-f", "--force"],
+          description:
+            "Removes various protections against unfortunate side effects, common mistakes, unnecessary performance degradation, and malicious input",
+          isDangerous: true,
+        },
         scopeOption,
         workspaceOption,
         workspacesOption,
@@ -2388,7 +2462,7 @@ const completionSpec: Fig.Spec = {
       ],
     },
     {
-      name: "install-test",
+      name: ["install-test", "it"],
       description: "Install package(s) and run tests",
       options: [
         saveOption,
@@ -2458,7 +2532,7 @@ const completionSpec: Fig.Spec = {
       },
     },
     {
-      name: "link",
+      name: ["link", "ln"],
       description: "Symlink a package folder",
       options: [
         saveOption,
@@ -2494,7 +2568,7 @@ const completionSpec: Fig.Spec = {
       args: { name: "package-spec", isOptional: true, template: "filepaths" },
     },
     {
-      name: "ll",
+      name: ["ll", "la"],
       description: "List installed packages",
       options: [
         allOption,
@@ -2548,7 +2622,7 @@ const completionSpec: Fig.Spec = {
       options: [registryOption, scopeOption],
     },
     {
-      name: "ls",
+      name: ["ls", "list"],
       description: "List installed packages",
       options: [
         allOption,
@@ -2657,7 +2731,7 @@ const completionSpec: Fig.Spec = {
       },
     },
     {
-      name: "owner",
+      name: ["owner", "author"],
       description: "Manage package owners",
       subcommands: [
         {
@@ -2712,7 +2786,7 @@ const completionSpec: Fig.Spec = {
           isPersistent: true,
         },
         {
-          name: "--workspaces",
+          name: ["-ws", "--workspaces"],
           description:
             "Set to true to run the command in the context of all configured workspaces",
           isPersistent: true,
@@ -2888,7 +2962,7 @@ const completionSpec: Fig.Spec = {
           isPersistent: true,
         },
         {
-          name: "--workspaces",
+          name: ["-ws", "--workspaces"],
           description:
             "Set to true to run the command in the context of all configured workspaces",
           isPersistent: true,
@@ -3064,7 +3138,7 @@ const completionSpec: Fig.Spec = {
       args: { name: "selector" },
     },
     {
-      name: "rebuild",
+      name: ["rebuild", "rb"],
       description: "Rebuild a package",
       options: [
         globalOption,
@@ -3300,7 +3374,7 @@ const completionSpec: Fig.Spec = {
           args: { name: "package-spec", isOptional: true },
         },
         {
-          name: ["view", "info", "show", "v"],
+          name: "view",
           description: "View details of a specific staged package",
           options: [jsonOption, registryOption],
           args: { name: "stage-id" },
@@ -3739,7 +3813,17 @@ const completionSpec: Fig.Spec = {
     {
       name: "unpublish",
       description: "Remove a package from the registry",
-      options: [dryRunOption, forceOption, workspaceOption, workspacesOption],
+      options: [
+        dryRunOption,
+        {
+          name: ["-f", "--force"],
+          description:
+            "Removes various protections against unfortunate side effects, common mistakes, unnecessary performance degradation, and malicious input",
+          isDangerous: true,
+        },
+        workspaceOption,
+        workspacesOption,
+      ],
       args: {
         name: "package-spec",
         isOptional: true,
