@@ -256,6 +256,25 @@ describe("importSpecFromLocation", () => {
 });
 
 describe("loadSubcommandCached", () => {
+  it("does not serve a cached repo-local spec after the setting turns off", async () => {
+    const location = {
+      name: "cached-repo-spec",
+      type: SpecLocationSource.LOCAL,
+      path: "/repo/",
+      repoLocal: true,
+    } as const;
+    updateSettings({ [SETTINGS.LOAD_REPO_LOCAL_SPECS]: true });
+    try {
+      await loadSubcommandCached(location);
+      updateSettings({});
+      await expect(loadSubcommandCached(location)).rejects.toThrow(
+        /Repo-local specs are off/,
+      );
+    } finally {
+      updateSettings({});
+    }
+  });
+
   // This is broken right now...
   it.todo("works", async () => {
     const oldLoadSpec = loadFigSubcommand;
