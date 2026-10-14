@@ -76,6 +76,8 @@ export const inlineSuffix = (
 };
 
 const SPEC_SOURCES = ["specs", "history-specs"];
+// The `inline.source` value when the setting is not set. Matches the CLI default.
+const INLINE_SOURCE_DEFAULT = "history-specs";
 
 let lastSent: { sessionId: string; buffer: string; suffix: string } | null =
   null;
@@ -92,7 +94,10 @@ export const sendInlineSuggestion = (
   const sessionId = shellContext?.sessionId;
   if (
     !sessionId ||
-    !SPEC_SOURCES.includes(settings[SETTINGS.INLINE_SOURCE] as string) ||
+    !SPEC_SOURCES.includes(
+      (settings[SETTINGS.INLINE_SOURCE] as string | undefined) ??
+        INLINE_SOURCE_DEFAULT,
+    ) ||
     // Suggestions computed from an older parse would not match the new buffer
     parsedCommand !== command
   ) {

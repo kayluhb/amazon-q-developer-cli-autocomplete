@@ -172,7 +172,10 @@ describe("sendInlineSuggestion", () => {
   const makeSendState = (
     sessionId: string,
     buffer: string,
-    { source = "specs", parsedCommand = command as object | null } = {},
+    {
+      source = "specs" as string | null,
+      parsedCommand = command as object | null,
+    } = {},
   ) =>
     ({
       ...makeState(buffer, "che"),
@@ -181,7 +184,8 @@ describe("sendInlineSuggestion", () => {
         cursorLocation: buffer.length,
         shellContext: { sessionId },
       },
-      settings: { [SETTINGS.INLINE_SOURCE]: source },
+      // A null source leaves the setting unset
+      settings: source === null ? {} : { [SETTINGS.INLINE_SOURCE]: source },
       suggestions: [subcommand("checkout")],
       command,
       parsedCommand,
@@ -217,6 +221,11 @@ describe("sendInlineSuggestion", () => {
       makeSendState(sessionId, "git che", { source: "history" }),
     );
     expect(Shell.setInlineSuggestion).not.toHaveBeenCalled();
+  });
+
+  it("sends spec suggestions when the setting is not set", () => {
+    sendInlineSuggestion(makeSendState(sessionId, "git che", { source: null }));
+    expect(Shell.setInlineSuggestion).toHaveBeenCalledTimes(1);
   });
 
   it("does nothing without a session", () => {

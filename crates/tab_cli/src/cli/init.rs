@@ -29,7 +29,9 @@ use super::internal::should_figterm_launch::should_figterm_launch_exit_status;
 use crate::util::app_path_from_bundle_id;
 
 const SHELL_INTEGRATIONS_ENABLED_STATE_KEY: &str = "shell-integrations.enabled";
-pub(super) const INLINE_SOURCE_SETTINGS_KEY: &str = "inline.source";
+const INLINE_SOURCE_SETTINGS_KEY: &str = "inline.source";
+/// The `inline.source` value when the setting is not set
+const INLINE_SOURCE_DEFAULT: &str = "history-specs";
 
 static IS_SNAPSHOT_TEST: LazyLock<bool> = LazyLock::new(|| tab_os_shim::Env::new().q_init_snapshot_test());
 
@@ -241,8 +243,7 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
     }
 
     if should_source_inline_plugin(shell, when, rcfile.as_deref()) && !*IS_SNAPSHOT_TEST {
-        let inline_source = tab_settings::settings::get_string_opt(INLINE_SOURCE_SETTINGS_KEY);
-        if let Some(source) = inline_plugin_source(inline_source.as_deref()) {
+        if let Some(source) = inline_plugin_source(Some(&inline_source_setting())) {
             to_source.push(source);
         }
     }
@@ -263,6 +264,11 @@ async fn shell_init(shell: &Shell, when: &When, rcfile: &Option<String>) -> Resu
     }
 
     Ok(to_source.join("\n"))
+}
+
+/// The `inline.source` setting, or the default when it is not set
+pub(super) fn inline_source_setting() -> String {
+    tab_settings::settings::get_string_opt(INLINE_SOURCE_SETTINGS_KEY).unwrap_or_else(|| INLINE_SOURCE_DEFAULT.into())
 }
 
 /// The inline suggestions plugin is zsh-only and loads once, from the zshrc post block

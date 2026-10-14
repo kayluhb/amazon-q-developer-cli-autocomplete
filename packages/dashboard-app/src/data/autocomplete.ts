@@ -168,7 +168,7 @@ const autocompleteSettings: PrefSection[] = [
         description:
           "Grey suggestions on the command line from history and/or completion specs. zsh only. Applies to new terminal windows. Press → to accept.",
         type: "select",
-        default: "off",
+        default: "history-specs",
         options: ["off", "history", "specs", "history-specs"],
         popular: false,
       },

@@ -8,7 +8,16 @@
       "version": "0.0.0",
       "title": "Version 0.0.0",
       "hidden": true,
-      "changes": []
+      "changes": [
+        {
+          "type": "changed",
+          "description": "Tab loads completion specs from `.fig/autocomplete/build` in project folders by default again. These specs can run commands. If you open projects that you do not trust, turn off \"Load completion specs from project folders\" in the dashboard."
+        },
+        {
+          "type": "changed",
+          "description": "Inline suggestions are on by default in zsh and use `history-specs`. To turn them off, set Inline suggestions to `off` in the dashboard. A value that you set before does not change."
+        }
+      ]
     },
     {
       "type": "release",

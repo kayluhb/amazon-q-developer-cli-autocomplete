@@ -106,7 +106,7 @@ use tokio::io::AsyncBufReadExt;
 use super::app::restart_fig;
 use super::diagnostics::verify_integration;
 use super::init::{
-    INLINE_SOURCE_SETTINGS_KEY,
+    inline_source_setting,
     inline_strategy,
 };
 use crate::util::desktop::{
@@ -662,8 +662,7 @@ impl DoctorCheck for InlineCheck {
 
     async fn get_type(&self, _: &(), _: Platform) -> DoctorCheckType {
         let shell = get_shell_context().await;
-        let inline_source = tab_settings::settings::get_string_opt(INLINE_SOURCE_SETTINGS_KEY);
-        let inline_enabled = inline_strategy(inline_source.as_deref()).is_some();
+        let inline_enabled = inline_strategy(Some(&inline_source_setting())).is_some();
 
         if matches!(shell, Ok(Some(Shell::Zsh))) && inline_enabled {
             DoctorCheckType::NormalCheck
