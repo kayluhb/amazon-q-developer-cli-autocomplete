@@ -2129,6 +2129,17 @@ mod tests {
     };
 
     #[test]
+    fn size_info_clamps_zero_size() {
+        // Terminals can report 0x0 while a window is being created
+        let size = SizeInfo::new(0, 0);
+        assert_eq!(size.screen_lines, MIN_SCREEN_LINES);
+        assert_eq!(size.columns, MIN_COLUMNS);
+
+        let mut term = Term::new_test(size, VoidListener, 0);
+        term.resize(SizeInfo::new(0, 0));
+    }
+
+    #[test]
     fn scroll_display_page_up() {
         let size = SizeInfo::new(10, 5);
         let mut term = Term::new_test(size, VoidListener, 10_000);

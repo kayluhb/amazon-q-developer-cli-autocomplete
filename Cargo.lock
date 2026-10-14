@@ -6687,13 +6687,9 @@ name = "tab_install"
 version = "2.0.0"
 dependencies = [
  "bitflags 2.13.2",
- "bytes",
  "camino",
- "cookie",
  "libc",
- "security-framework",
  "semver",
- "serde_json",
  "strum 0.27.2",
  "tab_integrations",
  "tab_ipc",
@@ -6702,7 +6698,6 @@ dependencies = [
  "tab_test_utils",
  "tab_util",
  "thiserror 2.0.21",
- "time",
  "tokio",
  "tracing",
  "tracing-subscriber",

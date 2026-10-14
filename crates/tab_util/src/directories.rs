@@ -290,19 +290,6 @@ pub fn utc_backup_dir() -> Result<PathBuf> {
     Ok(backups_dir()?.join(now))
 }
 
-/// The directory to the directory containing config for the `/context` feature in `q chat`.
-pub fn chat_global_context_path<Ctx: FsProvider + EnvProvider>(ctx: &Ctx) -> Result<PathBuf> {
-    Ok(home_dir_ctx(ctx)?
-        .join(".aws")
-        .join("amazonq")
-        .join("global_context.json"))
-}
-
-/// The directory to the directory containing config for the `/context` feature in `q chat`.
-pub fn chat_profiles_dir<Ctx: FsProvider + EnvProvider>(ctx: &Ctx) -> Result<PathBuf> {
-    Ok(home_dir_ctx(ctx)?.join(".aws").join("amazonq").join("profiles"))
-}
-
 /// The desktop app socket path
 ///
 /// - MacOS: `$TMPDIR/tabrun/desktop.sock`
@@ -405,13 +392,6 @@ pub fn update_lock_path(ctx: &impl FsProvider) -> Result<PathBuf> {
     Ok(fig_data_dir_ctx(ctx)?.join("update.lock"))
 }
 
-/// The path to the midway cookie
-///
-/// Path: `$HOME/.midway/cookie`
-pub fn midway_cookie_path() -> Result<PathBuf> {
-    Ok(home_dir()?.join(".midway").join("cookie"))
-}
-
 utf8_dir!(home_dir);
 utf8_dir!(home_local_bin);
 utf8_dir!(fig_data_dir);
@@ -443,7 +423,6 @@ mod linux_tests {
         assert!(logs_dir().is_ok());
         assert!(settings_path().is_ok());
         assert!(update_lock_path(&ctx).is_ok());
-        assert!(midway_cookie_path().is_ok());
     }
 }
 
@@ -486,14 +465,6 @@ mod tests {
         };
     }
 
-    macro_rules! linux {
-        ($value:expr, @ $snapshot:literal) => {};
-    }
-
-    macro_rules! windows {
-        ($value:expr, @ $snapshot:literal) => {};
-    }
-
     fn sanitized_directory_path(path: Result<PathBuf>) -> String {
         let mut path = path.unwrap().into_os_string().into_string().unwrap();
 
@@ -533,80 +504,53 @@ mod tests {
 
     #[test]
     fn snapshot_fig_data_dir() {
-        linux!(fig_data_dir(), @"$HOME/.local/share/tab");
         macos!(fig_data_dir(), @"$HOME/Library/Application Support/tab");
-        windows!(fig_data_dir(), @r"C:\Users\$USER\AppData\Local\AmazonQ");
     }
 
     #[test]
     fn snapshot_sockets_dir() {
-        linux!(sockets_dir(), @"$XDG_RUNTIME_DIR/tabrun");
         macos!(sockets_dir(), @"$TMPDIR/tabrun");
-        windows!(sockets_dir(), @r"C:\Users\$USER\AppData\Local\Temp\AmazonQ\sockets");
     }
 
     #[test]
     fn snapshot_themes_dir() {
-        linux!(themes_dir(&Context::new()), @"/usr/share/fig/themes");
         macos!(themes_dir(&Context::new()), @"/Applications/Tab.app/Contents/Resources/themes");
-        windows!(themes_dir(&Context::new()), @r"C:\Users\$USER\AppData\Local\AmazonQ\resources\themes");
     }
 
     #[test]
     fn snapshot_backups_dir() {
-        linux!(backups_dir(), @"$HOME/.tab.dotfiles.bak");
         macos!(backups_dir(), @"$HOME/.tab.dotfiles.bak");
-        windows!(backups_dir(), @r"C:\Users\$USER\.tab.dotfiles.bak");
     }
 
     #[test]
     fn snapshot_fig_socket_path() {
-        linux!(desktop_socket_path(), @"$XDG_RUNTIME_DIR/tabrun/desktop.sock");
         macos!(desktop_socket_path(), @"$TMPDIR/tabrun/desktop.sock");
-        windows!(desktop_socket_path(), @r"C:\Users\$USER\AppData\Local\Temp\AmazonQ\sockets\desktop.sock");
     }
 
     #[test]
     fn snapshot_remote_socket_path() {
-        linux!(remote_socket_path(), @"$XDG_RUNTIME_DIR/tabrun/remote.sock");
         macos!(remote_socket_path(), @"$TMPDIR/tabrun/remote.sock");
-        windows!(remote_socket_path(), @r"C:\Users\$USER\AppData\Local\Temp\AmazonQ\sockets\remote.sock");
     }
 
     #[test]
     fn snapshot_local_remote_socket_path() {
-        linux!(local_remote_socket_path(), @"$XDG_RUNTIME_DIR/tabrun/remote.sock");
         macos!(local_remote_socket_path(), @"$TMPDIR/tabrun/remote.sock");
-        windows!(local_remote_socket_path(), @r"C:\Users\$USER\AppData\Local\Temp\AmazonQ\sockets\remote.sock");
     }
 
     #[test]
     fn snapshot_figterm_socket_path() {
-        linux!(figterm_socket_path("$SESSION_ID"), @"$XDG_RUNTIME_DIR/tabrun/t/$SESSION_ID.sock");
         macos!(figterm_socket_path("$SESSION_ID"), @"$TMPDIR/tabrun/t/$SESSION_ID.sock");
-        windows!(figterm_socket_path("$SESSION_ID"), @r"C:\Users\$USER\AppData\Local\Temp\AmazonQ\sockets\t\$SESSION_ID.sock");
     }
 
     #[test]
     fn snapshot_settings_path() {
-        linux!(settings_path(), @"$HOME/.local/share/tab/settings.json");
         macos!(settings_path(), @"$HOME/Library/Application Support/tab/settings.json");
-        windows!(settings_path(), @r"C:\Users\$USER\AppData\Local\AmazonQ\settings.json");
     }
 
     #[test]
     fn snapshot_update_lock_path() {
         let ctx = Context::new();
-        linux!(update_lock_path(&ctx), @"$HOME/.local/share/tab/update.lock");
         macos!(update_lock_path(&ctx), @"$HOME/Library/Application Support/tab/update.lock");
-        windows!(update_lock_path(&ctx), @r"C:\Users\$USER\AppData\Local\AmazonQ\update.lock");
-    }
-
-    #[test]
-    fn snapshot_midway_cookie_path() {
-        linux!(midway_cookie_path(), @"$HOME/.midway/cookie");
-        macos!(midway_cookie_path(), @"$HOME/.midway/cookie");
-        windows!(midway_cookie_path(), @r"C:\Users\$USER\.midway\cookie");
     }
 
     #[test]

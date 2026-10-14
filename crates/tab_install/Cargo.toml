@@ -15,25 +15,20 @@ default = []
 
 [dependencies]
 bitflags.workspace = true
-bytes.workspace = true
 camino.workspace = true
-cookie = "0.18.0"
 tab_integrations.workspace = true
 tab_os_shim.workspace = true
 tab_settings.workspace = true
 tab_util.workspace = true
 semver = { version = "1.0.26", features = ["serde"] }
-serde_json.workspace = true
 strum = "0.27.1"
 thiserror.workspace = true
-time.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 tab_ipc.workspace = true
 libc.workspace = true
-security-framework = "3.0.1"
 
 [dev-dependencies]
 tab_test_utils.workspace = true

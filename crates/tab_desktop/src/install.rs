@@ -45,8 +45,8 @@ fn run_input_method_migration() {
 /// Run items at launch
 #[allow(unused_variables)]
 pub async fn run_install(ctx: Arc<Context>) {
-    {
-        initialize_fig_dir(&tab_os_shim::Env::new()).await.ok();
+    if let Err(err) = initialize_fig_dir(&tab_os_shim::Env::new()).await {
+        error!(%err, "Failed to initialize data dir");
     }
 
     // Add any items that are only once per version

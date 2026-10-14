@@ -28,20 +28,12 @@ use tab_util::Shell;
 
 use super::RequestResult;
 
-#[allow(dead_code)]
 async fn integration_status(integration: impl tab_integrations::Integration) -> ServerOriginatedSubMessage {
     ServerOriginatedSubMessage::InstallResponse(InstallResponse {
         response: Some(Response::InstallationStatus(match integration.is_installed().await {
             Ok(_) => InstallationStatus::Installed.into(),
             Err(_) => InstallationStatus::NotInstalled.into(),
         })),
-    })
-}
-
-#[allow(dead_code)]
-fn integration_unsupported() -> ServerOriginatedSubMessage {
-    ServerOriginatedSubMessage::InstallResponse(InstallResponse {
-        response: Some(Response::InstallationStatus(InstallationStatus::NotSupported.into())),
     })
 }
 

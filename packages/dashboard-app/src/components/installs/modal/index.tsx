@@ -10,6 +10,8 @@ import appIcon from "@assets/images/icon.png?url";
 import { usePlatformInfo } from "@/hooks/store/usePlatformInfo";
 import { matchesPlatformRestrictions } from "@/lib/platform";
 
+const INSTALL_STEP_IDS = ["dotfiles", "accessibility"];
+
 export default function OnboardingModal() {
   const [step, setStep] = useState(0);
   const check = onboarding[step] as InstallCheck;
@@ -77,7 +79,7 @@ export default function OnboardingModal() {
     return <WelcomeModal next={nextStep} />;
   }
 
-  if (["dotfiles", "accessibility"].includes(check.id)) {
+  if (INSTALL_STEP_IDS.includes(check.id)) {
     return <InstallModal check={check} skip={skipInstall} next={nextStep} />;
   }
 
@@ -88,7 +90,7 @@ export function WelcomeModal({ next }: { next: () => void }) {
   return (
     <div className="flex flex-col items-center gap-8 gradient-q-secondary-light -m-10 p-4 pt-10 rounded-lg text-white">
       <div className="flex flex-col items-center gap-8">
-        <img src={appIcon} className="w-24" />
+        <img src={appIcon} alt="Tab" className="w-24" />
         <div className="flex flex-col gap-2 items-center text-center">
           <h2 className="text-2xl text-white font-semibold select-none leading-none font-heading tracking-tight">
             Welcome!

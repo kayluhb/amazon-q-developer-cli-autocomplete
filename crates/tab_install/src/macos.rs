@@ -61,30 +61,10 @@ pub(crate) async fn uninstall_desktop(ctx: &tab_os_shim::Context) -> Result<(), 
 
     // Delete data dir
     if let Ok(fig_data_dir) = directories::fig_data_dir() {
-        let state = tab_settings::state::get_string("anonymousId").unwrap_or_default();
-
-        for file in std::fs::read_dir(fig_data_dir).ok().into_iter().flatten().flatten() {
-            if let Some(file_name) = file.file_name().to_str() {
-                if file_name == "credentials.json" {
-                } else if file_name == "state.json" {
-                    std::fs::write(file.path(), serde_json::json!({ "anonymousId": state }).to_string())
-                        .map_err(|err| warn!("Failed to write state.json: {err}"))
-                        .ok();
-                } else if let Ok(metadata) = file.metadata() {
-                    if metadata.is_dir() {
-                        fs::remove_dir_all(file.path())
-                            .await
-                            .map_err(|err| warn!("Failed to remove data dir: {err}"))
-                            .ok();
-                    } else {
-                        fs::remove_file(file.path())
-                            .await
-                            .map_err(|err| warn!("Failed to remove data dir: {err}"))
-                            .ok();
-                    }
-                }
-            }
-        }
+        fs::remove_dir_all(&fig_data_dir)
+            .await
+            .map_err(|err| warn!("Failed to remove data dir: {err}"))
+            .ok();
     }
 
     let app_path = tab_util::app_bundle_path();
@@ -114,15 +94,20 @@ pub async fn uninstall_terminal_integrations() {
         }
 
         // Delete VSCode integration
-        for (folder, prefix) in &[
-            (".vscode/extensions", "withfig.fig-"),
-            (".vscode-insiders/extensions", "withfig.fig-"),
-            (".vscode-oss/extensions", "withfig.fig-"),
-            (".cursor/extensions", "withfig.fig-"),
-            (".cursor-nightly/extensions", "withfig.fig-"),
+        for folder in &[
+            ".vscode/extensions",
+            ".vscode-insiders/extensions",
+            ".vscode-oss/extensions",
+            ".cursor/extensions",
+            ".cursor-nightly/extensions",
         ] {
             let folder = home.join(folder);
-            remove_in_dir_with_prefix_unless(&folder, prefix, |_| false).await;
+            for prefix in &[
+                "withfig.fig-",
+                "amazonwebservices.codewhisperer-for-command-line-companion-",
+            ] {
+                remove_in_dir_with_prefix_unless(&folder, prefix, |_| false).await;
+            }
         }
 
         // Remove Hyper integration

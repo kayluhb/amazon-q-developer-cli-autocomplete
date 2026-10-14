@@ -223,14 +223,6 @@ pub fn dump_state(
     ))))
 }
 
-#[allow(unused_variables)]
-pub async fn connect_to_ibus(proxy: EventLoopProxy, platform_state: &PlatformState) -> LocalResult {
-    Err(LocalResponse::Error {
-        code: None,
-        message: Some("Connecting to IBus is only supported on Linux".to_owned()),
-    })
-}
-
 pub async fn bundle_metadata(ctx: &Context) -> LocalResult {
     match tab_util::manifest::bundle_metadata_json(ctx).await {
         Ok(json) => Ok(LocalResponse::Message(Box::new(CommandResponseTypes::BundleMetadata(

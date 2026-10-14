@@ -12,7 +12,7 @@ KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 # Built-in LibreSSL writes PKCS#12 files the macOS keychain can import
 OPENSSL=/usr/bin/openssl
 
-if security find-certificate -c "$NAME" "$KEYCHAIN" >/dev/null 2>&1; then
+if security find-identity -p codesigning "$KEYCHAIN" | grep -qF "\"$NAME\""; then
   echo "\"$NAME\" already exists in the login keychain"
   exit 0
 fi

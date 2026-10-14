@@ -42,7 +42,7 @@ impl JsonNotification {
 pub struct NotificationBus {
     state_channels: DashMap<String, Sender<JsonNotification>, FnvBuildHasher>,
     settings_channels: DashMap<String, Sender<JsonNotification>, FnvBuildHasher>,
-    midway_channel: Sender<()>,
+    specs_changed_channel: Sender<()>,
 }
 
 impl std::default::Default for NotificationBus {
@@ -50,7 +50,7 @@ impl std::default::Default for NotificationBus {
         Self {
             state_channels: DashMap::default(),
             settings_channels: DashMap::default(),
-            midway_channel: broadcast::channel(CHANNEL_SIZE).0,
+            specs_changed_channel: broadcast::channel(CHANNEL_SIZE).0,
         }
     }
 }
@@ -80,8 +80,8 @@ impl NotificationBus {
             .subscribe()
     }
 
-    pub fn subscribe_midway(&self) -> Receiver<()> {
-        self.midway_channel.subscribe()
+    pub fn subscribe_specs_changed(&self) -> Receiver<()> {
+        self.specs_changed_channel.subscribe()
     }
 
     pub fn send_state(&self, key: impl AsRef<str>, value: JsonNotification) {
@@ -96,8 +96,8 @@ impl NotificationBus {
         }
     }
 
-    pub fn send_midway(&self) {
-        self.midway_channel.send(()).ok();
+    pub fn send_specs_changed(&self) {
+        self.specs_changed_channel.send(()).ok();
     }
 
     pub fn send_state_new(&self, key: impl AsRef<str>, value: &Value) {

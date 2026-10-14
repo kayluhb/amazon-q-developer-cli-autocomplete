@@ -16,8 +16,9 @@ if not test -z "$TAB_NEW_SESSION"
 end
 
 # Load parent from env variables
-if test -n "$TAB_PARENT"; and test -z "$TAB_SET_PARENT"
+if test -z "$TAB_PARENT"; and test -n "$TAB_SET_PARENT"
     set --export TAB_PARENT $TAB_SET_PARENT
+    set --erase TAB_SET_PARENT
 end
 
 if test -z "$SHOULD_TABTERM_LAUNCH"
