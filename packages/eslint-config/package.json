@@ -1,16 +1,16 @@
 {
   "name": "@tab/eslint-config",
-  "private": "true",
+  "private": true,
   "version": "0.1.0",
   "license": "MIT OR Apache-2.0",
-  "author": "Amazon Web Services",
-  "repository": "https://github.com/aws/amazon-q-developer-cli",
+  "author": "Caleb Brown",
+  "repository": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
   "type": "module",
   "exports": {
     "./*": "./dist/*.config.js"
   },
   "files": [
-    "*.js"
+    "dist"
   ],
   "engines": {
     "node": ">=18"
@@ -27,11 +27,8 @@
   "devDependencies": {
     "@tab/tsconfig": "workspace:^",
     "@eslint/js": "^9.18.0",
-    "@types/eslint__js": "^8.42.3",
     "@typescript-eslint/utils": "^8.31.1",
     "eslint-config-prettier": "^10.1.3",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "eslint-plugin-react": "^7.37.5",

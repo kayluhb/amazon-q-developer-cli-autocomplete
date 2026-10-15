@@ -2,8 +2,8 @@
   "name": "@tab/proto",
   "version": "0.2.0",
   "license": "MIT OR Apache-2.0",
-  "author": "Amazon Web Services",
-  "repository": "https://github.com/aws/amazon-q-developer-cli",
+  "author": "Caleb Brown",
+  "repository": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
   "type": "module",
   "exports": {
     "./*": "./dist/*_pb.js",

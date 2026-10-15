@@ -2,8 +2,8 @@
   "name": "@tab/api-bindings",
   "version": "0.2.0",
   "license": "MIT OR Apache-2.0",
-  "author": "Amazon Web Services",
-  "repository": "https://github.com/aws/amazon-q-developer-cli",
+  "author": "Caleb Brown",
+  "repository": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
   "type": "module",
   "exports": "./dist/index.js",
   "files": [
@@ -14,11 +14,11 @@
   },
   "scripts": {
     "clean": "rm -rf dist/",
-    "build": "npm run clean && npm run generate-requests && tsc",
+    "build": "pnpm run clean && pnpm run generate-requests && tsc",
     "lint": "eslint src && prettier --check src",
     "lint:fix": "eslint --fix src && prettier --write src",
     "precommit": "lint-staged",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "generate-requests": "tsx codegen/generate-requests.ts && prettier -w src/requests.ts"
   },
   "dependencies": {
@@ -28,9 +28,7 @@
   "devDependencies": {
     "@tab/eslint-config": "workspace:^",
     "@tab/tsconfig": "workspace:^",
-    "@tsconfig/recommended": "^1.0.8",
     "@types/node": "^22.15.20",
-    "@typescript/analyze-trace": "^0.10.1",
     "eslint": "^9.18.0",
     "lint-staged": "^15.5.1",
     "prettier": "^3.4.2",

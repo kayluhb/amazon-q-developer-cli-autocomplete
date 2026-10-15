@@ -1,8 +1,8 @@
 {
   "name": "root",
   "private": true,
-  "author": "Amazon Web Services",
-  "repository": "https://github.com/aws/amazon-q-developer-cli",
+  "author": "Caleb Brown",
+  "repository": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
   "license": "MIT OR Apache-2.0",
   "packageManager": "pnpm@10.0.0+sha256.43abf6e720fb7bc53c591b0862605c7d323d0a9d2dd33bcac07b062e13cf4948",
   "type": "module",
@@ -15,7 +15,7 @@
     "format": "cargo +nightly-2025-11-01 fmt",
     "clippy": "cargo clippy --locked --workspace --color always -- -D warnings",
     "test": "vitest",
-    "test:ci": "vitest run --run --coverage",
+    "test:ci": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage",
     "lint": "turbo lint --parallel",
@@ -35,9 +35,7 @@
     "@vitest/ui": "^3.0.8",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
-    "micromatch": "^4.0.8",
     "prettier": "^3.5.3",
-    "tsx": "^4.19.4",
     "turbo": "^2.5.2",
     "vitest": "^3.0.8"
   }
