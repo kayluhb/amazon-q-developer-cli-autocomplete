@@ -57,3 +57,7 @@ run-build.sh
 
 # Packed by build-scripts/build.py and embedded by crates/tab_integrations/build.rs
 crates/tab_integrations/src/vscode/vscode-plugin.vsix
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
