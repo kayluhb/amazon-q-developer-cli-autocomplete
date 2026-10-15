@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "MIT OR Apache-2.0",
   "author": "Caleb Brown",
-  "repository": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+  "repository": "https://github.com/kayluhb/tab",
   "type": "module",
   "exports": "./dist/index.js",
   "files": [

@@ -16,7 +16,7 @@
       "version": "2.4.0",
       "title": "Version 2.4.0",
       "description": "Inline suggestions and specs from project folders are on by default. A value that you set before does not change.",
-      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "link": "https://github.com/kayluhb/tab",
       "changes": [
         {
           "type": "changed",
@@ -34,7 +34,7 @@
       "version": "2.3.0",
       "title": "Version 2.3.0",
       "description": "Security fixes for completion specs, shell integration, IPC and local files. Tab no longer loads completion specs from project folders by default.",
-      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "link": "https://github.com/kayluhb/tab",
       "changes": [
         {
           "type": "changed",
@@ -80,7 +80,7 @@
       "version": "2.2.0",
       "title": "Version 2.2.0",
       "description": "Grey inline suggestions on the zsh command line, from your shell history and the bundled completion specs. They work offline and are off by default.",
-      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "link": "https://github.com/kayluhb/tab",
       "changes": [
         {
           "type": "added",
@@ -98,7 +98,7 @@
       "version": "2.1.0",
       "title": "Version 2.1.0",
       "description": "Up-to-date completion specs for the CLIs you use most. withfig/autocomplete stopped updating in May 2025, so Tab now ships its own specs.",
-      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "link": "https://github.com/kayluhb/tab",
       "changes": [
         {
           "type": "added",
@@ -128,7 +128,7 @@
       "version": "2.0.0",
       "title": "Version 2.0.0",
       "description": "Amazon Q terminal autocomplete is now Tab: a standalone, offline fork that keeps working after Kiro CLI sunsets autocomplete.",
-      "link": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+      "link": "https://github.com/kayluhb/tab",
       "changes": [
         {
           "type": "changed",

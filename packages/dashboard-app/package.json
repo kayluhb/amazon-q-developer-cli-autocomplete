@@ -2,7 +2,7 @@
   "name": "@tab/dashboard-app",
   "private": true,
   "version": "1.0.0",
-  "repository": "https://github.com/kayluhb/amazon-q-developer-cli-autocomplete",
+  "repository": "https://github.com/kayluhb/tab",
   "type": "module",
   "scripts": {
     "dev": "vite",

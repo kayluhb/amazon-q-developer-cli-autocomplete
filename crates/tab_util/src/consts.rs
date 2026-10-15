@@ -24,7 +24,7 @@ pub const DATA_DIR_NAME: &str = "tab";
 /// Backup directory name
 pub const BACKUP_DIR_NAME: &str = ".tab.dotfiles.bak";
 
-pub const GITHUB_REPO_NAME: &str = "kayluhb/amazon-q-developer-cli-autocomplete";
+pub const GITHUB_REPO_NAME: &str = "kayluhb/tab";
 
 pub mod url {
     pub const USER_MANUAL: &str = "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html";

@@ -10,7 +10,7 @@ body:
   attributes:
     label: "Checks"
     options:
-    - label: "I have searched [github.com/kayluhb/amazon-q-developer-cli-autocomplete/issues](https://github.com/kayluhb/amazon-q-developer-cli-autocomplete/issues?q=) and there are no duplicates of my issue"
+    - label: "I have searched [github.com/kayluhb/tab/issues](https://github.com/kayluhb/tab/issues?q=) and there are no duplicates of my issue"
       required: true
     - label: "I have run `tab doctor` in the affected terminal session"
       required: true
