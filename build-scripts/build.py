@@ -45,13 +45,13 @@ BUILD_DIR = BUILD_DIR_RELATIVE.absolute()
 
 
 # Completion specs, built from source and bundled into the app
-SPECS_REPO = "https://github.com/withfig/autocomplete.git"
+SPECS_REPO = "https://github.com/kayluhb/tab-autocomplete.git"
 SPECS_COMMIT = "aef52acff84c45edde61ae610cc2c964802b9a38"
 # Our own specs, laid out like upstream's src/; they add to or replace upstream specs
 SPECS_OVERRIDES_PATH = pathlib.Path("specs")
 
 # Themes, bundled into the app
-THEMES_REPO = "https://github.com/withfig/themes.git"
+THEMES_REPO = "https://github.com/kayluhb/tab-themes.git"
 THEMES_COMMIT = "ab71dc82974f4750736d2583867bf6c7219515cb"
 
 
@@ -76,7 +76,13 @@ def specs_cloned(repo: pathlib.Path) -> bool:
     if not (repo / "node_modules").exists():
         return False
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True)
-    return head.returncode == 0 and head.stdout.strip() == SPECS_COMMIT
+    origin = subprocess.run(["git", "remote", "get-url", "origin"], cwd=repo, capture_output=True, text=True)
+    return (
+        head.returncode == 0
+        and head.stdout.strip() == SPECS_COMMIT
+        and origin.returncode == 0
+        and origin.stdout.strip() == SPECS_REPO
+    )
 
 
 def build_specs() -> pathlib.Path:
