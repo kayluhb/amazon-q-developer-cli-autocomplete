@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "license": "MIT OR Apache-2.0",
   "author": "Caleb Brown",
+  "contributors": [
+    "Amazon Web Services (https://github.com/aws/amazon-q-developer-cli)"
+  ],
   "description": "Testing for shell integration and qterm",
   "main": "test.js",
   "scripts": {

@@ -2,6 +2,9 @@
   "name": "root",
   "private": true,
   "author": "Caleb Brown",
+  "contributors": [
+    "Amazon Web Services (https://github.com/aws/amazon-q-developer-cli)"
+  ],
   "repository": "https://github.com/kayluhb/tab",
   "license": "MIT OR Apache-2.0",
   "packageManager": "pnpm@10.0.0+sha256.43abf6e720fb7bc53c591b0862605c7d323d0a9d2dd33bcac07b062e13cf4948",

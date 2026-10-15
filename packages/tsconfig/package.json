@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "license": "MIT OR Apache-2.0",
   "author": "Caleb Brown",
+  "contributors": [
+    "Amazon Web Services (https://github.com/aws/amazon-q-developer-cli)"
+  ],
   "repository": "https://github.com/kayluhb/tab",
   "peerDependencies": {
     "typescript": "*"
