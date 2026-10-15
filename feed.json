@@ -12,6 +12,20 @@
     },
     {
       "type": "release",
+      "date": "2026-10-15",
+      "version": "2.4.1",
+      "title": "Version 2.4.1",
+      "description": "The GitHub repository name changed to kayluhb/tab.",
+      "link": "https://github.com/kayluhb/tab",
+      "changes": [
+        {
+          "type": "changed",
+          "description": "`tab debug` and `tab doctor` show issue links to github.com/kayluhb/tab."
+        }
+      ]
+    },
+    {
+      "type": "release",
       "date": "2026-10-14",
       "version": "2.4.0",
       "title": "Version 2.4.0",
