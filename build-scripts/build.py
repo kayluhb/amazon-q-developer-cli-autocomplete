@@ -396,6 +396,14 @@ def build_macos_desktop_app(
     info("Copying completion specs into bundle")
     shutil.copytree(npm_packages.specs_path, app_path / "Contents/Resources/specs")
 
+    info("Copying licenses into bundle")
+    licenses_dir = app_path / "Contents/Resources/licenses"
+    licenses_dir.mkdir()
+    for name in ["NOTICE", "LICENSE.MIT", "LICENSE.APACHE"]:
+        shutil.copy(name, licenses_dir / name)
+    # The specs are MIT licensed, so their license ships with them
+    shutil.copy(npm_packages.specs_path.parent / "LICENSE", licenses_dir / "LICENSE.withfig-autocomplete")
+
     # Add symlinks
     # os.symlink(f"./{CLI_BINARY_NAME}", app_path / "Contents/MacOS/cli")
     # os.symlink(f"./{PTY_BINARY_NAME}", app_path / "Contents/MacOS/pty")
