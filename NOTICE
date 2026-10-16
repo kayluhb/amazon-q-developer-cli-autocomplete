@@ -1,0 +1,11 @@
+Tab
+Copyright 2026 Caleb Brown
+
+This product is a modified fork of amazon-q-developer-cli-autocomplete
+(https://github.com/aws/amazon-q-developer-cli-autocomplete),
+Copyright 2024 Amazon.com, Inc. or its affiliates, licensed under MIT OR Apache-2.0.
+Files have been modified by Caleb Brown since 2026.
+
+Completion specs are built from withfig/autocomplete
+(https://github.com/withfig/autocomplete), Copyright 2021 Hercules Labs Inc. (Fig),
+licensed under MIT.
