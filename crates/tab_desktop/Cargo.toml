@@ -2,7 +2,7 @@
 name = "tab_desktop"
 authors = ["kayluhb"]
 edition.workspace = true
-homepage = "https://aws.amazon.com/codewhisperer"
+homepage.workspace = true
 publish.workspace = true
 version.workspace = true
 license.workspace = true

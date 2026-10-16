@@ -58,28 +58,6 @@ const generalPreferences = [
       },
     ],
   },
-  {
-    title: "Advanced",
-    properties: [
-      {
-        id: "app.beta",
-        title: "Beta",
-        description:
-          "Opt into more frequent updates with all the newest features (and bugs).",
-        type: "boolean",
-        default: false,
-        popular: false,
-      },
-      // {
-      //   id: "cli.tips.disabled",
-      //   title: "Terminal Tips",
-      //   description: "Offers tips at the top of your terminal on start",
-      //   type: "boolean",
-      //   default: false,
-      //   popular: false,
-      // },
-    ],
-  },
 ];
 
 export default generalPreferences;

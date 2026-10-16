@@ -18,7 +18,7 @@ authors = [
     "Brandon Kiser (bskiser@amazon.com)",
 ]
 edition = "2024"
-homepage = "https://aws.amazon.com/q/"
+homepage = "https://github.com/kayluhb/tab"
 publish = false
 version = "2.4.1"
 license = "MIT OR Apache-2.0"

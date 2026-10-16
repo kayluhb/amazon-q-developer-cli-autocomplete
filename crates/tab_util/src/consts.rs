@@ -27,9 +27,8 @@ pub const BACKUP_DIR_NAME: &str = ".tab.dotfiles.bak";
 pub const GITHUB_REPO_NAME: &str = "kayluhb/tab";
 
 pub mod url {
-    pub const USER_MANUAL: &str = "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line.html";
-    pub const AUTOCOMPLETE_SSH_WIKI: &str =
-        "https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-autocomplete-ssh.html";
+    pub const USER_MANUAL: &str = "https://github.com/kayluhb/tab/blob/main/docs/user-manual.md";
+    pub const AUTOCOMPLETE_SSH_WIKI: &str = "https://github.com/kayluhb/tab/blob/main/docs/user-manual.md#ssh";
 }
 
 /// Build time env vars
